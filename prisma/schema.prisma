@@ -29,3 +29,29 @@ model Post {
   author    User    @relation(fields: [authorId], references: [id])
   authorId  Int
 }
+
+enum AgeLevel {
+  CHILDREN
+  YA
+  NA
+  ADULT
+  EROTICA
+}
+
+enum ReadingStatus {
+  TBR
+  READING
+  READ
+  DNF
+}
+
+enum SeriesStatus {
+  COMPLETE
+  INCOMPLETE
+  UNKNOWN
+}
+
+enum SubscriptionPlan {
+  FREE
+  PREMIUM
+}
