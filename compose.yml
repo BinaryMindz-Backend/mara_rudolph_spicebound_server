@@ -1,0 +1,18 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: spicebound_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: spicebound
+      POSTGRES_PASSWORD: spicebound123
+      POSTGRES_DB: spicebound_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - spicebound_pgdata:/var/lib/postgresql/data
+
+volumes:
+  spicebound_pgdata:
