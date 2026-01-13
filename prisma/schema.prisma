@@ -25,7 +25,7 @@ model User {
 
   library           UserBook[]
   ratings           Rating[]
-  // subscriptions     Subscription[]
+  subscriptions     Subscription[]
 }
 
 model Book {
@@ -96,6 +96,18 @@ model Rating {
   book    Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
+}
+
+model Subscription {
+  id             String    @id @default(cuid())
+  user           User      @relation(fields: [userId], references: [id])
+  userId         String
+  stripeCustomerId String
+  stripeSubscriptionId String
+  plan           String
+  status         String
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 enum AgeLevel {
