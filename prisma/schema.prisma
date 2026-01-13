@@ -15,19 +15,57 @@ datasource db {
 
 
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
-  posts Post[]
+  id                String   @id @default(uuid())
+  firstName         String
+  email             String   @unique
+  passwordHash      String
+  plan              SubscriptionPlan @default(FREE)
+  stripeCustomerId  String?
+  createdAt         DateTime @default(now())
+
+  // library           UserBook[]
+  // ratings           Rating[]
+  // subscriptions     Subscription[]
 }
 
-model Post {
-  id        Int     @id @default(autoincrement())
-  title     String
-  content   String?
-  published Boolean @default(false)
-  author    User    @relation(fields: [authorId], references: [id])
-  authorId  Int
+model Book {
+  id                  String   @id @default(uuid())
+
+  title               String
+  author              String
+  firstPublishedYear  Int?
+  description         String?
+
+  ageLevel            AgeLevel?
+  spiceRating         Int?
+
+  tropes              String[]
+  creatures           String[]
+  subgenres           String[]
+
+  seriesName          String?
+  seriesIndex         Int?
+  seriesTotal         Int?
+  seriesStatus        SeriesStatus?
+
+  isbn13              String?
+  googleVolumeId      String?
+  openLibraryId       String?
+  asin                String?
+
+  amazonUrl           String
+  bookshopUrl         String
+
+  externalAvgRating   Float?
+  externalRatingCount Int?
+
+  spiceboundAvgRating Float?
+  spiceboundRatingCount Int @default(0)
+
+  createdAt           DateTime @default(now())
+
+  // users               UserBook[]
+  // ratings             Rating[]
 }
 
 enum AgeLevel {
