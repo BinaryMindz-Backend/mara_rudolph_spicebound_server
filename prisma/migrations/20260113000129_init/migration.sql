@@ -1,0 +1,30 @@
+-- CreateTable
+CREATE TABLE "Book" (
+    "id" TEXT NOT NULL,
+    "title" TEXT NOT NULL,
+    "author" TEXT NOT NULL,
+    "firstPublishedYear" INTEGER,
+    "description" TEXT,
+    "ageLevel" "AgeLevel",
+    "spiceRating" INTEGER,
+    "tropes" TEXT[],
+    "creatures" TEXT[],
+    "subgenres" TEXT[],
+    "seriesName" TEXT,
+    "seriesIndex" INTEGER,
+    "seriesTotal" INTEGER,
+    "seriesStatus" "SeriesStatus",
+    "isbn13" TEXT,
+    "googleVolumeId" TEXT,
+    "openLibraryId" TEXT,
+    "asin" TEXT,
+    "amazonUrl" TEXT NOT NULL,
+    "bookshopUrl" TEXT NOT NULL,
+    "externalAvgRating" DOUBLE PRECISION,
+    "externalRatingCount" INTEGER,
+    "spiceboundAvgRating" DOUBLE PRECISION,
+    "spiceboundRatingCount" INTEGER NOT NULL DEFAULT 0,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Book_pkey" PRIMARY KEY ("id")
+);

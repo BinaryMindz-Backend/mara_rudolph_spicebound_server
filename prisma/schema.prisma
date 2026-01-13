@@ -23,8 +23,8 @@ model User {
   stripeCustomerId  String?
   createdAt         DateTime @default(now())
 
-  // library           UserBook[]
-  // ratings           Rating[]
+  library           UserBook[]
+  ratings           Rating[]
   // subscriptions     Subscription[]
 }
 
@@ -64,8 +64,38 @@ model Book {
 
   createdAt           DateTime @default(now())
 
-  // users               UserBook[]
-  // ratings             Rating[]
+  users               UserBook[]
+  ratings             Rating[]
+}
+
+model UserBook {
+  id          String @id @default(uuid())
+
+  userId      String
+  bookId      String
+
+  status      ReadingStatus @default(TBR)
+  orderIndex  Int
+  rating      Float?
+
+  createdAt   DateTime @default(now())
+
+  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book        Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
+}
+
+model Rating {
+  id      String @id @default(uuid())
+  userId  String
+  bookId  String
+  value   Float
+
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book    Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, bookId])
 }
 
 enum AgeLevel {
