@@ -6,108 +6,107 @@
 
 generator client {
   provider = "prisma-client"
-  output   = "../generated/prisma"
+  output   = "../prisma/generated/prisma-client"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
-
 model User {
-  id                String   @id @default(uuid())
-  firstName         String
-  email             String   @unique
-  passwordHash      String
-  plan              SubscriptionPlan @default(FREE)
-  stripeCustomerId  String?
-  createdAt         DateTime @default(now())
+  id               String           @id @default(uuid())
+  name             String
+  email            String           @unique
+  password         String
+  plan             SubscriptionPlan @default(FREE)
+  stripeCustomerId String?
+  createdAt        DateTime         @default(now())
 
-  library           UserBook[]
-  ratings           Rating[]
-  subscriptions     Subscription[]
+  library       UserBook[]
+  ratings       Rating[]
+  subscriptions Subscription[]
 }
 
 model Book {
-  id                  String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  title               String
-  author              String
-  firstPublishedYear  Int?
-  description         String?
+  title              String
+  author             String
+  firstPublishedYear Int?
+  description        String?
 
-  ageLevel            AgeLevel?
-  spiceRating         Int?
+  ageLevel    AgeLevel?
+  spiceRating Int?
 
-  tropes              String[]
-  creatures           String[]
-  subgenres           String[]
+  tropes    String[]
+  creatures String[]
+  subgenres String[]
 
-  seriesName          String?
-  seriesIndex         Int?
-  seriesTotal         Int?
-  seriesStatus        SeriesStatus?
+  seriesName   String?
+  seriesIndex  Int?
+  seriesTotal  Int?
+  seriesStatus SeriesStatus?
 
-  isbn13              String?
-  googleVolumeId      String?
-  openLibraryId       String?
-  asin                String?
+  isbn13         String?
+  googleVolumeId String?
+  openLibraryId  String?
+  asin           String?
 
-  amazonUrl           String
-  bookshopUrl         String
+  amazonUrl   String
+  bookshopUrl String
 
   externalAvgRating   Float?
   externalRatingCount Int?
 
-  spiceboundAvgRating Float?
-  spiceboundRatingCount Int @default(0)
+  spiceboundAvgRating   Float?
+  spiceboundRatingCount Int    @default(0)
 
-  createdAt           DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  users               UserBook[]
-  ratings             Rating[]
+  users   UserBook[]
+  ratings Rating[]
 }
 
 model UserBook {
-  id          String @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId      String
-  bookId      String
+  userId String
+  bookId String
 
-  status      ReadingStatus @default(TBR)
-  orderIndex  Int
-  rating      Float?
+  status     ReadingStatus @default(TBR)
+  orderIndex Int
+  rating     Float?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
-  user        User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book        Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }
 
 model Rating {
-  id      String @id @default(uuid())
-  userId  String
-  bookId  String
-  value   Float
+  id     String @id @default(uuid())
+  userId String
+  bookId String
+  value  Float
 
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  book    Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
 
   @@unique([userId, bookId])
 }
 
 model Subscription {
-  id             String    @id @default(cuid())
-  user           User      @relation(fields: [userId], references: [id])
-  userId         String
-  stripeCustomerId String
+  id                   String   @id @default(cuid())
+  user                 User     @relation(fields: [userId], references: [id])
+  userId               String
+  stripeCustomerId     String
   stripeSubscriptionId String
-  plan           String
-  status         String
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  plan                 String
+  status               String
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 }
 
 enum AgeLevel {

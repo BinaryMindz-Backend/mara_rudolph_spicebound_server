@@ -3,11 +3,11 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { PrismaService } from '../prisma/prisma.service.js';
 
 
 @Injectable()
@@ -17,48 +17,57 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async signup(dto: SignupDto) {
-    const exists = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+async signup(dto: SignupDto) {
+  const exists = await this.prisma.user.findUnique({
+    where: { email: dto.email },
+  });
 
-    if (exists) {
-      throw new ConflictException('Email already registered');
-    }
-
-    const hashedPassword = await bcrypt.hash(dto.password, 12);
-
-    const user = await this.prisma.user.create({
-      data: {
-        firstName: dto.firstName,
-        email: dto.email,
-        password: hashedPassword,
-      },
-    });
-
-    return this.generateAuthResponse(user);
+  if (exists) {
+    throw new ConflictException('Email already registered');
   }
 
-  async login(dto: LoginDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
+  const hashedPassword = await bcrypt.hash(dto.password, 12);
 
-    if (!user) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  const createdUser = await this.prisma.user.create({
+    data: {
+      name: dto.name,
+      email: dto.email,
+      password: hashedPassword,
+    },
+  });
 
-    const passwordMatch = await bcrypt.compare(
-      dto.password,
-      user.password,
-    );
+  // Explicitly remove password
+  const { password, ...user } = createdUser;
 
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
+  return this.generateAuthResponse(user);
+}
 
-    return this.generateAuthResponse(user);
+
+
+async login(dto: LoginDto) {
+  const user = await this.prisma.user.findUnique({
+    where: { email: dto.email },
+  });
+
+  if (!user) {
+    throw new UnauthorizedException('Invalid credentials');
   }
+
+  const passwordMatch = await bcrypt.compare(
+    dto.password,
+    user.password,
+  );
+
+  if (!passwordMatch) {
+    throw new UnauthorizedException('Invalid credentials');
+  }
+
+  const { password, ...safeUser } = user;
+
+  return this.generateAuthResponse(safeUser);
+}
+
+
 
   private generateAuthResponse(user: any) {
     const payload = {
