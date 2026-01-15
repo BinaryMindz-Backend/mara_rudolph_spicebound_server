@@ -61,7 +61,6 @@ async login(dto: LoginDto) {
   if (!passwordMatch) {
     throw new UnauthorizedException('Invalid credentials');
   }
-
   const { password, ...safeUser } = user;
 
   return this.generateAuthResponse(safeUser);

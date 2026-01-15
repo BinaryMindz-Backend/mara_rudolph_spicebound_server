@@ -5,7 +5,6 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-   // 🔐 Swagger configuration
   const config = new DocumentBuilder()
     .setTitle('Spicebound API')
     .setDescription('Backend API for Spicebound MVP')
