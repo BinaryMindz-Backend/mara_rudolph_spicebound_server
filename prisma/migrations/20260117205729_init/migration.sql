@@ -1,0 +1,5 @@
+-- CreateEnum
+CREATE TYPE "BookAliasType" AS ENUM ('ISBN_10', 'ISBN_13', 'GOOGLE_VOLUME_ID', 'OPEN_LIBRARY_ID', 'ASIN', 'GOODREADS_ID');
+
+-- AlterEnum
+ALTER TYPE "AgeLevel" ADD VALUE 'UNKNOWN';

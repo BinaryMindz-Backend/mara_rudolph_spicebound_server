@@ -115,6 +115,7 @@ enum AgeLevel {
   NA
   ADULT
   EROTICA
+  UNKNOWN
 }
 
 enum ReadingStatus {
@@ -122,6 +123,15 @@ enum ReadingStatus {
   READING
   READ
   DNF
+}
+
+enum BookAliasType {
+  ISBN_10
+  ISBN_13
+  GOOGLE_VOLUME_ID
+  OPEN_LIBRARY_ID
+  ASIN
+  GOODREADS_ID
 }
 
 enum SeriesStatus {
