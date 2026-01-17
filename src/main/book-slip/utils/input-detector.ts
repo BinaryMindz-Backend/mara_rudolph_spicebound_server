@@ -1,4 +1,4 @@
-import { InputType } from '../types/book-source.types';
+import { InputType } from "../types/book-source.types.js";
 
 export function detectInputType(input: string): InputType {
   if (/^97[89]\d{10}$/.test(input.replace(/-/g, ''))) {

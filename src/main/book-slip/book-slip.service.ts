@@ -34,7 +34,7 @@ export class BookSlipService {
       openLibraryData = await this.openLibrary.fetchById(input);
     } else {
       googleData = await this.googleBooks.search(input);
-      openLibraryData = await this.openLibrary.search(input);
+      openLibraryData = await this.openLibrary.search(input);   
     }
 
     const merged = mergeExternalData(googleData, openLibraryData);
