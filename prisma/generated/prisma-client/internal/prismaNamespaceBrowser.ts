@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Book: 'Book',
+  BookAlias: 'BookAlias',
   UserBook: 'UserBook',
   Rating: 'Rating',
   Subscription: 'Subscription'
@@ -90,32 +91,47 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const BookScalarFieldEnum = {
   id: 'id',
   title: 'title',
-  author: 'author',
+  normalizedTitle: 'normalizedTitle',
+  primaryAuthor: 'primaryAuthor',
+  normalizedAuthor: 'normalizedAuthor',
   firstPublishedYear: 'firstPublishedYear',
-  description: 'description',
+  coverImageUrl: 'coverImageUrl',
   ageLevel: 'ageLevel',
   spiceRating: 'spiceRating',
   tropes: 'tropes',
   creatures: 'creatures',
   subgenres: 'subgenres',
+  shortDescription: 'shortDescription',
+  isStandalone: 'isStandalone',
   seriesName: 'seriesName',
   seriesIndex: 'seriesIndex',
   seriesTotal: 'seriesTotal',
   seriesStatus: 'seriesStatus',
-  isbn13: 'isbn13',
-  googleVolumeId: 'googleVolumeId',
-  openLibraryId: 'openLibraryId',
-  asin: 'asin',
-  amazonUrl: 'amazonUrl',
-  bookshopUrl: 'bookshopUrl',
   externalAvgRating: 'externalAvgRating',
   externalRatingCount: 'externalRatingCount',
+  externalRatingSource: 'externalRatingSource',
   spiceboundAvgRating: 'spiceboundAvgRating',
   spiceboundRatingCount: 'spiceboundRatingCount',
-  createdAt: 'createdAt'
+  amazonUrl: 'amazonUrl',
+  amazonAffiliateUrl: 'amazonAffiliateUrl',
+  bookshopUrl: 'bookshopUrl',
+  bookshopAffiliateUrl: 'bookshopAffiliateUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type BookScalarFieldEnum = (typeof BookScalarFieldEnum)[keyof typeof BookScalarFieldEnum]
+
+
+export const BookAliasScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  value: 'value',
+  bookId: 'bookId',
+  createdAt: 'createdAt'
+} as const
+
+export type BookAliasScalarFieldEnum = (typeof BookAliasScalarFieldEnum)[keyof typeof BookAliasScalarFieldEnum]
 
 
 export const UserBookScalarFieldEnum = {

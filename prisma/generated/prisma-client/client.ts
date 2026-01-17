@@ -50,6 +50,11 @@ export type User = Prisma.UserModel
  */
 export type Book = Prisma.BookModel
 /**
+ * Model BookAlias
+ * 
+ */
+export type BookAlias = Prisma.BookAliasModel
+/**
  * Model UserBook
  * 
  */

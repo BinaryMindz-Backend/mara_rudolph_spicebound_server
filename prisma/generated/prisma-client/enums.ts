@@ -14,7 +14,8 @@ export const AgeLevel = {
   YA: 'YA',
   NA: 'NA',
   ADULT: 'ADULT',
-  EROTICA: 'EROTICA'
+  EROTICA: 'EROTICA',
+  UNKNOWN: 'UNKNOWN'
 } as const
 
 export type AgeLevel = (typeof AgeLevel)[keyof typeof AgeLevel]
@@ -28,6 +29,18 @@ export const ReadingStatus = {
 } as const
 
 export type ReadingStatus = (typeof ReadingStatus)[keyof typeof ReadingStatus]
+
+
+export const BookAliasType = {
+  ISBN_10: 'ISBN_10',
+  ISBN_13: 'ISBN_13',
+  GOOGLE_VOLUME_ID: 'GOOGLE_VOLUME_ID',
+  OPEN_LIBRARY_ID: 'OPEN_LIBRARY_ID',
+  ASIN: 'ASIN',
+  GOODREADS_ID: 'GOODREADS_ID'
+} as const
+
+export type BookAliasType = (typeof BookAliasType)[keyof typeof BookAliasType]
 
 
 export const SeriesStatus = {

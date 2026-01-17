@@ -386,6 +386,7 @@ type FieldRefInputType<Model, FieldType> = Model extends never ? never : FieldRe
 export const ModelName = {
   User: 'User',
   Book: 'Book',
+  BookAlias: 'BookAlias',
   UserBook: 'UserBook',
   Rating: 'Rating',
   Subscription: 'Subscription'
@@ -404,7 +405,7 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
     omit: GlobalOmitOptions
   }
   meta: {
-    modelProps: "user" | "book" | "userBook" | "rating" | "subscription"
+    modelProps: "user" | "book" | "bookAlias" | "userBook" | "rating" | "subscription"
     txIsolationLevel: TransactionIsolationLevel
   }
   model: {
@@ -553,6 +554,80 @@ export type TypeMap<ExtArgs extends runtime.Types.Extensions.InternalArgs = runt
         count: {
           args: Prisma.BookCountArgs<ExtArgs>
           result: runtime.Types.Utils.Optional<Prisma.BookCountAggregateOutputType> | number
+        }
+      }
+    }
+    BookAlias: {
+      payload: Prisma.$BookAliasPayload<ExtArgs>
+      fields: Prisma.BookAliasFieldRefs
+      operations: {
+        findUnique: {
+          args: Prisma.BookAliasFindUniqueArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload> | null
+        }
+        findUniqueOrThrow: {
+          args: Prisma.BookAliasFindUniqueOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        findFirst: {
+          args: Prisma.BookAliasFindFirstArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload> | null
+        }
+        findFirstOrThrow: {
+          args: Prisma.BookAliasFindFirstOrThrowArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        findMany: {
+          args: Prisma.BookAliasFindManyArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>[]
+        }
+        create: {
+          args: Prisma.BookAliasCreateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        createMany: {
+          args: Prisma.BookAliasCreateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        createManyAndReturn: {
+          args: Prisma.BookAliasCreateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>[]
+        }
+        delete: {
+          args: Prisma.BookAliasDeleteArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        update: {
+          args: Prisma.BookAliasUpdateArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        deleteMany: {
+          args: Prisma.BookAliasDeleteManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateMany: {
+          args: Prisma.BookAliasUpdateManyArgs<ExtArgs>
+          result: BatchPayload
+        }
+        updateManyAndReturn: {
+          args: Prisma.BookAliasUpdateManyAndReturnArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>[]
+        }
+        upsert: {
+          args: Prisma.BookAliasUpsertArgs<ExtArgs>
+          result: runtime.Types.Utils.PayloadToResult<Prisma.$BookAliasPayload>
+        }
+        aggregate: {
+          args: Prisma.BookAliasAggregateArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.AggregateBookAlias>
+        }
+        groupBy: {
+          args: Prisma.BookAliasGroupByArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BookAliasGroupByOutputType>[]
+        }
+        count: {
+          args: Prisma.BookAliasCountArgs<ExtArgs>
+          result: runtime.Types.Utils.Optional<Prisma.BookAliasCountAggregateOutputType> | number
         }
       }
     }
@@ -833,32 +908,47 @@ export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof User
 export const BookScalarFieldEnum = {
   id: 'id',
   title: 'title',
-  author: 'author',
+  normalizedTitle: 'normalizedTitle',
+  primaryAuthor: 'primaryAuthor',
+  normalizedAuthor: 'normalizedAuthor',
   firstPublishedYear: 'firstPublishedYear',
-  description: 'description',
+  coverImageUrl: 'coverImageUrl',
   ageLevel: 'ageLevel',
   spiceRating: 'spiceRating',
   tropes: 'tropes',
   creatures: 'creatures',
   subgenres: 'subgenres',
+  shortDescription: 'shortDescription',
+  isStandalone: 'isStandalone',
   seriesName: 'seriesName',
   seriesIndex: 'seriesIndex',
   seriesTotal: 'seriesTotal',
   seriesStatus: 'seriesStatus',
-  isbn13: 'isbn13',
-  googleVolumeId: 'googleVolumeId',
-  openLibraryId: 'openLibraryId',
-  asin: 'asin',
-  amazonUrl: 'amazonUrl',
-  bookshopUrl: 'bookshopUrl',
   externalAvgRating: 'externalAvgRating',
   externalRatingCount: 'externalRatingCount',
+  externalRatingSource: 'externalRatingSource',
   spiceboundAvgRating: 'spiceboundAvgRating',
   spiceboundRatingCount: 'spiceboundRatingCount',
-  createdAt: 'createdAt'
+  amazonUrl: 'amazonUrl',
+  amazonAffiliateUrl: 'amazonAffiliateUrl',
+  bookshopUrl: 'bookshopUrl',
+  bookshopAffiliateUrl: 'bookshopAffiliateUrl',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
 } as const
 
 export type BookScalarFieldEnum = (typeof BookScalarFieldEnum)[keyof typeof BookScalarFieldEnum]
+
+
+export const BookAliasScalarFieldEnum = {
+  id: 'id',
+  type: 'type',
+  value: 'value',
+  bookId: 'bookId',
+  createdAt: 'createdAt'
+} as const
+
+export type BookAliasScalarFieldEnum = (typeof BookAliasScalarFieldEnum)[keyof typeof BookAliasScalarFieldEnum]
 
 
 export const UserBookScalarFieldEnum = {
@@ -999,6 +1089,13 @@ export type ListEnumAgeLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
 
 
 /**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
+    
+
+
+/**
  * Reference to a field of type 'SeriesStatus'
  */
 export type EnumSeriesStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SeriesStatus'>
@@ -1023,6 +1120,20 @@ export type FloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, '
  * Reference to a field of type 'Float[]'
  */
 export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+/**
+ * Reference to a field of type 'BookAliasType'
+ */
+export type EnumBookAliasTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BookAliasType'>
+    
+
+
+/**
+ * Reference to a field of type 'BookAliasType[]'
+ */
+export type ListEnumBookAliasTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BookAliasType[]'>
     
 
 
@@ -1136,6 +1247,7 @@ export type PrismaClientOptions = ({
 export type GlobalOmitConfig = {
   user?: Prisma.UserOmit
   book?: Prisma.BookOmit
+  bookAlias?: Prisma.BookAliasOmit
   userBook?: Prisma.UserBookOmit
   rating?: Prisma.RatingOmit
   subscription?: Prisma.SubscriptionOmit

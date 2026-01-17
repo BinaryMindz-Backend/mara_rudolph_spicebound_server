@@ -51,79 +51,91 @@ export type BookSumAggregateOutputType = {
 export type BookMinAggregateOutputType = {
   id: string | null
   title: string | null
-  author: string | null
+  normalizedTitle: string | null
+  primaryAuthor: string | null
+  normalizedAuthor: string | null
   firstPublishedYear: number | null
-  description: string | null
+  coverImageUrl: string | null
   ageLevel: $Enums.AgeLevel | null
   spiceRating: number | null
+  shortDescription: string | null
+  isStandalone: boolean | null
   seriesName: string | null
   seriesIndex: number | null
   seriesTotal: number | null
   seriesStatus: $Enums.SeriesStatus | null
-  isbn13: string | null
-  googleVolumeId: string | null
-  openLibraryId: string | null
-  asin: string | null
-  amazonUrl: string | null
-  bookshopUrl: string | null
   externalAvgRating: number | null
   externalRatingCount: number | null
+  externalRatingSource: string | null
   spiceboundAvgRating: number | null
   spiceboundRatingCount: number | null
+  amazonUrl: string | null
+  amazonAffiliateUrl: string | null
+  bookshopUrl: string | null
+  bookshopAffiliateUrl: string | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type BookMaxAggregateOutputType = {
   id: string | null
   title: string | null
-  author: string | null
+  normalizedTitle: string | null
+  primaryAuthor: string | null
+  normalizedAuthor: string | null
   firstPublishedYear: number | null
-  description: string | null
+  coverImageUrl: string | null
   ageLevel: $Enums.AgeLevel | null
   spiceRating: number | null
+  shortDescription: string | null
+  isStandalone: boolean | null
   seriesName: string | null
   seriesIndex: number | null
   seriesTotal: number | null
   seriesStatus: $Enums.SeriesStatus | null
-  isbn13: string | null
-  googleVolumeId: string | null
-  openLibraryId: string | null
-  asin: string | null
-  amazonUrl: string | null
-  bookshopUrl: string | null
   externalAvgRating: number | null
   externalRatingCount: number | null
+  externalRatingSource: string | null
   spiceboundAvgRating: number | null
   spiceboundRatingCount: number | null
+  amazonUrl: string | null
+  amazonAffiliateUrl: string | null
+  bookshopUrl: string | null
+  bookshopAffiliateUrl: string | null
   createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export type BookCountAggregateOutputType = {
   id: number
   title: number
-  author: number
+  normalizedTitle: number
+  primaryAuthor: number
+  normalizedAuthor: number
   firstPublishedYear: number
-  description: number
+  coverImageUrl: number
   ageLevel: number
   spiceRating: number
   tropes: number
   creatures: number
   subgenres: number
+  shortDescription: number
+  isStandalone: number
   seriesName: number
   seriesIndex: number
   seriesTotal: number
   seriesStatus: number
-  isbn13: number
-  googleVolumeId: number
-  openLibraryId: number
-  asin: number
-  amazonUrl: number
-  bookshopUrl: number
   externalAvgRating: number
   externalRatingCount: number
+  externalRatingSource: number
   spiceboundAvgRating: number
   spiceboundRatingCount: number
+  amazonUrl: number
+  amazonAffiliateUrl: number
+  bookshopUrl: number
+  bookshopAffiliateUrl: number
   createdAt: number
+  updatedAt: number
   _all: number
 }
 
@@ -153,79 +165,91 @@ export type BookSumAggregateInputType = {
 export type BookMinAggregateInputType = {
   id?: true
   title?: true
-  author?: true
+  normalizedTitle?: true
+  primaryAuthor?: true
+  normalizedAuthor?: true
   firstPublishedYear?: true
-  description?: true
+  coverImageUrl?: true
   ageLevel?: true
   spiceRating?: true
+  shortDescription?: true
+  isStandalone?: true
   seriesName?: true
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
-  isbn13?: true
-  googleVolumeId?: true
-  openLibraryId?: true
-  asin?: true
-  amazonUrl?: true
-  bookshopUrl?: true
   externalAvgRating?: true
   externalRatingCount?: true
+  externalRatingSource?: true
   spiceboundAvgRating?: true
   spiceboundRatingCount?: true
+  amazonUrl?: true
+  amazonAffiliateUrl?: true
+  bookshopUrl?: true
+  bookshopAffiliateUrl?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type BookMaxAggregateInputType = {
   id?: true
   title?: true
-  author?: true
+  normalizedTitle?: true
+  primaryAuthor?: true
+  normalizedAuthor?: true
   firstPublishedYear?: true
-  description?: true
+  coverImageUrl?: true
   ageLevel?: true
   spiceRating?: true
+  shortDescription?: true
+  isStandalone?: true
   seriesName?: true
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
-  isbn13?: true
-  googleVolumeId?: true
-  openLibraryId?: true
-  asin?: true
-  amazonUrl?: true
-  bookshopUrl?: true
   externalAvgRating?: true
   externalRatingCount?: true
+  externalRatingSource?: true
   spiceboundAvgRating?: true
   spiceboundRatingCount?: true
+  amazonUrl?: true
+  amazonAffiliateUrl?: true
+  bookshopUrl?: true
+  bookshopAffiliateUrl?: true
   createdAt?: true
+  updatedAt?: true
 }
 
 export type BookCountAggregateInputType = {
   id?: true
   title?: true
-  author?: true
+  normalizedTitle?: true
+  primaryAuthor?: true
+  normalizedAuthor?: true
   firstPublishedYear?: true
-  description?: true
+  coverImageUrl?: true
   ageLevel?: true
   spiceRating?: true
   tropes?: true
   creatures?: true
   subgenres?: true
+  shortDescription?: true
+  isStandalone?: true
   seriesName?: true
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
-  isbn13?: true
-  googleVolumeId?: true
-  openLibraryId?: true
-  asin?: true
-  amazonUrl?: true
-  bookshopUrl?: true
   externalAvgRating?: true
   externalRatingCount?: true
+  externalRatingSource?: true
   spiceboundAvgRating?: true
   spiceboundRatingCount?: true
+  amazonUrl?: true
+  amazonAffiliateUrl?: true
+  bookshopUrl?: true
+  bookshopAffiliateUrl?: true
   createdAt?: true
+  updatedAt?: true
   _all?: true
 }
 
@@ -318,29 +342,33 @@ export type BookGroupByArgs<ExtArgs extends runtime.Types.Extensions.InternalArg
 export type BookGroupByOutputType = {
   id: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear: number | null
-  description: string | null
-  ageLevel: $Enums.AgeLevel | null
+  coverImageUrl: string | null
+  ageLevel: $Enums.AgeLevel
   spiceRating: number | null
   tropes: string[]
   creatures: string[]
   subgenres: string[]
+  shortDescription: string | null
+  isStandalone: boolean
   seriesName: string | null
   seriesIndex: number | null
   seriesTotal: number | null
-  seriesStatus: $Enums.SeriesStatus | null
-  isbn13: string | null
-  googleVolumeId: string | null
-  openLibraryId: string | null
-  asin: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus: $Enums.SeriesStatus
   externalAvgRating: number | null
   externalRatingCount: number | null
+  externalRatingSource: string | null
   spiceboundAvgRating: number | null
   spiceboundRatingCount: number
+  amazonUrl: string | null
+  amazonAffiliateUrl: string | null
+  bookshopUrl: string | null
+  bookshopAffiliateUrl: string | null
   createdAt: Date
+  updatedAt: Date
   _count: BookCountAggregateOutputType | null
   _avg: BookAvgAggregateOutputType | null
   _sum: BookSumAggregateOutputType | null
@@ -369,29 +397,34 @@ export type BookWhereInput = {
   NOT?: Prisma.BookWhereInput | Prisma.BookWhereInput[]
   id?: Prisma.StringFilter<"Book"> | string
   title?: Prisma.StringFilter<"Book"> | string
-  author?: Prisma.StringFilter<"Book"> | string
+  normalizedTitle?: Prisma.StringFilter<"Book"> | string
+  primaryAuthor?: Prisma.StringFilter<"Book"> | string
+  normalizedAuthor?: Prisma.StringFilter<"Book"> | string
   firstPublishedYear?: Prisma.IntNullableFilter<"Book"> | number | null
-  description?: Prisma.StringNullableFilter<"Book"> | string | null
-  ageLevel?: Prisma.EnumAgeLevelNullableFilter<"Book"> | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  ageLevel?: Prisma.EnumAgeLevelFilter<"Book"> | $Enums.AgeLevel
   spiceRating?: Prisma.IntNullableFilter<"Book"> | number | null
   tropes?: Prisma.StringNullableListFilter<"Book">
   creatures?: Prisma.StringNullableListFilter<"Book">
   subgenres?: Prisma.StringNullableListFilter<"Book">
+  shortDescription?: Prisma.StringNullableFilter<"Book"> | string | null
+  isStandalone?: Prisma.BoolFilter<"Book"> | boolean
   seriesName?: Prisma.StringNullableFilter<"Book"> | string | null
   seriesIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableFilter<"Book"> | number | null
-  seriesStatus?: Prisma.EnumSeriesStatusNullableFilter<"Book"> | $Enums.SeriesStatus | null
-  isbn13?: Prisma.StringNullableFilter<"Book"> | string | null
-  googleVolumeId?: Prisma.StringNullableFilter<"Book"> | string | null
-  openLibraryId?: Prisma.StringNullableFilter<"Book"> | string | null
-  asin?: Prisma.StringNullableFilter<"Book"> | string | null
-  amazonUrl?: Prisma.StringFilter<"Book"> | string
-  bookshopUrl?: Prisma.StringFilter<"Book"> | string
+  seriesStatus?: Prisma.EnumSeriesStatusFilter<"Book"> | $Enums.SeriesStatus
   externalAvgRating?: Prisma.FloatNullableFilter<"Book"> | number | null
   externalRatingCount?: Prisma.IntNullableFilter<"Book"> | number | null
+  externalRatingSource?: Prisma.StringNullableFilter<"Book"> | string | null
   spiceboundAvgRating?: Prisma.FloatNullableFilter<"Book"> | number | null
   spiceboundRatingCount?: Prisma.IntFilter<"Book"> | number
+  amazonUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  amazonAffiliateUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  bookshopUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  bookshopAffiliateUrl?: Prisma.StringNullableFilter<"Book"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Book"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Book"> | Date | string
+  aliases?: Prisma.BookAliasListRelationFilter
   users?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
 }
@@ -399,29 +432,34 @@ export type BookWhereInput = {
 export type BookOrderByWithRelationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  author?: Prisma.SortOrder
+  normalizedTitle?: Prisma.SortOrder
+  primaryAuthor?: Prisma.SortOrder
+  normalizedAuthor?: Prisma.SortOrder
   firstPublishedYear?: Prisma.SortOrderInput | Prisma.SortOrder
-  description?: Prisma.SortOrderInput | Prisma.SortOrder
-  ageLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverImageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageLevel?: Prisma.SortOrder
   spiceRating?: Prisma.SortOrderInput | Prisma.SortOrder
   tropes?: Prisma.SortOrder
   creatures?: Prisma.SortOrder
   subgenres?: Prisma.SortOrder
+  shortDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  isStandalone?: Prisma.SortOrder
   seriesName?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesTotal?: Prisma.SortOrderInput | Prisma.SortOrder
-  seriesStatus?: Prisma.SortOrderInput | Prisma.SortOrder
-  isbn13?: Prisma.SortOrderInput | Prisma.SortOrder
-  googleVolumeId?: Prisma.SortOrderInput | Prisma.SortOrder
-  openLibraryId?: Prisma.SortOrderInput | Prisma.SortOrder
-  asin?: Prisma.SortOrderInput | Prisma.SortOrder
-  amazonUrl?: Prisma.SortOrder
-  bookshopUrl?: Prisma.SortOrder
+  seriesStatus?: Prisma.SortOrder
   externalAvgRating?: Prisma.SortOrderInput | Prisma.SortOrder
   externalRatingCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  externalRatingSource?: Prisma.SortOrderInput | Prisma.SortOrder
   spiceboundAvgRating?: Prisma.SortOrderInput | Prisma.SortOrder
   spiceboundRatingCount?: Prisma.SortOrder
+  amazonUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  amazonAffiliateUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookshopUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookshopAffiliateUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
+  aliases?: Prisma.BookAliasOrderByRelationAggregateInput
   users?: Prisma.UserBookOrderByRelationAggregateInput
   ratings?: Prisma.RatingOrderByRelationAggregateInput
 }
@@ -432,29 +470,34 @@ export type BookWhereUniqueInput = Prisma.AtLeast<{
   OR?: Prisma.BookWhereInput[]
   NOT?: Prisma.BookWhereInput | Prisma.BookWhereInput[]
   title?: Prisma.StringFilter<"Book"> | string
-  author?: Prisma.StringFilter<"Book"> | string
+  normalizedTitle?: Prisma.StringFilter<"Book"> | string
+  primaryAuthor?: Prisma.StringFilter<"Book"> | string
+  normalizedAuthor?: Prisma.StringFilter<"Book"> | string
   firstPublishedYear?: Prisma.IntNullableFilter<"Book"> | number | null
-  description?: Prisma.StringNullableFilter<"Book"> | string | null
-  ageLevel?: Prisma.EnumAgeLevelNullableFilter<"Book"> | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  ageLevel?: Prisma.EnumAgeLevelFilter<"Book"> | $Enums.AgeLevel
   spiceRating?: Prisma.IntNullableFilter<"Book"> | number | null
   tropes?: Prisma.StringNullableListFilter<"Book">
   creatures?: Prisma.StringNullableListFilter<"Book">
   subgenres?: Prisma.StringNullableListFilter<"Book">
+  shortDescription?: Prisma.StringNullableFilter<"Book"> | string | null
+  isStandalone?: Prisma.BoolFilter<"Book"> | boolean
   seriesName?: Prisma.StringNullableFilter<"Book"> | string | null
   seriesIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableFilter<"Book"> | number | null
-  seriesStatus?: Prisma.EnumSeriesStatusNullableFilter<"Book"> | $Enums.SeriesStatus | null
-  isbn13?: Prisma.StringNullableFilter<"Book"> | string | null
-  googleVolumeId?: Prisma.StringNullableFilter<"Book"> | string | null
-  openLibraryId?: Prisma.StringNullableFilter<"Book"> | string | null
-  asin?: Prisma.StringNullableFilter<"Book"> | string | null
-  amazonUrl?: Prisma.StringFilter<"Book"> | string
-  bookshopUrl?: Prisma.StringFilter<"Book"> | string
+  seriesStatus?: Prisma.EnumSeriesStatusFilter<"Book"> | $Enums.SeriesStatus
   externalAvgRating?: Prisma.FloatNullableFilter<"Book"> | number | null
   externalRatingCount?: Prisma.IntNullableFilter<"Book"> | number | null
+  externalRatingSource?: Prisma.StringNullableFilter<"Book"> | string | null
   spiceboundAvgRating?: Prisma.FloatNullableFilter<"Book"> | number | null
   spiceboundRatingCount?: Prisma.IntFilter<"Book"> | number
+  amazonUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  amazonAffiliateUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  bookshopUrl?: Prisma.StringNullableFilter<"Book"> | string | null
+  bookshopAffiliateUrl?: Prisma.StringNullableFilter<"Book"> | string | null
   createdAt?: Prisma.DateTimeFilter<"Book"> | Date | string
+  updatedAt?: Prisma.DateTimeFilter<"Book"> | Date | string
+  aliases?: Prisma.BookAliasListRelationFilter
   users?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
 }, "id">
@@ -462,29 +505,33 @@ export type BookWhereUniqueInput = Prisma.AtLeast<{
 export type BookOrderByWithAggregationInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  author?: Prisma.SortOrder
+  normalizedTitle?: Prisma.SortOrder
+  primaryAuthor?: Prisma.SortOrder
+  normalizedAuthor?: Prisma.SortOrder
   firstPublishedYear?: Prisma.SortOrderInput | Prisma.SortOrder
-  description?: Prisma.SortOrderInput | Prisma.SortOrder
-  ageLevel?: Prisma.SortOrderInput | Prisma.SortOrder
+  coverImageUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  ageLevel?: Prisma.SortOrder
   spiceRating?: Prisma.SortOrderInput | Prisma.SortOrder
   tropes?: Prisma.SortOrder
   creatures?: Prisma.SortOrder
   subgenres?: Prisma.SortOrder
+  shortDescription?: Prisma.SortOrderInput | Prisma.SortOrder
+  isStandalone?: Prisma.SortOrder
   seriesName?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesTotal?: Prisma.SortOrderInput | Prisma.SortOrder
-  seriesStatus?: Prisma.SortOrderInput | Prisma.SortOrder
-  isbn13?: Prisma.SortOrderInput | Prisma.SortOrder
-  googleVolumeId?: Prisma.SortOrderInput | Prisma.SortOrder
-  openLibraryId?: Prisma.SortOrderInput | Prisma.SortOrder
-  asin?: Prisma.SortOrderInput | Prisma.SortOrder
-  amazonUrl?: Prisma.SortOrder
-  bookshopUrl?: Prisma.SortOrder
+  seriesStatus?: Prisma.SortOrder
   externalAvgRating?: Prisma.SortOrderInput | Prisma.SortOrder
   externalRatingCount?: Prisma.SortOrderInput | Prisma.SortOrder
+  externalRatingSource?: Prisma.SortOrderInput | Prisma.SortOrder
   spiceboundAvgRating?: Prisma.SortOrderInput | Prisma.SortOrder
   spiceboundRatingCount?: Prisma.SortOrder
+  amazonUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  amazonAffiliateUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookshopUrl?: Prisma.SortOrderInput | Prisma.SortOrder
+  bookshopAffiliateUrl?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
   _count?: Prisma.BookCountOrderByAggregateInput
   _avg?: Prisma.BookAvgOrderByAggregateInput
   _max?: Prisma.BookMaxOrderByAggregateInput
@@ -498,57 +545,66 @@ export type BookScalarWhereWithAggregatesInput = {
   NOT?: Prisma.BookScalarWhereWithAggregatesInput | Prisma.BookScalarWhereWithAggregatesInput[]
   id?: Prisma.StringWithAggregatesFilter<"Book"> | string
   title?: Prisma.StringWithAggregatesFilter<"Book"> | string
-  author?: Prisma.StringWithAggregatesFilter<"Book"> | string
+  normalizedTitle?: Prisma.StringWithAggregatesFilter<"Book"> | string
+  primaryAuthor?: Prisma.StringWithAggregatesFilter<"Book"> | string
+  normalizedAuthor?: Prisma.StringWithAggregatesFilter<"Book"> | string
   firstPublishedYear?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
-  description?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
-  ageLevel?: Prisma.EnumAgeLevelNullableWithAggregatesFilter<"Book"> | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
+  ageLevel?: Prisma.EnumAgeLevelWithAggregatesFilter<"Book"> | $Enums.AgeLevel
   spiceRating?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
   tropes?: Prisma.StringNullableListFilter<"Book">
   creatures?: Prisma.StringNullableListFilter<"Book">
   subgenres?: Prisma.StringNullableListFilter<"Book">
+  shortDescription?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
+  isStandalone?: Prisma.BoolWithAggregatesFilter<"Book"> | boolean
   seriesName?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
   seriesIndex?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
-  seriesStatus?: Prisma.EnumSeriesStatusNullableWithAggregatesFilter<"Book"> | $Enums.SeriesStatus | null
-  isbn13?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
-  googleVolumeId?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
-  openLibraryId?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
-  asin?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
-  amazonUrl?: Prisma.StringWithAggregatesFilter<"Book"> | string
-  bookshopUrl?: Prisma.StringWithAggregatesFilter<"Book"> | string
+  seriesStatus?: Prisma.EnumSeriesStatusWithAggregatesFilter<"Book"> | $Enums.SeriesStatus
   externalAvgRating?: Prisma.FloatNullableWithAggregatesFilter<"Book"> | number | null
   externalRatingCount?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
+  externalRatingSource?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
   spiceboundAvgRating?: Prisma.FloatNullableWithAggregatesFilter<"Book"> | number | null
   spiceboundRatingCount?: Prisma.IntWithAggregatesFilter<"Book"> | number
+  amazonUrl?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
+  amazonAffiliateUrl?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
+  bookshopUrl?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
+  bookshopAffiliateUrl?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Book"> | Date | string
+  updatedAt?: Prisma.DateTimeWithAggregatesFilter<"Book"> | Date | string
 }
 
 export type BookCreateInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasCreateNestedManyWithoutBookInput
   users?: Prisma.UserBookCreateNestedManyWithoutBookInput
   ratings?: Prisma.RatingCreateNestedManyWithoutBookInput
 }
@@ -556,29 +612,34 @@ export type BookCreateInput = {
 export type BookUncheckedCreateInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasUncheckedCreateNestedManyWithoutBookInput
   users?: Prisma.UserBookUncheckedCreateNestedManyWithoutBookInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutBookInput
 }
@@ -586,29 +647,34 @@ export type BookUncheckedCreateInput = {
 export type BookUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUpdateManyWithoutBookNestedInput
   users?: Prisma.UserBookUpdateManyWithoutBookNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutBookNestedInput
 }
@@ -616,29 +682,34 @@ export type BookUpdateInput = {
 export type BookUncheckedUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUncheckedUpdateManyWithoutBookNestedInput
   users?: Prisma.UserBookUncheckedUpdateManyWithoutBookNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutBookNestedInput
 }
@@ -646,85 +717,97 @@ export type BookUncheckedUpdateInput = {
 export type BookCreateManyInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
 }
 
 export type BookUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type BookUncheckedUpdateManyInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
 export type StringNullableListFilter<$PrismaModel = never> = {
@@ -738,29 +821,33 @@ export type StringNullableListFilter<$PrismaModel = never> = {
 export type BookCountOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  author?: Prisma.SortOrder
+  normalizedTitle?: Prisma.SortOrder
+  primaryAuthor?: Prisma.SortOrder
+  normalizedAuthor?: Prisma.SortOrder
   firstPublishedYear?: Prisma.SortOrder
-  description?: Prisma.SortOrder
+  coverImageUrl?: Prisma.SortOrder
   ageLevel?: Prisma.SortOrder
   spiceRating?: Prisma.SortOrder
   tropes?: Prisma.SortOrder
   creatures?: Prisma.SortOrder
   subgenres?: Prisma.SortOrder
+  shortDescription?: Prisma.SortOrder
+  isStandalone?: Prisma.SortOrder
   seriesName?: Prisma.SortOrder
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
-  isbn13?: Prisma.SortOrder
-  googleVolumeId?: Prisma.SortOrder
-  openLibraryId?: Prisma.SortOrder
-  asin?: Prisma.SortOrder
-  amazonUrl?: Prisma.SortOrder
-  bookshopUrl?: Prisma.SortOrder
   externalAvgRating?: Prisma.SortOrder
   externalRatingCount?: Prisma.SortOrder
+  externalRatingSource?: Prisma.SortOrder
   spiceboundAvgRating?: Prisma.SortOrder
   spiceboundRatingCount?: Prisma.SortOrder
+  amazonUrl?: Prisma.SortOrder
+  amazonAffiliateUrl?: Prisma.SortOrder
+  bookshopUrl?: Prisma.SortOrder
+  bookshopAffiliateUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type BookAvgOrderByAggregateInput = {
@@ -777,51 +864,59 @@ export type BookAvgOrderByAggregateInput = {
 export type BookMaxOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  author?: Prisma.SortOrder
+  normalizedTitle?: Prisma.SortOrder
+  primaryAuthor?: Prisma.SortOrder
+  normalizedAuthor?: Prisma.SortOrder
   firstPublishedYear?: Prisma.SortOrder
-  description?: Prisma.SortOrder
+  coverImageUrl?: Prisma.SortOrder
   ageLevel?: Prisma.SortOrder
   spiceRating?: Prisma.SortOrder
+  shortDescription?: Prisma.SortOrder
+  isStandalone?: Prisma.SortOrder
   seriesName?: Prisma.SortOrder
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
-  isbn13?: Prisma.SortOrder
-  googleVolumeId?: Prisma.SortOrder
-  openLibraryId?: Prisma.SortOrder
-  asin?: Prisma.SortOrder
-  amazonUrl?: Prisma.SortOrder
-  bookshopUrl?: Prisma.SortOrder
   externalAvgRating?: Prisma.SortOrder
   externalRatingCount?: Prisma.SortOrder
+  externalRatingSource?: Prisma.SortOrder
   spiceboundAvgRating?: Prisma.SortOrder
   spiceboundRatingCount?: Prisma.SortOrder
+  amazonUrl?: Prisma.SortOrder
+  amazonAffiliateUrl?: Prisma.SortOrder
+  bookshopUrl?: Prisma.SortOrder
+  bookshopAffiliateUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type BookMinOrderByAggregateInput = {
   id?: Prisma.SortOrder
   title?: Prisma.SortOrder
-  author?: Prisma.SortOrder
+  normalizedTitle?: Prisma.SortOrder
+  primaryAuthor?: Prisma.SortOrder
+  normalizedAuthor?: Prisma.SortOrder
   firstPublishedYear?: Prisma.SortOrder
-  description?: Prisma.SortOrder
+  coverImageUrl?: Prisma.SortOrder
   ageLevel?: Prisma.SortOrder
   spiceRating?: Prisma.SortOrder
+  shortDescription?: Prisma.SortOrder
+  isStandalone?: Prisma.SortOrder
   seriesName?: Prisma.SortOrder
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
-  isbn13?: Prisma.SortOrder
-  googleVolumeId?: Prisma.SortOrder
-  openLibraryId?: Prisma.SortOrder
-  asin?: Prisma.SortOrder
-  amazonUrl?: Prisma.SortOrder
-  bookshopUrl?: Prisma.SortOrder
   externalAvgRating?: Prisma.SortOrder
   externalRatingCount?: Prisma.SortOrder
+  externalRatingSource?: Prisma.SortOrder
   spiceboundAvgRating?: Prisma.SortOrder
   spiceboundRatingCount?: Prisma.SortOrder
+  amazonUrl?: Prisma.SortOrder
+  amazonAffiliateUrl?: Prisma.SortOrder
+  bookshopUrl?: Prisma.SortOrder
+  bookshopAffiliateUrl?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
+  updatedAt?: Prisma.SortOrder
 }
 
 export type BookSumOrderByAggregateInput = {
@@ -860,8 +955,8 @@ export type NullableIntFieldUpdateOperationsInput = {
   divide?: number
 }
 
-export type NullableEnumAgeLevelFieldUpdateOperationsInput = {
-  set?: $Enums.AgeLevel | null
+export type EnumAgeLevelFieldUpdateOperationsInput = {
+  set?: $Enums.AgeLevel
 }
 
 export type BookUpdatetropesInput = {
@@ -879,8 +974,12 @@ export type BookUpdatesubgenresInput = {
   push?: string | string[]
 }
 
-export type NullableEnumSeriesStatusFieldUpdateOperationsInput = {
-  set?: $Enums.SeriesStatus | null
+export type BoolFieldUpdateOperationsInput = {
+  set?: boolean
+}
+
+export type EnumSeriesStatusFieldUpdateOperationsInput = {
+  set?: $Enums.SeriesStatus
 }
 
 export type NullableFloatFieldUpdateOperationsInput = {
@@ -897,6 +996,20 @@ export type IntFieldUpdateOperationsInput = {
   decrement?: number
   multiply?: number
   divide?: number
+}
+
+export type BookCreateNestedOneWithoutAliasesInput = {
+  create?: Prisma.XOR<Prisma.BookCreateWithoutAliasesInput, Prisma.BookUncheckedCreateWithoutAliasesInput>
+  connectOrCreate?: Prisma.BookCreateOrConnectWithoutAliasesInput
+  connect?: Prisma.BookWhereUniqueInput
+}
+
+export type BookUpdateOneRequiredWithoutAliasesNestedInput = {
+  create?: Prisma.XOR<Prisma.BookCreateWithoutAliasesInput, Prisma.BookUncheckedCreateWithoutAliasesInput>
+  connectOrCreate?: Prisma.BookCreateOrConnectWithoutAliasesInput
+  upsert?: Prisma.BookUpsertWithoutAliasesInput
+  connect?: Prisma.BookWhereUniqueInput
+  update?: Prisma.XOR<Prisma.XOR<Prisma.BookUpdateToOneWithWhereWithoutAliasesInput, Prisma.BookUpdateWithoutAliasesInput>, Prisma.BookUncheckedUpdateWithoutAliasesInput>
 }
 
 export type BookCreateNestedOneWithoutUsersInput = {
@@ -927,61 +1040,223 @@ export type BookUpdateOneRequiredWithoutRatingsNestedInput = {
   update?: Prisma.XOR<Prisma.XOR<Prisma.BookUpdateToOneWithWhereWithoutRatingsInput, Prisma.BookUpdateWithoutRatingsInput>, Prisma.BookUncheckedUpdateWithoutRatingsInput>
 }
 
-export type BookCreateWithoutUsersInput = {
+export type BookCreateWithoutAliasesInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserBookCreateNestedManyWithoutBookInput
+  ratings?: Prisma.RatingCreateNestedManyWithoutBookInput
+}
+
+export type BookUncheckedCreateWithoutAliasesInput = {
+  id?: string
+  title: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
+  firstPublishedYear?: number | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
+  spiceRating?: number | null
+  tropes?: Prisma.BookCreatetropesInput | string[]
+  creatures?: Prisma.BookCreatecreaturesInput | string[]
+  subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
+  seriesName?: string | null
+  seriesIndex?: number | null
+  seriesTotal?: number | null
+  seriesStatus?: $Enums.SeriesStatus
+  externalAvgRating?: number | null
+  externalRatingCount?: number | null
+  externalRatingSource?: string | null
+  spiceboundAvgRating?: number | null
+  spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  users?: Prisma.UserBookUncheckedCreateNestedManyWithoutBookInput
+  ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutBookInput
+}
+
+export type BookCreateOrConnectWithoutAliasesInput = {
+  where: Prisma.BookWhereUniqueInput
+  create: Prisma.XOR<Prisma.BookCreateWithoutAliasesInput, Prisma.BookUncheckedCreateWithoutAliasesInput>
+}
+
+export type BookUpsertWithoutAliasesInput = {
+  update: Prisma.XOR<Prisma.BookUpdateWithoutAliasesInput, Prisma.BookUncheckedUpdateWithoutAliasesInput>
+  create: Prisma.XOR<Prisma.BookCreateWithoutAliasesInput, Prisma.BookUncheckedCreateWithoutAliasesInput>
+  where?: Prisma.BookWhereInput
+}
+
+export type BookUpdateToOneWithWhereWithoutAliasesInput = {
+  where?: Prisma.BookWhereInput
+  data: Prisma.XOR<Prisma.BookUpdateWithoutAliasesInput, Prisma.BookUncheckedUpdateWithoutAliasesInput>
+}
+
+export type BookUpdateWithoutAliasesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
+  spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tropes?: Prisma.BookUpdatetropesInput | string[]
+  creatures?: Prisma.BookUpdatecreaturesInput | string[]
+  subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserBookUpdateManyWithoutBookNestedInput
+  ratings?: Prisma.RatingUpdateManyWithoutBookNestedInput
+}
+
+export type BookUncheckedUpdateWithoutAliasesInput = {
+  id?: Prisma.StringFieldUpdateOperationsInput | string
+  title?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
+  spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  tropes?: Prisma.BookUpdatetropesInput | string[]
+  creatures?: Prisma.BookUpdatecreaturesInput | string[]
+  subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
+  seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
+  spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  users?: Prisma.UserBookUncheckedUpdateManyWithoutBookNestedInput
+  ratings?: Prisma.RatingUncheckedUpdateManyWithoutBookNestedInput
+}
+
+export type BookCreateWithoutUsersInput = {
+  id?: string
+  title: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
+  firstPublishedYear?: number | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
+  spiceRating?: number | null
+  tropes?: Prisma.BookCreatetropesInput | string[]
+  creatures?: Prisma.BookCreatecreaturesInput | string[]
+  subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
+  seriesName?: string | null
+  seriesIndex?: number | null
+  seriesTotal?: number | null
+  seriesStatus?: $Enums.SeriesStatus
+  externalAvgRating?: number | null
+  externalRatingCount?: number | null
+  externalRatingSource?: string | null
+  spiceboundAvgRating?: number | null
+  spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
+  createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasCreateNestedManyWithoutBookInput
   ratings?: Prisma.RatingCreateNestedManyWithoutBookInput
 }
 
 export type BookUncheckedCreateWithoutUsersInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasUncheckedCreateNestedManyWithoutBookInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutBookInput
 }
 
@@ -1004,116 +1279,136 @@ export type BookUpdateToOneWithWhereWithoutUsersInput = {
 export type BookUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUpdateManyWithoutBookNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutBookNestedInput
 }
 
 export type BookUncheckedUpdateWithoutUsersInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUncheckedUpdateManyWithoutBookNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutBookNestedInput
 }
 
 export type BookCreateWithoutRatingsInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasCreateNestedManyWithoutBookInput
   users?: Prisma.UserBookCreateNestedManyWithoutBookInput
 }
 
 export type BookUncheckedCreateWithoutRatingsInput = {
   id?: string
   title: string
-  author: string
+  normalizedTitle: string
+  primaryAuthor: string
+  normalizedAuthor: string
   firstPublishedYear?: number | null
-  description?: string | null
-  ageLevel?: $Enums.AgeLevel | null
+  coverImageUrl?: string | null
+  ageLevel?: $Enums.AgeLevel
   spiceRating?: number | null
   tropes?: Prisma.BookCreatetropesInput | string[]
   creatures?: Prisma.BookCreatecreaturesInput | string[]
   subgenres?: Prisma.BookCreatesubgenresInput | string[]
+  shortDescription?: string | null
+  isStandalone?: boolean
   seriesName?: string | null
   seriesIndex?: number | null
   seriesTotal?: number | null
-  seriesStatus?: $Enums.SeriesStatus | null
-  isbn13?: string | null
-  googleVolumeId?: string | null
-  openLibraryId?: string | null
-  asin?: string | null
-  amazonUrl: string
-  bookshopUrl: string
+  seriesStatus?: $Enums.SeriesStatus
   externalAvgRating?: number | null
   externalRatingCount?: number | null
+  externalRatingSource?: string | null
   spiceboundAvgRating?: number | null
   spiceboundRatingCount?: number
+  amazonUrl?: string | null
+  amazonAffiliateUrl?: string | null
+  bookshopUrl?: string | null
+  bookshopAffiliateUrl?: string | null
   createdAt?: Date | string
+  updatedAt?: Date | string
+  aliases?: Prisma.BookAliasUncheckedCreateNestedManyWithoutBookInput
   users?: Prisma.UserBookUncheckedCreateNestedManyWithoutBookInput
 }
 
@@ -1136,58 +1431,68 @@ export type BookUpdateToOneWithWhereWithoutRatingsInput = {
 export type BookUpdateWithoutRatingsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUpdateManyWithoutBookNestedInput
   users?: Prisma.UserBookUpdateManyWithoutBookNestedInput
 }
 
 export type BookUncheckedUpdateWithoutRatingsInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   title?: Prisma.StringFieldUpdateOperationsInput | string
-  author?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedTitle?: Prisma.StringFieldUpdateOperationsInput | string
+  primaryAuthor?: Prisma.StringFieldUpdateOperationsInput | string
+  normalizedAuthor?: Prisma.StringFieldUpdateOperationsInput | string
   firstPublishedYear?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  description?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  ageLevel?: Prisma.NullableEnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel | null
+  coverImageUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  ageLevel?: Prisma.EnumAgeLevelFieldUpdateOperationsInput | $Enums.AgeLevel
   spiceRating?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   tropes?: Prisma.BookUpdatetropesInput | string[]
   creatures?: Prisma.BookUpdatecreaturesInput | string[]
   subgenres?: Prisma.BookUpdatesubgenresInput | string[]
+  shortDescription?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  isStandalone?: Prisma.BoolFieldUpdateOperationsInput | boolean
   seriesName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
-  seriesStatus?: Prisma.NullableEnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus | null
-  isbn13?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  googleVolumeId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  openLibraryId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  asin?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
-  amazonUrl?: Prisma.StringFieldUpdateOperationsInput | string
-  bookshopUrl?: Prisma.StringFieldUpdateOperationsInput | string
+  seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
   externalAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   externalRatingCount?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
+  externalRatingSource?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   spiceboundAvgRating?: Prisma.NullableFloatFieldUpdateOperationsInput | number | null
   spiceboundRatingCount?: Prisma.IntFieldUpdateOperationsInput | number
+  amazonUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  amazonAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  bookshopAffiliateUrl?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
+  aliases?: Prisma.BookAliasUncheckedUpdateManyWithoutBookNestedInput
   users?: Prisma.UserBookUncheckedUpdateManyWithoutBookNestedInput
 }
 
@@ -1197,11 +1502,13 @@ export type BookUncheckedUpdateWithoutRatingsInput = {
  */
 
 export type BookCountOutputType = {
+  aliases: number
   users: number
   ratings: number
 }
 
 export type BookCountOutputTypeSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  aliases?: boolean | BookCountOutputTypeCountAliasesArgs
   users?: boolean | BookCountOutputTypeCountUsersArgs
   ratings?: boolean | BookCountOutputTypeCountRatingsArgs
 }
@@ -1214,6 +1521,13 @@ export type BookCountOutputTypeDefaultArgs<ExtArgs extends runtime.Types.Extensi
    * Select specific fields to fetch from the BookCountOutputType
    */
   select?: Prisma.BookCountOutputTypeSelect<ExtArgs> | null
+}
+
+/**
+ * BookCountOutputType without action
+ */
+export type BookCountOutputTypeCountAliasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  where?: Prisma.BookAliasWhereInput
 }
 
 /**
@@ -1234,29 +1548,34 @@ export type BookCountOutputTypeCountRatingsArgs<ExtArgs extends runtime.Types.Ex
 export type BookSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   title?: boolean
-  author?: boolean
+  normalizedTitle?: boolean
+  primaryAuthor?: boolean
+  normalizedAuthor?: boolean
   firstPublishedYear?: boolean
-  description?: boolean
+  coverImageUrl?: boolean
   ageLevel?: boolean
   spiceRating?: boolean
   tropes?: boolean
   creatures?: boolean
   subgenres?: boolean
+  shortDescription?: boolean
+  isStandalone?: boolean
   seriesName?: boolean
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
-  isbn13?: boolean
-  googleVolumeId?: boolean
-  openLibraryId?: boolean
-  asin?: boolean
-  amazonUrl?: boolean
-  bookshopUrl?: boolean
   externalAvgRating?: boolean
   externalRatingCount?: boolean
+  externalRatingSource?: boolean
   spiceboundAvgRating?: boolean
   spiceboundRatingCount?: boolean
+  amazonUrl?: boolean
+  amazonAffiliateUrl?: boolean
+  bookshopUrl?: boolean
+  bookshopAffiliateUrl?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
+  aliases?: boolean | Prisma.Book$aliasesArgs<ExtArgs>
   users?: boolean | Prisma.Book$usersArgs<ExtArgs>
   ratings?: boolean | Prisma.Book$ratingsArgs<ExtArgs>
   _count?: boolean | Prisma.BookCountOutputTypeDefaultArgs<ExtArgs>
@@ -1265,89 +1584,102 @@ export type BookSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
 export type BookSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   title?: boolean
-  author?: boolean
+  normalizedTitle?: boolean
+  primaryAuthor?: boolean
+  normalizedAuthor?: boolean
   firstPublishedYear?: boolean
-  description?: boolean
+  coverImageUrl?: boolean
   ageLevel?: boolean
   spiceRating?: boolean
   tropes?: boolean
   creatures?: boolean
   subgenres?: boolean
+  shortDescription?: boolean
+  isStandalone?: boolean
   seriesName?: boolean
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
-  isbn13?: boolean
-  googleVolumeId?: boolean
-  openLibraryId?: boolean
-  asin?: boolean
-  amazonUrl?: boolean
-  bookshopUrl?: boolean
   externalAvgRating?: boolean
   externalRatingCount?: boolean
+  externalRatingSource?: boolean
   spiceboundAvgRating?: boolean
   spiceboundRatingCount?: boolean
+  amazonUrl?: boolean
+  amazonAffiliateUrl?: boolean
+  bookshopUrl?: boolean
+  bookshopAffiliateUrl?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["book"]>
 
 export type BookSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetSelect<{
   id?: boolean
   title?: boolean
-  author?: boolean
+  normalizedTitle?: boolean
+  primaryAuthor?: boolean
+  normalizedAuthor?: boolean
   firstPublishedYear?: boolean
-  description?: boolean
+  coverImageUrl?: boolean
   ageLevel?: boolean
   spiceRating?: boolean
   tropes?: boolean
   creatures?: boolean
   subgenres?: boolean
+  shortDescription?: boolean
+  isStandalone?: boolean
   seriesName?: boolean
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
-  isbn13?: boolean
-  googleVolumeId?: boolean
-  openLibraryId?: boolean
-  asin?: boolean
-  amazonUrl?: boolean
-  bookshopUrl?: boolean
   externalAvgRating?: boolean
   externalRatingCount?: boolean
+  externalRatingSource?: boolean
   spiceboundAvgRating?: boolean
   spiceboundRatingCount?: boolean
+  amazonUrl?: boolean
+  amazonAffiliateUrl?: boolean
+  bookshopUrl?: boolean
+  bookshopAffiliateUrl?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }, ExtArgs["result"]["book"]>
 
 export type BookSelectScalar = {
   id?: boolean
   title?: boolean
-  author?: boolean
+  normalizedTitle?: boolean
+  primaryAuthor?: boolean
+  normalizedAuthor?: boolean
   firstPublishedYear?: boolean
-  description?: boolean
+  coverImageUrl?: boolean
   ageLevel?: boolean
   spiceRating?: boolean
   tropes?: boolean
   creatures?: boolean
   subgenres?: boolean
+  shortDescription?: boolean
+  isStandalone?: boolean
   seriesName?: boolean
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
-  isbn13?: boolean
-  googleVolumeId?: boolean
-  openLibraryId?: boolean
-  asin?: boolean
-  amazonUrl?: boolean
-  bookshopUrl?: boolean
   externalAvgRating?: boolean
   externalRatingCount?: boolean
+  externalRatingSource?: boolean
   spiceboundAvgRating?: boolean
   spiceboundRatingCount?: boolean
+  amazonUrl?: boolean
+  amazonAffiliateUrl?: boolean
+  bookshopUrl?: boolean
+  bookshopAffiliateUrl?: boolean
   createdAt?: boolean
+  updatedAt?: boolean
 }
 
-export type BookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "author" | "firstPublishedYear" | "description" | "ageLevel" | "spiceRating" | "tropes" | "creatures" | "subgenres" | "seriesName" | "seriesIndex" | "seriesTotal" | "seriesStatus" | "isbn13" | "googleVolumeId" | "openLibraryId" | "asin" | "amazonUrl" | "bookshopUrl" | "externalAvgRating" | "externalRatingCount" | "spiceboundAvgRating" | "spiceboundRatingCount" | "createdAt", ExtArgs["result"]["book"]>
+export type BookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "normalizedTitle" | "primaryAuthor" | "normalizedAuthor" | "firstPublishedYear" | "coverImageUrl" | "ageLevel" | "spiceRating" | "tropes" | "creatures" | "subgenres" | "shortDescription" | "isStandalone" | "seriesName" | "seriesIndex" | "seriesTotal" | "seriesStatus" | "externalAvgRating" | "externalRatingCount" | "externalRatingSource" | "spiceboundAvgRating" | "spiceboundRatingCount" | "amazonUrl" | "amazonAffiliateUrl" | "bookshopUrl" | "bookshopAffiliateUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["book"]>
 export type BookInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  aliases?: boolean | Prisma.Book$aliasesArgs<ExtArgs>
   users?: boolean | Prisma.Book$usersArgs<ExtArgs>
   ratings?: boolean | Prisma.Book$ratingsArgs<ExtArgs>
   _count?: boolean | Prisma.BookCountOutputTypeDefaultArgs<ExtArgs>
@@ -1358,35 +1690,40 @@ export type BookIncludeUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
 export type $BookPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   name: "Book"
   objects: {
+    aliases: Prisma.$BookAliasPayload<ExtArgs>[]
     users: Prisma.$UserBookPayload<ExtArgs>[]
     ratings: Prisma.$RatingPayload<ExtArgs>[]
   }
   scalars: runtime.Types.Extensions.GetPayloadResult<{
     id: string
     title: string
-    author: string
+    normalizedTitle: string
+    primaryAuthor: string
+    normalizedAuthor: string
     firstPublishedYear: number | null
-    description: string | null
-    ageLevel: $Enums.AgeLevel | null
+    coverImageUrl: string | null
+    ageLevel: $Enums.AgeLevel
     spiceRating: number | null
     tropes: string[]
     creatures: string[]
     subgenres: string[]
+    shortDescription: string | null
+    isStandalone: boolean
     seriesName: string | null
     seriesIndex: number | null
     seriesTotal: number | null
-    seriesStatus: $Enums.SeriesStatus | null
-    isbn13: string | null
-    googleVolumeId: string | null
-    openLibraryId: string | null
-    asin: string | null
-    amazonUrl: string
-    bookshopUrl: string
+    seriesStatus: $Enums.SeriesStatus
     externalAvgRating: number | null
     externalRatingCount: number | null
+    externalRatingSource: string | null
     spiceboundAvgRating: number | null
     spiceboundRatingCount: number
+    amazonUrl: string | null
+    amazonAffiliateUrl: string | null
+    bookshopUrl: string | null
+    bookshopAffiliateUrl: string | null
     createdAt: Date
+    updatedAt: Date
   }, ExtArgs["result"]["book"]>
   composites: {}
 }
@@ -1781,6 +2118,7 @@ readonly fields: BookFieldRefs;
  */
 export interface Prisma__BookClient<T, Null = never, ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
   readonly [Symbol.toStringTag]: "PrismaPromise"
+  aliases<T extends Prisma.Book$aliasesArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Book$aliasesArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$BookAliasPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   users<T extends Prisma.Book$usersArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Book$usersArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$UserBookPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   ratings<T extends Prisma.Book$ratingsArgs<ExtArgs> = {}>(args?: Prisma.Subset<T, Prisma.Book$ratingsArgs<ExtArgs>>): Prisma.PrismaPromise<runtime.Types.Result.GetResult<Prisma.$RatingPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
   /**
@@ -1814,29 +2152,33 @@ export interface Prisma__BookClient<T, Null = never, ExtArgs extends runtime.Typ
 export interface BookFieldRefs {
   readonly id: Prisma.FieldRef<"Book", 'String'>
   readonly title: Prisma.FieldRef<"Book", 'String'>
-  readonly author: Prisma.FieldRef<"Book", 'String'>
+  readonly normalizedTitle: Prisma.FieldRef<"Book", 'String'>
+  readonly primaryAuthor: Prisma.FieldRef<"Book", 'String'>
+  readonly normalizedAuthor: Prisma.FieldRef<"Book", 'String'>
   readonly firstPublishedYear: Prisma.FieldRef<"Book", 'Int'>
-  readonly description: Prisma.FieldRef<"Book", 'String'>
+  readonly coverImageUrl: Prisma.FieldRef<"Book", 'String'>
   readonly ageLevel: Prisma.FieldRef<"Book", 'AgeLevel'>
   readonly spiceRating: Prisma.FieldRef<"Book", 'Int'>
   readonly tropes: Prisma.FieldRef<"Book", 'String[]'>
   readonly creatures: Prisma.FieldRef<"Book", 'String[]'>
   readonly subgenres: Prisma.FieldRef<"Book", 'String[]'>
+  readonly shortDescription: Prisma.FieldRef<"Book", 'String'>
+  readonly isStandalone: Prisma.FieldRef<"Book", 'Boolean'>
   readonly seriesName: Prisma.FieldRef<"Book", 'String'>
   readonly seriesIndex: Prisma.FieldRef<"Book", 'Int'>
   readonly seriesTotal: Prisma.FieldRef<"Book", 'Int'>
   readonly seriesStatus: Prisma.FieldRef<"Book", 'SeriesStatus'>
-  readonly isbn13: Prisma.FieldRef<"Book", 'String'>
-  readonly googleVolumeId: Prisma.FieldRef<"Book", 'String'>
-  readonly openLibraryId: Prisma.FieldRef<"Book", 'String'>
-  readonly asin: Prisma.FieldRef<"Book", 'String'>
-  readonly amazonUrl: Prisma.FieldRef<"Book", 'String'>
-  readonly bookshopUrl: Prisma.FieldRef<"Book", 'String'>
   readonly externalAvgRating: Prisma.FieldRef<"Book", 'Float'>
   readonly externalRatingCount: Prisma.FieldRef<"Book", 'Int'>
+  readonly externalRatingSource: Prisma.FieldRef<"Book", 'String'>
   readonly spiceboundAvgRating: Prisma.FieldRef<"Book", 'Float'>
   readonly spiceboundRatingCount: Prisma.FieldRef<"Book", 'Int'>
+  readonly amazonUrl: Prisma.FieldRef<"Book", 'String'>
+  readonly amazonAffiliateUrl: Prisma.FieldRef<"Book", 'String'>
+  readonly bookshopUrl: Prisma.FieldRef<"Book", 'String'>
+  readonly bookshopAffiliateUrl: Prisma.FieldRef<"Book", 'String'>
   readonly createdAt: Prisma.FieldRef<"Book", 'DateTime'>
+  readonly updatedAt: Prisma.FieldRef<"Book", 'DateTime'>
 }
     
 
@@ -2222,6 +2564,30 @@ export type BookDeleteManyArgs<ExtArgs extends runtime.Types.Extensions.Internal
    * Limit how many Books to delete.
    */
   limit?: number
+}
+
+/**
+ * Book.aliases
+ */
+export type Book$aliasesArgs<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
+  /**
+   * Select specific fields to fetch from the BookAlias
+   */
+  select?: Prisma.BookAliasSelect<ExtArgs> | null
+  /**
+   * Omit specific fields from the BookAlias
+   */
+  omit?: Prisma.BookAliasOmit<ExtArgs> | null
+  /**
+   * Choose, which related nodes to fetch as well
+   */
+  include?: Prisma.BookAliasInclude<ExtArgs> | null
+  where?: Prisma.BookAliasWhereInput
+  orderBy?: Prisma.BookAliasOrderByWithRelationInput | Prisma.BookAliasOrderByWithRelationInput[]
+  cursor?: Prisma.BookAliasWhereUniqueInput
+  take?: number
+  skip?: number
+  distinct?: Prisma.BookAliasScalarFieldEnum | Prisma.BookAliasScalarFieldEnum[]
 }
 
 /**

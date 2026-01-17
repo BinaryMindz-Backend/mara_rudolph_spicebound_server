@@ -10,6 +10,7 @@
  */
 export type * from './models/User.js'
 export type * from './models/Book.js'
+export type * from './models/BookAlias.js'
 export type * from './models/UserBook.js'
 export type * from './models/Rating.js'
 export type * from './models/Subscription.js'
