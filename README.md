@@ -1,98 +1,180 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+BookSlip module does ONE thing:
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+Take anything the user gives → normalize → find or create a canonical book → return a Book Slip
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Think of it as:
 
-## Description
+User Input
+   ↓
+Input Classification
+   ↓
+External Book Discovery
+   ↓
+Canonical Merge
+   ↓
+Reuse or Create Book
+   ↓
+Structured Book Slip
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
 
-```bash
-$ npm install
-```
 
-## Compile and run the project
 
-```bash
-# development
-$ npm run start
 
-# watch mode
-$ npm run start:dev
 
-# production mode
-$ npm run start:prod
-```
 
-## Run tests
 
-```bash
-# unit tests
-$ npm run test
+Exact Runtime Flow (Step-by-Step)
 
-# e2e tests
-$ npm run test:e2e
+Let’s walk through what happens when this endpoint is hit.
 
-# test coverage
-$ npm run test:cov
-```
+🔹 STEP 1: Request hits controller
 
-## Deployment
+Example request:
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+POST /book-slip/discover
+Content-Type: application/json
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+{
+  "input": "Fourth Wing by Rebecca Yarros"
+}
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Controller calls:
 
-## Resources
+return this.bookSlipService.discoverBook(dto.input);
 
-Check out a few resources that may come in handy when working with NestJS:
+🔹 STEP 2: Input type detection
+const inputType = detectInputType(input);
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
 
-## Support
+This function checks:
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+Input	Detected As
+Amazon URL	AMAZON_URL
+Google Books URL	GOOGLE_BOOKS_URL
+OpenLibrary URL	OPEN_LIBRARY_URL
+Anything else	TEXT
 
-## Stay in touch
+Why this matters:
+Different input types require different fetch strategies.
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+🔹 STEP 3: ASIN extraction (only for Amazon)
+if (inputType === InputType.AMAZON_URL) {
+  asin = extractAsin(input);
+}
 
-## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Example:
+
+https://www.amazon.com/dp/B0B6K7ZJ5P
+→ asin = B0B6K7ZJ5P
+
+
+⚠️ Amazon does not give book metadata
+ASIN is used only for lookup + affiliate links
+
+🔹 STEP 4: External book discovery
+Case A — Google Books URL
+googleData = await googleBooks.fetchByVolumeId(input);
+
+Case B — Open Library URL
+openLibraryData = await openLibrary.fetchById(input);
+
+Case C — Plain text (MOST COMMON)
+googleData = await googleBooks.search(input);
+openLibraryData = await openLibrary.search(input);
+
+
+You now have:
+
+Google’s version of the book
+
+Open Library’s version of the book
+
+Both may be partial or conflicting.
+
+🔹 STEP 5: Merge external data (CRITICAL STEP)
+const merged = mergeExternalData(googleData, openLibraryData);
+
+
+This function:
+
+Picks the best title
+
+Picks the best author
+
+Normalizes ISBN
+
+Chooses strongest description
+
+Chooses best rating
+
+Result:
+
+{
+  title: "Fourth Wing",
+  author: "Rebecca Yarros",
+  isbn13: "9781649374042",
+  publishedYear: 2023,
+  description: "...",
+  externalAvgRating: 4.6,
+  externalRatingCount: 120000
+}
+
+
+This is your canonical external truth.
+
+🔹 STEP 6: Validate identity (hard stop)
+if (!merged.title || !merged.author) {
+  throw new Error('Unable to resolve book identity');
+}
+
+
+Why?
+
+Without title + author, a book is meaningless
+
+Prevents polluted DB entries
+
+🔹 STEP 7: Reuse existing book (deduplication)
+const existingBook = await prisma.book.findFirst(...)
+
+
+You are checking:
+
+Same ISBN
+
+Same Google Volume ID
+
+Same Open Library ID
+
+Same ASIN
+
+If found:
+return buildSlip(existingBook, false);
+
+
+🟢 No duplication
+🟢 Faster response
+🟢 Same canonical ID
+
+🔹 STEP 8: Create canonical book (only if new)
+await prisma.book.create(...)
+
+
+Important things happening here:
+
+You normalize title & author
+
+You store external ratings
+
+You intentionally do NOT enrich yet
+
+This is correct architecture.
+
+🔹 STEP 9: Build Book Slip response
+return buildSlip(book, true);
+
+
+This returns a frontend-ready object, not a raw DB row.
