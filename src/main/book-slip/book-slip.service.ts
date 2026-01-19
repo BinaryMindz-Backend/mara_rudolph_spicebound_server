@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 
 import { GoogleBooksProvider } from './providers/google-books.provider.js';
@@ -9,15 +9,8 @@ import { detectInputType } from './utils/input-detector.js';
 import { extractAsin } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
 
-import {
-  ExternalBookData,
-  InputType,
-} from './types/book-source.types.js';
+import { ExternalBookData, InputType } from './types/book-source.types.js';
 
-/**
- * Very small helper – keep local for now
- * (later can move to shared utils)
- */
 function normalizeText(value: string): string {
   return value
     .toLowerCase()
@@ -28,78 +21,71 @@ function normalizeText(value: string): string {
 
 @Injectable()
 export class BookSlipService {
+  private readonly logger = new Logger(BookSlipService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly googleBooks: GoogleBooksProvider,
     private readonly openLibrary: OpenLibraryProvider,
-  ) { }
+  ) {}
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
+    this.logger.log(`🔹 discoverBook called with input: ${input}`);
     const inputType = detectInputType(input);
+    this.logger.log(`🔹 Detected input type: ${inputType}`);
 
     let googleData: ExternalBookData | undefined;
-    let openLibraryData: ExternalBookData | undefined;
+    let openLibraryData: ExternalBookData | null | undefined;
     let asin: string | undefined;
 
-    /**
-     * 1️⃣ Extract ASIN if Amazon URL
-     */
+    // 1️⃣ Extract ASIN if Amazon URL
     if (inputType === InputType.AMAZON_URL) {
       asin = extractAsin(input) ?? undefined;
+      this.logger.log(`🔹 Extracted ASIN: ${asin}`);
     }
 
-    /**
-     * 2️⃣ Fetch external metadata
-     */
+    // 2️⃣ Fetch external metadata
     if (inputType === InputType.GOOGLE_BOOKS_URL) {
-      googleData =
-        (await this.googleBooks.fetchByVolumeId(input)) ?? undefined;
+      googleData = await this.googleBooks.fetchByVolumeId(input);
+      this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId output:', googleData);
     } else if (inputType === InputType.OPEN_LIBRARY_URL) {
-      openLibraryData =
-        (await this.openLibrary.fetchById(input)) ?? undefined;
+      openLibraryData = await this.openLibrary.fetchById(input);
+      this.logger.log('🔹 OpenLibraryProvider.fetchById output:', openLibraryData);
     } else {
-      googleData =
-        (await this.googleBooks.search(input)) ?? undefined;
+      googleData = await this.googleBooks.search(input);
+      this.logger.log('🔹 GoogleBooksProvider.search output:', googleData);
 
-      openLibraryData =
-        (await this.openLibrary.search(input)) ?? undefined;
+      openLibraryData = await this.openLibrary.search(input);
+      this.logger.log('🔹 OpenLibraryProvider.search output:', openLibraryData);
     }
 
-    /**
-     * 3️⃣ Merge external sources
-     */
-    const merged = mergeExternalData(googleData, openLibraryData);
+    // 3️⃣ Merge external sources
+    const merged = mergeExternalData(googleData,);
+    this.logger.log('🔹 Merged external book data:', merged);
 
     if (!merged.title || !merged.author) {
+      this.logger.error('⚠️ Merged data missing title or author:', merged);
       throw new Error('Unable to resolve book identity');
     }
 
     const normalizedTitle = normalizeText(merged.title);
     const normalizedAuthor = normalizeText(merged.author);
 
-    /**
-     * 4️⃣ Try reuse existing canonical book
-     * (Correct approach for your schema)
-     */
+    // 4️⃣ Check if canonical book already exists
     const existingBook = await this.prisma.book.findFirst({
       where: {
         normalizedTitle,
         normalizedAuthor,
       },
     });
-
     if (existingBook) {
+      this.logger.log('🔹 Found existing book in DB:', existingBook.id);
       return this.buildSlip(existingBook, false);
     }
 
-    /**
-     * 5️⃣ TODO: AI enrichment step
-     * (ageLevel, spiceRating, tropes, etc.)
-     */
+    // 5️⃣ TODO: AI enrichment (ageLevel, spiceRating, tropes, creatures, subgenres)
 
-    /**
-     * 6️⃣ Create canonical Book
-     */
+    // 6️⃣ Create canonical Book
     const book = await this.prisma.book.create({
       data: {
         title: merged.title,
@@ -115,12 +101,9 @@ export class BookSlipService {
         externalRatingCount: merged.externalRatingCount ?? null,
       },
     });
+    this.logger.log('🔹 Created new book with ID:', book.id);
 
-
-    /**
-     * 7️⃣ Alias creation (safe + optional)
-     * This matches your schema design philosophy
-     */
+    // 7️⃣ Create aliases if available
     const aliases = [
       merged.isbn13 && {
         bookId: book.id,
@@ -149,15 +132,12 @@ export class BookSlipService {
         data: aliases as any,
         skipDuplicates: true,
       });
+      this.logger.log('🔹 Created aliases:', aliases);
     }
 
     return this.buildSlip(book, true);
   }
 
-  /**
-   * Response mapper
-   * (ONLY expose fields that exist in schema)
-   */
   private buildSlip(book: any, created: boolean): BookSlipResponse {
     return {
       bookId: book.id,
@@ -174,11 +154,11 @@ export class BookSlipService {
 
       series: book.seriesName
         ? {
-          name: book.seriesName,
-          index: book.seriesIndex,
-          total: book.seriesTotal,
-          status: book.seriesStatus,
-        }
+            name: book.seriesName,
+            index: book.seriesIndex,
+            total: book.seriesTotal,
+            status: book.seriesStatus,
+          }
         : undefined,
 
       externalRatings: {

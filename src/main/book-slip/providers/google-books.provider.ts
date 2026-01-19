@@ -9,11 +9,13 @@ export class GoogleBooksProvider {
   async search(query: string): Promise<ExternalBookData | undefined> {
     try {
       const url = `${this.baseUrl}?q=${encodeURIComponent(query)}&maxResults=1&key=${process.env.GOOGLE_BOOKS_KEY}`;
+      console.log(url)
 
       const res = await fetch(url);
       if (!res.ok) return undefined;
 
       const data = await res.json();
+      console.log(data)
       if (!data.items?.length) return undefined;
 
       return this.mapVolumeToExternalData(data.items[0]);
