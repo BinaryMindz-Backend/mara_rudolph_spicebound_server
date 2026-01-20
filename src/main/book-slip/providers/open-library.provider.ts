@@ -4,7 +4,7 @@ import { ExternalBookData } from '../types/book-source.types.js';
 @Injectable()
 export class OpenLibraryProvider {
   private readonly logger = new Logger(OpenLibraryProvider.name);
-
+   private readonly baseUrl = 'https://openlibrary.org/search.json';
   /**
    * Search Open Library by title/author
    */

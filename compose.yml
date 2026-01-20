@@ -10,9 +10,20 @@ services:
       POSTGRES_PASSWORD: spicebound123
       POSTGRES_DB: spicebound_db
     ports:
-      - "5435:5432"
+      - "5434:5432"
     volumes:
       - spicebound_pgdata:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend # folder containing your Nest.js app & Dockerfile
+    container_name: spicebound_backend
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql://spicebound:spicebound123@postgres:5432/spicebound_db?schema=public
+    ports:
+      - "3000:3000"  # Exposes backend to host
+    depends_on:
+      - postgres
 
 volumes:
   spicebound_pgdata:
