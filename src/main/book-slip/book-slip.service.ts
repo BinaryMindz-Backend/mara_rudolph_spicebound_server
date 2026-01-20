@@ -63,13 +63,13 @@ export class BookSlipService {
       googleData = await this.googleBooks.fetchByVolumeId(input);
       this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId:', googleData);
     } else if (inputType === InputType.OPEN_LIBRARY_URL) {
-      // openLibraryData = await this.openLibrary.fetchById(input);
+      openLibraryData = (await this.openLibrary.fetchById(input)) ?? undefined;
       this.logger.log('🔹 OpenLibraryProvider.fetchById:', openLibraryData);
     } else {
       googleData = await this.googleBooks.search(input);
       this.logger.log('🔹 GoogleBooksProvider.search:', googleData);
 
-      // openLibraryData = await this.openLibrary.search(input);
+      openLibraryData = (await this.openLibrary.search(input)) ?? undefined;
       this.logger.log('🔹 OpenLibraryProvider.search:', openLibraryData);
     }
 
