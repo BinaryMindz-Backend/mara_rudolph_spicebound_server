@@ -9,8 +9,17 @@ import { detectInputType } from './utils/input-detector.js';
 import { extractAsin } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
 
-import { ExternalBookData, InputType } from './types/book-source.types.js';
+import {
+  ExternalBookData,
+  InputType,
+} from './types/book-source.types.js';
+import { BookAliasType } from '../../../prisma/generated/prisma-client/enums.js';
 
+
+
+/**
+ * Normalize strings for canonical matching
+ */
 function normalizeText(value: string): string {
   return value
     .toLowerCase()
@@ -27,116 +36,140 @@ export class BookSlipService {
     private readonly prisma: PrismaService,
     private readonly googleBooks: GoogleBooksProvider,
     private readonly openLibrary: OpenLibraryProvider,
-  ) {}
+  ) { }
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
+
     const inputType = detectInputType(input);
     this.logger.log(`🔹 Detected input type: ${inputType}`);
 
     let googleData: ExternalBookData | undefined;
-    let openLibraryData: ExternalBookData | null | undefined;
+    let openLibraryData: ExternalBookData | undefined;
     let asin: string | undefined;
 
-    // 1️⃣ Extract ASIN if Amazon URL
+    /**
+     * 1️⃣ Extract ASIN if Amazon URL
+     */
     if (inputType === InputType.AMAZON_URL) {
       asin = extractAsin(input) ?? undefined;
       this.logger.log(`🔹 Extracted ASIN: ${asin}`);
     }
 
-    // 2️⃣ Fetch external metadata
+    /**
+     * 2️⃣ Fetch external metadata
+     */
     if (inputType === InputType.GOOGLE_BOOKS_URL) {
       googleData = await this.googleBooks.fetchByVolumeId(input);
-      this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId output:', googleData);
+      this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId:', googleData);
     } else if (inputType === InputType.OPEN_LIBRARY_URL) {
-      openLibraryData = await this.openLibrary.fetchById(input);
-      this.logger.log('🔹 OpenLibraryProvider.fetchById output:', openLibraryData);
+      // openLibraryData = await this.openLibrary.fetchById(input);
+      this.logger.log('🔹 OpenLibraryProvider.fetchById:', openLibraryData);
     } else {
       googleData = await this.googleBooks.search(input);
-      this.logger.log('🔹 GoogleBooksProvider.search output:', googleData);
+      this.logger.log('🔹 GoogleBooksProvider.search:', googleData);
 
-      openLibraryData = await this.openLibrary.search(input);
-      this.logger.log('🔹 OpenLibraryProvider.search output:', openLibraryData);
+      // openLibraryData = await this.openLibrary.search(input);
+      this.logger.log('🔹 OpenLibraryProvider.search:', openLibraryData);
     }
 
-    // 3️⃣ Merge external sources
-    const merged = mergeExternalData(googleData,);
-    this.logger.log('🔹 Merged external book data:', merged);
+    /**
+     * 3️⃣ Merge sources
+     */
+    const merged = mergeExternalData(googleData, openLibraryData);
+    this.logger.log('🔹 Merged data:', merged);
 
     if (!merged.title || !merged.author) {
-      this.logger.error('⚠️ Merged data missing title or author:', merged);
+      this.logger.error('❌ Missing title or author', merged);
       throw new Error('Unable to resolve book identity');
     }
 
     const normalizedTitle = normalizeText(merged.title);
     const normalizedAuthor = normalizeText(merged.author);
 
-    // 4️⃣ Check if canonical book already exists
+    /**
+     * 4️⃣ Check existing book
+     */
     const existingBook = await this.prisma.book.findFirst({
-      where: {
-        normalizedTitle,
-        normalizedAuthor,
-      },
+      where: { normalizedTitle, normalizedAuthor },
     });
+
     if (existingBook) {
-      this.logger.log('🔹 Found existing book in DB:', existingBook.id);
+      this.logger.log(`🔹 Found existing book: ${existingBook.id}`);
       return this.buildSlip(existingBook, false);
     }
 
-    // 5️⃣ TODO: AI enrichment (ageLevel, spiceRating, tropes, creatures, subgenres)
-
-    // 6️⃣ Create canonical Book
+    /**
+     * 5️⃣ Create Book
+     */
     const book = await this.prisma.book.create({
       data: {
         title: merged.title,
         normalizedTitle,
-
         primaryAuthor: merged.author,
         normalizedAuthor,
-
         shortDescription: merged.description ?? null,
         firstPublishedYear: merged.publishedYear ?? null,
-
         externalAvgRating: merged.externalAvgRating ?? null,
         externalRatingCount: merged.externalRatingCount ?? null,
       },
     });
-    this.logger.log('🔹 Created new book with ID:', book.id);
 
-    // 7️⃣ Create aliases if available
-    const aliases = [
-      merged.isbn13 && {
+    this.logger.log(`✅ Book created: ${book.id}`);
+
+    /**
+     * 6️⃣ Create aliases (TYPE SAFE)
+     */
+    const aliases: {
+      bookId: string;
+      type: BookAliasType;
+      value: string;
+    }[] = [];
+
+    if (merged.isbn13) {
+      aliases.push({
         bookId: book.id,
-        type: 'ISBN_13',
+        type: BookAliasType.ISBN_13,
         value: merged.isbn13,
-      },
-      merged.googleVolumeId && {
+      });
+    }
+
+    if (merged.googleVolumeId) {
+      aliases.push({
         bookId: book.id,
-        type: 'GOOGLE_VOLUME',
+        type: BookAliasType.GOOGLE_VOLUME_ID,
         value: merged.googleVolumeId,
-      },
-      merged.openLibraryId && {
+      });
+    }
+
+    if (merged.openLibraryId) {
+      aliases.push({
         bookId: book.id,
-        type: 'OPEN_LIBRARY',
+        type: BookAliasType.OPEN_LIBRARY_ID,
         value: merged.openLibraryId,
-      },
-      asin && {
+      });
+    }
+
+    if (asin) {
+      aliases.push({
         bookId: book.id,
-        type: 'AMAZON_ASIN',
+        type: BookAliasType.ASIN,
         value: asin,
-      },
-    ].filter(Boolean);
+      });
+    }
 
     if (aliases.length > 0) {
       await this.prisma.bookAlias.createMany({
-        data: aliases as any,
+        data: aliases,
         skipDuplicates: true,
       });
-      this.logger.log('🔹 Created aliases:', aliases);
+
+      this.logger.log('🔹 Aliases created:', aliases);
     }
 
     return this.buildSlip(book, true);
   }
+
 
   private buildSlip(book: any, created: boolean): BookSlipResponse {
     return {
@@ -154,11 +187,11 @@ export class BookSlipService {
 
       series: book.seriesName
         ? {
-            name: book.seriesName,
-            index: book.seriesIndex,
-            total: book.seriesTotal,
-            status: book.seriesStatus,
-          }
+          name: book.seriesName,
+          index: book.seriesIndex,
+          total: book.seriesTotal,
+          status: book.seriesStatus,
+        }
         : undefined,
 
       externalRatings: {
