@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto.js';
 
 import { PrismaService } from '../prisma/prisma.service.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 
 
 @Injectable()
@@ -70,7 +71,7 @@ export class AuthService {
   async changePassword(
     userId: string,
     dto: ChangePasswordDto,
-  ): Promise<{ success: boolean }> {
+  ) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -95,7 +96,11 @@ export class AuthService {
       data: { password: hashedNewPassword },
     });
 
-    return { success: true };
+    return ApiResponseUtil.success(
+      { success: true },
+      'Password changed successfully',
+      200,
+    );
   }
 
   private generateAuthResponse(user: any) {
@@ -105,7 +110,7 @@ export class AuthService {
       plan: user.plan,
     };
 
-    return {
+    const authData = {
       accessToken: this.jwtService.sign(payload),
       user: {
         id: user.id,
@@ -115,6 +120,11 @@ export class AuthService {
         createdAt: user.createdAt,
       },
     };
+
+    return ApiResponseUtil.created(
+      authData,
+      'Authentication successful',
+    );
   }
 
   async getMe(userId: string) {

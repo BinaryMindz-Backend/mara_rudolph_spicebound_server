@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './main/auth/auth.module.js';
@@ -11,6 +12,8 @@ import { SubscriptionModule } from './main/subscription/subscription.module.js';
 import stripeConfig from './config/stripe.config.js';
 import jwtConfig from './config/jwt.config.js';
 import openaiConfig from './config/openai.config.js';
+import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 
 @Module({
   imports: [
@@ -27,6 +30,16 @@ import openaiConfig from './config/openai.config.js';
     SubscriptionModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: ResponseInterceptor,
+    },
+    {
+      provide: APP_FILTER,
+      useClass: AllExceptionsFilter,
+    },
+  ],
 })
 export class AppModule {}
