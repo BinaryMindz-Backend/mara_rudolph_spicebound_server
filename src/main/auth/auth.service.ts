@@ -8,7 +8,9 @@ import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+
 import { PrismaService } from '../prisma/prisma.service.js';
+import { ChangePasswordDto } from './dto/change-password.dto.js';
 
 
 @Injectable()
@@ -18,82 +20,111 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-async signup(dto: SignupDto) {
-  const exists = await this.prisma.user.findUnique({
-    where: { email: dto.email },
-  });
+  async signup(dto: SignupDto) {
+    const exists = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
-  if (exists) {
-    throw new ConflictException('Email already registered');
+    if (exists) {
+      throw new ConflictException('Email already registered');
+    }
+
+    const hashedPassword = await bcrypt.hash(dto.password, 12);
+
+    const createdUser = await this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        password: hashedPassword,
+      },
+    });
+
+    // Explicitly remove password
+    const { password, ...user } = createdUser;
+
+    return this.generateAuthResponse(user);
   }
 
-  const hashedPassword = await bcrypt.hash(dto.password, 12);
+  async login(dto: LoginDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
 
-  const createdUser = await this.prisma.user.create({
-    data: {
-      name: dto.name,
-      email: dto.email,
-      password: hashedPassword,
-    },
-  });
+    if (!user) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
 
-  // Explicitly remove password
-  const { password, ...user } = createdUser;
+    const passwordMatch = await bcrypt.compare(
+      dto.password,
+      user.password,
+    );
 
-  return this.generateAuthResponse(user);
-}
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const { password, ...safeUser } = user;
 
-
-
-async login(dto: LoginDto) {
-  const user = await this.prisma.user.findUnique({
-    where: { email: dto.email },
-  });
-
-  if (!user) {
-    throw new UnauthorizedException('Invalid credentials');
+    return this.generateAuthResponse(safeUser);
   }
 
-  const passwordMatch = await bcrypt.compare(
-    dto.password,
-    user.password,
-  );
+  async changePassword(
+    userId: string,
+    dto: ChangePasswordDto,
+  ): Promise<{ success: boolean }> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
 
-  if (!passwordMatch) {
-    throw new UnauthorizedException('Invalid credentials');
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const passwordMatch = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
+
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+
+    return { success: true };
   }
-  const { password, ...safeUser } = user;
-
-  return this.generateAuthResponse(safeUser);
-}
-
-
 
   private generateAuthResponse(user: any) {
     const payload = {
       sub: user.id,
       email: user.email,
-      isPremium: user.isPremium,
+      plan: user.plan,
     };
 
     return {
       accessToken: this.jwtService.sign(payload),
       user: {
         id: user.id,
-        firstName: user.firstName,
+        name: user.name,
         email: user.email,
-        isPremium: user.isPremium,
+        plan: user.plan,
+        createdAt: user.createdAt,
       },
     };
   }
 
-   async getMe(userId: string) {
+  async getMe(userId: string) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: {
         id: true,
         email: true,
         name: true,
+        plan: true,
         createdAt: true,
       },
     });

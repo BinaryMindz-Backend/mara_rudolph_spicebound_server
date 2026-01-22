@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 import { GoogleBooksProvider } from './providers/google-books.provider.js';
 import { OpenLibraryProvider } from './providers/open-library.provider.js';
+import { AiEnrichmentService } from './ai/ai-enrichment.service.js';
 
 import { BookSlipResponse } from './dto/book-slip.response.js';
 import { detectInputType } from './utils/input-detector.js';
@@ -13,9 +14,7 @@ import {
   ExternalBookData,
   InputType,
 } from './types/book-source.types.js';
-import { BookAliasType } from '../../../prisma/generated/prisma-client/enums.js';
-
-
+import { BookAliasType, AgeLevel } from '../../../prisma/generated/prisma-client/enums.js';
 
 /**
  * Normalize strings for canonical matching
@@ -36,7 +35,8 @@ export class BookSlipService {
     private readonly prisma: PrismaService,
     private readonly googleBooks: GoogleBooksProvider,
     private readonly openLibrary: OpenLibraryProvider,
-  ) { }
+    private readonly aiEnrichment: AiEnrichmentService,
+  ) {}
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
@@ -100,7 +100,18 @@ export class BookSlipService {
     }
 
     /**
-     * 5️⃣ Create Book
+     * 5️⃣ AI Enrichment
+     */
+    const enriched = await this.aiEnrichment.enrichBook({
+      title: merged.title,
+      author: merged.author,
+      description: merged.description,
+    });
+
+    this.logger.log('🔹 AI Enrichment result:', enriched);
+
+    /**
+     * 6️⃣ Create Book
      */
     const book = await this.prisma.book.create({
       data: {
@@ -112,13 +123,18 @@ export class BookSlipService {
         firstPublishedYear: merged.publishedYear ?? null,
         externalAvgRating: merged.externalAvgRating ?? null,
         externalRatingCount: merged.externalRatingCount ?? null,
+        ageLevel: (enriched.ageLevel as AgeLevel) || AgeLevel.UNKNOWN,
+        spiceRating: enriched.spiceRating ?? null,
+        tropes: enriched.tropes ?? [],
+        creatures: enriched.creatures ?? [],
+        subgenres: enriched.subgenres ?? [],
       },
     });
 
     this.logger.log(`✅ Book created: ${book.id}`);
 
     /**
-     * 6️⃣ Create aliases (TYPE SAFE)
+     * 7️⃣ Create aliases (TYPE SAFE)
      */
     const aliases: {
       bookId: string;
