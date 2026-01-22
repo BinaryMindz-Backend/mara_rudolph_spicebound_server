@@ -14,13 +14,15 @@ datasource db {
 }
 
 model User {
-  id               String           @id @default(uuid())
-  name             String
-  email            String           @unique
-  password         String
-  plan             SubscriptionPlan @default(FREE)
-  stripeCustomerId String?
-  createdAt        DateTime         @default(now())
+  id                  String           @id @default(uuid())
+  name                String
+  email               String           @unique
+  password            String
+  plan                SubscriptionPlan @default(FREE)
+  stripeCustomerId    String?
+  resetToken          String?
+  resetTokenExpiry    DateTime?
+  createdAt           DateTime         @default(now())
 
   library       UserBook[]
   ratings       Rating[]

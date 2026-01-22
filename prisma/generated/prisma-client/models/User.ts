@@ -31,6 +31,8 @@ export type UserMinAggregateOutputType = {
   password: string | null
   plan: $Enums.SubscriptionPlan | null
   stripeCustomerId: string | null
+  resetToken: string | null
+  resetTokenExpiry: Date | null
   createdAt: Date | null
 }
 
@@ -41,6 +43,8 @@ export type UserMaxAggregateOutputType = {
   password: string | null
   plan: $Enums.SubscriptionPlan | null
   stripeCustomerId: string | null
+  resetToken: string | null
+  resetTokenExpiry: Date | null
   createdAt: Date | null
 }
 
@@ -51,6 +55,8 @@ export type UserCountAggregateOutputType = {
   password: number
   plan: number
   stripeCustomerId: number
+  resetToken: number
+  resetTokenExpiry: number
   createdAt: number
   _all: number
 }
@@ -63,6 +69,8 @@ export type UserMinAggregateInputType = {
   password?: true
   plan?: true
   stripeCustomerId?: true
+  resetToken?: true
+  resetTokenExpiry?: true
   createdAt?: true
 }
 
@@ -73,6 +81,8 @@ export type UserMaxAggregateInputType = {
   password?: true
   plan?: true
   stripeCustomerId?: true
+  resetToken?: true
+  resetTokenExpiry?: true
   createdAt?: true
 }
 
@@ -83,6 +93,8 @@ export type UserCountAggregateInputType = {
   password?: true
   plan?: true
   stripeCustomerId?: true
+  resetToken?: true
+  resetTokenExpiry?: true
   createdAt?: true
   _all?: true
 }
@@ -166,6 +178,8 @@ export type UserGroupByOutputType = {
   password: string
   plan: $Enums.SubscriptionPlan
   stripeCustomerId: string | null
+  resetToken: string | null
+  resetTokenExpiry: Date | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
@@ -197,6 +211,8 @@ export type UserWhereInput = {
   password?: Prisma.StringFilter<"User"> | string
   plan?: Prisma.EnumSubscriptionPlanFilter<"User"> | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
+  resetToken?: Prisma.StringNullableFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   library?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -210,6 +226,8 @@ export type UserOrderByWithRelationInput = {
   password?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   stripeCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   library?: Prisma.UserBookOrderByRelationAggregateInput
   ratings?: Prisma.RatingOrderByRelationAggregateInput
@@ -226,6 +244,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   password?: Prisma.StringFilter<"User"> | string
   plan?: Prisma.EnumSubscriptionPlanFilter<"User"> | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
+  resetToken?: Prisma.StringNullableFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   library?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -239,6 +259,8 @@ export type UserOrderByWithAggregationInput = {
   password?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   stripeCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -255,6 +277,8 @@ export type UserScalarWhereWithAggregatesInput = {
   password?: Prisma.StringWithAggregatesFilter<"User"> | string
   plan?: Prisma.EnumSubscriptionPlanWithAggregatesFilter<"User"> | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  resetToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  resetTokenExpiry?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
@@ -265,6 +289,8 @@ export type UserCreateInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -278,6 +304,8 @@ export type UserUncheckedCreateInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
@@ -291,6 +319,8 @@ export type UserUpdateInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -304,6 +334,8 @@ export type UserUncheckedUpdateInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
@@ -317,6 +349,8 @@ export type UserCreateManyInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -327,6 +361,8 @@ export type UserUpdateManyMutationInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -337,6 +373,8 @@ export type UserUncheckedUpdateManyInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -347,6 +385,8 @@ export type UserCountOrderByAggregateInput = {
   password?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   stripeCustomerId?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -357,6 +397,8 @@ export type UserMaxOrderByAggregateInput = {
   password?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   stripeCustomerId?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -367,6 +409,8 @@ export type UserMinOrderByAggregateInput = {
   password?: Prisma.SortOrder
   plan?: Prisma.SortOrder
   stripeCustomerId?: Prisma.SortOrder
+  resetToken?: Prisma.SortOrder
+  resetTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -385,6 +429,10 @@ export type EnumSubscriptionPlanFieldUpdateOperationsInput = {
 
 export type NullableStringFieldUpdateOperationsInput = {
   set?: string | null
+}
+
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
 }
 
 export type DateTimeFieldUpdateOperationsInput = {
@@ -440,6 +488,8 @@ export type UserCreateWithoutLibraryInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutUserInput
@@ -452,6 +502,8 @@ export type UserUncheckedCreateWithoutLibraryInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -480,6 +532,8 @@ export type UserUpdateWithoutLibraryInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutUserNestedInput
@@ -492,6 +546,8 @@ export type UserUncheckedUpdateWithoutLibraryInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -504,6 +560,8 @@ export type UserCreateWithoutRatingsInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutUserInput
@@ -516,6 +574,8 @@ export type UserUncheckedCreateWithoutRatingsInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -544,6 +604,8 @@ export type UserUpdateWithoutRatingsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutUserNestedInput
@@ -556,6 +618,8 @@ export type UserUncheckedUpdateWithoutRatingsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -568,6 +632,8 @@ export type UserCreateWithoutSubscriptionsInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -580,6 +646,8 @@ export type UserUncheckedCreateWithoutSubscriptionsInput = {
   password: string
   plan?: $Enums.SubscriptionPlan
   stripeCustomerId?: string | null
+  resetToken?: string | null
+  resetTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
@@ -608,6 +676,8 @@ export type UserUpdateWithoutSubscriptionsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -620,6 +690,8 @@ export type UserUncheckedUpdateWithoutSubscriptionsInput = {
   password?: Prisma.StringFieldUpdateOperationsInput | string
   plan?: Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput | $Enums.SubscriptionPlan
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
@@ -681,6 +753,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   password?: boolean
   plan?: boolean
   stripeCustomerId?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
   createdAt?: boolean
   library?: boolean | Prisma.User$libraryArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -695,6 +769,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   password?: boolean
   plan?: boolean
   stripeCustomerId?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -705,6 +781,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   password?: boolean
   plan?: boolean
   stripeCustomerId?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -715,10 +793,12 @@ export type UserSelectScalar = {
   password?: boolean
   plan?: boolean
   stripeCustomerId?: boolean
+  resetToken?: boolean
+  resetTokenExpiry?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "plan" | "stripeCustomerId" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "plan" | "stripeCustomerId" | "resetToken" | "resetTokenExpiry" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   library?: boolean | Prisma.User$libraryArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -742,6 +822,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     password: string
     plan: $Enums.SubscriptionPlan
     stripeCustomerId: string | null
+    resetToken: string | null
+    resetTokenExpiry: Date | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -1175,6 +1257,8 @@ export interface UserFieldRefs {
   readonly password: Prisma.FieldRef<"User", 'String'>
   readonly plan: Prisma.FieldRef<"User", 'SubscriptionPlan'>
   readonly stripeCustomerId: Prisma.FieldRef<"User", 'String'>
+  readonly resetToken: Prisma.FieldRef<"User", 'String'>
+  readonly resetTokenExpiry: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     

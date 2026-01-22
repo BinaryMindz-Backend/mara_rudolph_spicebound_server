@@ -5,6 +5,8 @@ import { LoginDto } from './dto/login.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/user.decorators.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
+import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
+import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 
@@ -43,5 +45,17 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, dto);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset' })
+  forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }
