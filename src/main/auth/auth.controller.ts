@@ -13,11 +13,13 @@ export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
+  @ApiOperation({ summary: 'Create a new user account' })
   signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
   }
 
   @Post('login')
+  @ApiOperation({ summary: 'User login' })
   login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
   }
@@ -31,7 +33,10 @@ export class AuthController {
     return this.authService.getMe(userId);
   }
 
+  @ApiTags('Auth')
+  @ApiBearerAuth('access-token')
   @Post('change-password')
+  @ApiOperation({ summary: 'Change user password' })
   @UseGuards(JwtAuthGuard)
   changePassword(
     @CurrentUser() userId: string,
