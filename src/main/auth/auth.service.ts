@@ -16,6 +16,7 @@ import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
+import { EmailService } from '../../common/services/email.service.js';
 
 
 @Injectable()
@@ -23,6 +24,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private emailService: EmailService,
   ) { }
 
   async signup(dto: SignupDto) {
@@ -177,10 +179,11 @@ export class AuthService {
       },
     });
 
-    // In a real application, send this token via email
-    // For now, we return it for testing purposes
+    // Send password reset email
+    await this.emailService.sendPasswordResetEmail(user.email, resetToken);
+
     return ApiResponseUtil.success(
-      { resetToken },
+      { success: true },
       'Password reset link sent to your email',
       200,
     );
