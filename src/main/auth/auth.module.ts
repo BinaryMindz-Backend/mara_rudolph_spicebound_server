@@ -11,10 +11,6 @@ import { EmailService } from '../../common/services/email.service.js';
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
-    // JwtModule.register({
-    //   secret: process.env.JWT_SECRET,
-    //   signOptions: { expiresIn: '7d' },
-    // }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
