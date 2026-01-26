@@ -6,6 +6,7 @@ import {
   Req,
   UseGuards,
   Request,
+  BadRequestException,
 } from '@nestjs/common';
 import { SubscriptionService } from './subscription.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
@@ -38,12 +39,16 @@ export class SubscriptionController {
 
   @Post('webhook')
   async handleWebhook(@Req() req: any) {
-    // In production, verify Stripe signature
-    // const sig = req.headers['stripe-signature'];
-    // const event = this.stripe.webhooks.constructEvent(req.rawBody, sig, webhookSecret);
+    const signature = req.headers['stripe-signature'];
+    
+    if (!signature) {
+      throw new BadRequestException('Missing Stripe signature header');
+    }
 
-    const event = req.body;
-    await this.subscriptionService.handleWebhook(event);
+    // Get raw body for signature verification
+    const rawBody = req.rawBody || JSON.stringify(req.body);
+
+    await this.subscriptionService.handleWebhook(rawBody, signature);
     return { received: true };
   }
 }

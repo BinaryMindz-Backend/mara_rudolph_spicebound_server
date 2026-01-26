@@ -95,9 +95,29 @@ export class SubscriptionService {
   /**
    * Handle Stripe webhook for subscription events
    */
-  async handleWebhook(event: any): Promise<void> {
+  async handleWebhook(rawBody: string, signature: string): Promise<void> {
     if (!this.stripe) {
       throw new BadRequestException('Stripe not configured');
+    }
+
+    const webhookSecret = this.configService.get<string>('stripe.webhookSecret');
+
+    if (!webhookSecret) {
+      this.logger.error('Stripe webhook secret not configured');
+      throw new BadRequestException('Webhook secret not configured');
+    }
+
+    // Verify Stripe signature
+    let event;
+    try {
+      event = this.stripe.webhooks.constructEvent(
+        rawBody,
+        signature,
+        webhookSecret,
+      );
+    } catch (error) {
+      this.logger.error('Webhook signature verification failed', error);
+      throw new BadRequestException(`Webhook signature verification failed: ${error.message}`);
     }
 
     try {

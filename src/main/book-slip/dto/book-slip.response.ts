@@ -26,6 +26,17 @@ export interface BookSlipResponse {
     count?: number;
   };
 
+  spiceboundRatings?: {
+    average?: number;
+    count?: number;
+  };
+
+  combinedRating?: {
+    display: string;
+    value: number | null;
+    sources: string[];
+  };
+
   links?: {
     amazon?: string;
     bookshop?: string;

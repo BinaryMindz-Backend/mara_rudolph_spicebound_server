@@ -9,6 +9,7 @@ import { BookSlipResponse } from './dto/book-slip.response.js';
 import { detectInputType } from './utils/input-detector.js';
 import { extractAsin } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
+import { calculateCombinedRating } from '../../common/utils/rating-utils.js';
 
 import {
   ExternalBookData,
@@ -188,6 +189,14 @@ export class BookSlipService {
 
 
   private buildSlip(book: any, created: boolean): BookSlipResponse {
+    // Calculate combined rating
+    const combinedRating = calculateCombinedRating(
+      book.externalAvgRating,
+      book.externalRatingCount,
+      book.spiceboundAvgRating,
+      book.spiceboundRatingCount,
+    );
+
     return {
       bookId: book.id,
       title: book.title,
@@ -213,6 +222,17 @@ export class BookSlipService {
       externalRatings: {
         average: book.externalAvgRating,
         count: book.externalRatingCount,
+      },
+
+      spiceboundRatings: {
+        average: book.spiceboundAvgRating,
+        count: book.spiceboundRatingCount,
+      },
+
+      combinedRating: {
+        display: combinedRating.display,
+        value: combinedRating.value,
+        sources: combinedRating.sources,
       },
 
       links: {

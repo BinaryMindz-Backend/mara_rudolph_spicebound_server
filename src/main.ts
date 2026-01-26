@@ -6,7 +6,25 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    rawBody: true, // Required for Stripe webhook signature verification
+  });
+
+  // Configure CORS
+  const allowedOrigins = process.env.NODE_ENV === 'production'
+    ? [
+        'https://readspicebound.com',
+        'https://www.readspicebound.com',
+      ]
+    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5050'];
+
+  app.enableCors({
+    origin: allowedOrigins,
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 3600,
+  });
 
   // Global validation pipe
   app.useGlobalPipes(
