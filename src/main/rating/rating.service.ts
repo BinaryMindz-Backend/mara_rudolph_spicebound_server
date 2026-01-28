@@ -92,28 +92,6 @@ export class RatingService {
   async getBookRatings(
     bookId: string,
   ): Promise<{ average: number | null; count: number }> {
-    const book = await this.prisma.book.findUnique({
-      where: { id: bookId },
-      select: {
-        spiceboundAvgRating: true,
-        spiceboundRatingCount: true,
-      },
-    });
-
-    if (!book) {
-      throw new NotFoundException('Book not found');
-    }
-
-    return {
-      average: book.spiceboundAvgRating,
-      count: book.spiceboundRatingCount,
-    };
-  }
-
-  /**
-   * Recalculate aggregated ratings for a book
-   */
-  private async recalculateBookRatings(bookId: string): Promise<void> {
     const ratings = await this.prisma.rating.findMany({
       where: { bookId },
     });
@@ -122,12 +100,18 @@ export class RatingService {
       ? ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length
       : null;
 
-    await this.prisma.book.update({
-      where: { id: bookId },
-      data: {
-        spiceboundAvgRating: average,
-        spiceboundRatingCount: ratings.length,
-      },
-    });
+    return {
+      average,
+      count: ratings.length,
+    };
+  }
+
+  /**
+   * Recalculate aggregated ratings for a book
+   */
+  private async recalculateBookRatings(bookId: string): Promise<void> {
+    // Ratings are now calculated dynamically from the Rating table
+    // No need to store aggregates in Book table
+    return;
   }
 }

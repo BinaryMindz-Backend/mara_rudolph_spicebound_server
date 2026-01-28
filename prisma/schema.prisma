@@ -39,8 +39,7 @@ model Book {
   normalizedAuthor String
 
   firstPublishedYear Int?
-  coverImageUrl      String?
-
+  
   // AI-enriched classification
   ageLevel    AgeLevel @default(UNKNOWN)
   spiceRating Int?
@@ -53,25 +52,18 @@ model Book {
   shortDescription String?
 
   // Series info
-  isStandalone Boolean      @default(true)
   seriesName   String?
   seriesIndex  Int?
   seriesTotal  Int?
   seriesStatus SeriesStatus @default(UNKNOWN)
 
-  // Ratings
-  externalAvgRating    Float?
-  externalRatingCount  Int?
-  externalRatingSource String?
+  // Ratings (from external sources like Google Books)
+  externalAvgRating   Float?
+  externalRatingCount Int?
 
-  spiceboundAvgRating   Float?
-  spiceboundRatingCount Int    @default(0)
-
-  // Purchase links (affiliate-safe)
-  amazonUrl            String?
-  amazonAffiliateUrl   String?
-  bookshopUrl          String?
-  bookshopAffiliateUrl String?
+  // Purchase links
+  amazonUrl   String?
+  bookshopUrl String?
 
   // Relations
   aliases BookAlias[]

@@ -507,6 +507,14 @@ export type EnumReadingStatusFieldUpdateOperationsInput = {
   set?: $Enums.ReadingStatus
 }
 
+export type IntFieldUpdateOperationsInput = {
+  set?: number
+  increment?: number
+  decrement?: number
+  multiply?: number
+  divide?: number
+}
+
 export type UserBookCreateWithoutUserInput = {
   id?: string
   status?: $Enums.ReadingStatus

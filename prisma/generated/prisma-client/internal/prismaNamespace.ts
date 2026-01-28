@@ -914,27 +914,20 @@ export const BookScalarFieldEnum = {
   primaryAuthor: 'primaryAuthor',
   normalizedAuthor: 'normalizedAuthor',
   firstPublishedYear: 'firstPublishedYear',
-  coverImageUrl: 'coverImageUrl',
   ageLevel: 'ageLevel',
   spiceRating: 'spiceRating',
   tropes: 'tropes',
   creatures: 'creatures',
   subgenres: 'subgenres',
   shortDescription: 'shortDescription',
-  isStandalone: 'isStandalone',
   seriesName: 'seriesName',
   seriesIndex: 'seriesIndex',
   seriesTotal: 'seriesTotal',
   seriesStatus: 'seriesStatus',
   externalAvgRating: 'externalAvgRating',
   externalRatingCount: 'externalRatingCount',
-  externalRatingSource: 'externalRatingSource',
-  spiceboundAvgRating: 'spiceboundAvgRating',
-  spiceboundRatingCount: 'spiceboundRatingCount',
   amazonUrl: 'amazonUrl',
-  amazonAffiliateUrl: 'amazonAffiliateUrl',
   bookshopUrl: 'bookshopUrl',
-  bookshopAffiliateUrl: 'bookshopAffiliateUrl',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 } as const
@@ -1087,13 +1080,6 @@ export type EnumAgeLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaM
  * Reference to a field of type 'AgeLevel[]'
  */
 export type ListEnumAgeLevelFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'AgeLevel[]'>
-    
-
-
-/**
- * Reference to a field of type 'Boolean'
- */
-export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 
