@@ -50,6 +50,7 @@ export class GoogleBooksProvider {
     return {
       title: info.title,
       author: info.authors?.[0],
+      description: info.description,
       publishedYear: info.publishedDate
         ? Number(info.publishedDate.split('-')[0])
         : undefined,

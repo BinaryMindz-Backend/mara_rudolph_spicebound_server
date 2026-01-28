@@ -7,6 +7,8 @@ export interface BookSlipResponse {
   author: string;
   description?: string;
 
+  releaseYear?: number;
+
   ageLevel?: AgeLevel;
   spiceRating?: number;
 
@@ -21,20 +23,9 @@ export interface BookSlipResponse {
     status: SeriesStatus;
   };
 
-  externalRatings?: {
+  ratings?: {
     average?: number;
     count?: number;
-  };
-
-  spiceboundRatings?: {
-    average?: number;
-    count?: number;
-  };
-
-  combinedRating?: {
-    display: string;
-    value: number | null;
-    sources: string[];
   };
 
   links?: {

@@ -10,6 +10,7 @@ import { detectInputType } from './utils/input-detector.js';
 import { extractAsin } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
 import { calculateCombinedRating } from '../../common/utils/rating-utils.js';
+import { generateLinks } from './utils/link-generator.js';
 
 import {
   ExternalBookData,
@@ -97,7 +98,8 @@ export class BookSlipService {
 
     if (existingBook) {
       this.logger.log(`🔹 Found existing book: ${existingBook.id}`);
-      return this.buildSlip(existingBook, false);
+      const slip = await this.buildSlip(existingBook, false);
+      return slip;
     }
 
     /**
@@ -184,18 +186,54 @@ export class BookSlipService {
       this.logger.log('🔹 Aliases created:', aliases);
     }
 
-    return this.buildSlip(book, true);
+    const slip = await this.buildSlip(book, true, asin, merged.isbn13);
+    return slip;
   }
 
+  private async buildSlip(
+    book: any,
+    created: boolean,
+    asin?: string,
+    isbn13?: string,
+  ): Promise<BookSlipResponse> {
+    // Fetch ISBN and ASIN from aliases if not provided
+    let finalAsin = asin;
+    let finalIsbn13 = isbn13;
 
-  private buildSlip(book: any, created: boolean): BookSlipResponse {
-    // Calculate combined rating
-    const combinedRating = calculateCombinedRating(
-      book.externalAvgRating,
-      book.externalRatingCount,
-      book.spiceboundAvgRating,
-      book.spiceboundRatingCount,
+    if (!finalAsin || !finalIsbn13) {
+      const aliases = await this.prisma.bookAlias.findMany({
+        where: { bookId: book.id },
+      });
+
+      for (const alias of aliases) {
+        if (alias.type === BookAliasType.ASIN && !finalAsin) {
+          finalAsin = alias.value;
+        }
+        if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) {
+          finalIsbn13 = alias.value;
+        }
+      }
+    }
+
+    // Generate links
+    const links = generateLinks(
+      finalAsin,
+      finalIsbn13,
+      book.amazonUrl,
+      book.bookshopUrl,
     );
+
+    // Calculate platform user ratings (Spicebound ratings)
+    const platformRatings = await this.prisma.rating.aggregate({
+      where: { bookId: book.id },
+      _avg: { value: true },
+      _count: true,
+    });
+
+    const ratings = {
+      average: platformRatings._avg.value ?? undefined,
+      count: platformRatings._count > 0 ? platformRatings._count : undefined,
+    };
 
     return {
       bookId: book.id,
@@ -203,8 +241,10 @@ export class BookSlipService {
       author: book.primaryAuthor,
       description: book.shortDescription,
 
+      releaseYear: book.firstPublishedYear ?? undefined,
+
       ageLevel: book.ageLevel,
-      spiceRating: book.spiceRating,
+      spiceRating: book.spiceRating ?? 0,
 
       tropes: book.tropes ?? [],
       creatures: book.creatures ?? [],
@@ -219,26 +259,9 @@ export class BookSlipService {
         }
         : undefined,
 
-      externalRatings: {
-        average: book.externalAvgRating,
-        count: book.externalRatingCount,
-      },
+      ratings: ratings.count || ratings.average ? ratings : undefined,
 
-      spiceboundRatings: {
-        average: book.spiceboundAvgRating,
-        count: book.spiceboundRatingCount,
-      },
-
-      combinedRating: {
-        display: combinedRating.display,
-        value: combinedRating.value,
-        sources: combinedRating.sources,
-      },
-
-      links: {
-        amazon: book.amazonUrl,
-        bookshop: book.bookshopUrl,
-      },
+      links,
 
       created,
     };

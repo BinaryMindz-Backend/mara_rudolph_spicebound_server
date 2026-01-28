@@ -33,16 +33,27 @@ export class OpenLibraryProvider {
       }
 
       const doc = data.docs[0];
+      const workId = doc.key?.replace('/works/', '');
 
       const mapped: ExternalBookData = {
         title: doc.title ?? undefined,
         author: doc.author_name?.[0] ?? undefined,
         publishedYear: doc.first_publish_year ?? undefined,
         isbn13: doc.isbn?.find((i: string) => i.length === 13),
-        openLibraryId: doc.key?.replace('/works/', ''),
+        openLibraryId: workId,
       };
 
       this.logger.log('✅ OpenLibrary search mapped:', mapped);
+
+      // Fetch full work details to get description
+      if (workId) {
+        const enrichedData = await this.fetchById(workId);
+        if (enrichedData?.description) {
+          mapped.description = enrichedData.description;
+          this.logger.log('✅ OpenLibrary fetched description for work:', workId);
+        }
+      }
+
       return mapped;
     } catch (error) {
       this.logger.error('❌ OpenLibrary search error', error);

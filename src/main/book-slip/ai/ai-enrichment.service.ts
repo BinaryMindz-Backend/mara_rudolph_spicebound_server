@@ -29,10 +29,20 @@ export class AiEnrichmentService {
         this.logger.warn(
           'OpenAI API key not configured, skipping AI enrichment',
         );
-        return {};
+        return {
+          ageLevel: 'UNKNOWN',
+          spiceRating: 0,
+          tropes: [],
+          creatures: [],
+          subgenres: [],
+        };
       }
 
       const prompt = this.buildEnrichmentPrompt(bookData);
+      const model = this.configService.get<string>('openai.model') || 'gpt-3.5-turbo';
+
+      this.logger.log(`🔹 Calling OpenAI with model: ${model}`);
+      this.logger.debug(`🔹 OpenAI API Key exists: ${apiKey.substring(0, 20)}...`);
 
       const response = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
@@ -41,7 +51,7 @@ export class AiEnrichmentService {
           Authorization: `Bearer ${apiKey}`,
         },
         body: JSON.stringify({
-          model: this.configService.get<string>('openai.model') || 'gpt-4',
+          model,
           messages: [
             {
               role: 'system',
@@ -59,8 +69,15 @@ export class AiEnrichmentService {
       });
 
       if (!response.ok) {
-        this.logger.error(`OpenAI API error: ${response.statusText}`);
-        return {};
+        const errorData = await response.json();
+        this.logger.error(`OpenAI API error: ${response.status} ${response.statusText}`, errorData);
+        return {
+          ageLevel: 'UNKNOWN',
+          spiceRating: 0,
+          tropes: [],
+          creatures: [],
+          subgenres: [],
+        };
       }
 
       const data = (await response.json()) as any;
@@ -68,35 +85,51 @@ export class AiEnrichmentService {
 
       if (!content) {
         this.logger.warn('Empty response from OpenAI');
-        return {};
+        return {
+          ageLevel: 'UNKNOWN',
+          spiceRating: 0,
+          tropes: [],
+          creatures: [],
+          subgenres: [],
+        };
       }
+
+      this.logger.debug(`🔹 OpenAI raw response: ${content}`);
 
       // Parse JSON response
       const enriched = JSON.parse(content);
+      this.logger.log(`🔹 AI Enrichment parsed: ${JSON.stringify(enriched)}`);
 
       // Validate and sanitize output
       return this.sanitizeEnrichedData(enriched);
     } catch (error) {
-      this.logger.error('AI enrichment failed', error);
-      return {};
+      this.logger.error('AI enrichment failed', error instanceof Error ? error.message : error);
+      return {
+        ageLevel: 'UNKNOWN',
+        spiceRating: 0,
+        tropes: [],
+        creatures: [],
+        subgenres: [],
+      };
     }
   }
 
   private buildEnrichmentPrompt(bookData: any): string {
     return `
-Analyze this romance book and return enriched metadata as JSON.
+You are a romance book metadata enrichment engine. Analyze this book and return metadata as valid JSON.
 
-Book data:
+Book Information:
 - Title: ${bookData.title || 'unknown'}
 - Author: ${bookData.author || 'unknown'}
-- Description: ${bookData.description || 'none'}
-- Genre: ${bookData.genre || 'unknown'}
+- Description: ${bookData.description || 'none provided'}
 
-Return ONLY this JSON structure (no markdown):
+If this is NOT primarily a romance book, still classify it appropriately in the romance taxonomy.
+
+Return ONLY this JSON structure (no markdown, no extra text):
 {
-  "ageLevel": "YA" | "NA" | "ADULT" | "EROTICA",
+  "ageLevel": "CHILDREN" | "YA" | "NA" | "ADULT" | "EROTICA" | "UNKNOWN",
   "spiceRating": 0-6,
-  "tropes": ["trope1", "trope2", "trope3"],
+  "tropes": ["trope1", "trope2"],
   "creatures": ["creature1", "creature2"],
   "subgenres": ["subgenre1", "subgenre2"],
   "series": {
@@ -107,7 +140,15 @@ Return ONLY this JSON structure (no markdown):
 
 Allowed tropes: ${APPROVED_TROPES.join(', ')}
 
-Be conservative: if unsure, omit the field or return fewer tropes (min 1).
+Rules:
+- spiceRating: 0=clean, 1=sweet/closed-door, 2=mild tension, 3=some scenes, 4=explicit, 5=very explicit, 6=erotica
+- If unsure about a field, use minimum values (0 for spice, empty arrays for lists, UNKNOWN for levels)
+- For Fourth Wing: This is fantasy romance with high spice and specific tropes - classify accurately
+- Omit null series names from the series object
+
+Examples:
+- "Fourth Wing by Rebecca Yarros" -> ageLevel: NA, spiceRating: 4-5, tropes: [enemies-to-lovers, forbidden-romance, dragons]
+- "Normal non-romance book" -> ageLevel: UNKNOWN, spiceRating: 0, tropes: [], subgenres: [NA or adult-fantasy]
 `;
   }
 
@@ -120,6 +161,8 @@ Be conservative: if unsure, omit the field or return fewer tropes (min 1).
       ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'].includes(data.ageLevel)
     ) {
       sanitized.ageLevel = data.ageLevel;
+    } else {
+      sanitized.ageLevel = 'UNKNOWN';
     }
 
     // Validate spiceRating
@@ -128,6 +171,8 @@ Be conservative: if unsure, omit the field or return fewer tropes (min 1).
       isValidSpiceRating(data.spiceRating)
     ) {
       sanitized.spiceRating = data.spiceRating;
+    } else {
+      sanitized.spiceRating = 0;
     }
 
     // Validate tropes
@@ -137,6 +182,8 @@ Be conservative: if unsure, omit the field or return fewer tropes (min 1).
       data.tropes.every((t: any) => isValidTrope(t))
     ) {
       sanitized.tropes = data.tropes.slice(0, 4); // Max 4 tropes
+    } else {
+      sanitized.tropes = [];
     }
 
     // Validate creatures
@@ -144,6 +191,8 @@ Be conservative: if unsure, omit the field or return fewer tropes (min 1).
       sanitized.creatures = data.creatures
         .filter((c: any) => typeof c === 'string')
         .slice(0, 3); // Max 3
+    } else {
+      sanitized.creatures = [];
     }
 
     // Validate subgenres
@@ -151,6 +200,8 @@ Be conservative: if unsure, omit the field or return fewer tropes (min 1).
       sanitized.subgenres = data.subgenres
         .filter((s: any) => typeof s === 'string')
         .slice(0, 3); // Max 3
+    } else {
+      sanitized.subgenres = [];
     }
 
     // Preserve series info

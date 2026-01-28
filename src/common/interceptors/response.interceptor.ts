@@ -22,11 +22,17 @@ export class ResponseInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((data) => {
         const response = context.switchToHttp().getResponse();
-        const statusCode = response.statusCode || 200;
+        let statusCode = response.statusCode || 200;
 
         // If data is already in the expected format, return it
         if (data && data.success !== undefined) {
           return data;
+        }
+
+        // If response contains created flag, set 201 status
+        if (data && data.created === true) {
+          statusCode = 201;
+          response.status(201);
         }
 
         // Wrap the response in the standard format
