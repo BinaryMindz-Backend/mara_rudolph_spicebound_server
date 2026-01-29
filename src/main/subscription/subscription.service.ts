@@ -137,6 +137,7 @@ export class SubscriptionService {
         signature,
         webhookSecret,
       );
+      this.logger.log(`✅ Webhook signature verified: ${event.type}`);
     } catch (error) {
       this.logger.error('Webhook signature verification failed', error);
       throw new BadRequestException(`Webhook signature verification failed: ${error.message}`);
@@ -146,19 +147,25 @@ export class SubscriptionService {
       switch (event.type) {
         case 'customer.subscription.created':
         case 'customer.subscription.updated':
+          this.logger.log(`🔄 Processing subscription event: ${event.type}`);
           await this.handleSubscriptionUpdate(event.data.object);
           break;
 
         case 'customer.subscription.deleted':
+          this.logger.log(`🔄 Processing subscription canceled: ${event.type}`);
           await this.handleSubscriptionCanceled(event.data.object);
           break;
 
         case 'payment_intent.succeeded':
-          this.logger.log('Payment succeeded');
+          this.logger.log(`💳 Payment succeeded: ${event.data.object.id}`);
+          break;
+
+        case 'payment_intent.payment_failed':
+          this.logger.warn(`❌ Payment failed: ${event.data.object.id}`);
           break;
 
         default:
-          this.logger.log(`Unhandled event type: ${event.type}`);
+          this.logger.debug(`⏭️  Unhandled event type: ${event.type}`);
       }
     } catch (error) {
       this.logger.error('Webhook handling failed', error);
@@ -212,10 +219,22 @@ export class SubscriptionService {
   }
 
   /**
+   * TEST helper: set stripe customer id for a user (development only)
+   */
+  async setUserStripeCustomer(userId: string, customerId: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customerId },
+    });
+  }
+
+  /**
    * Internal: Handle subscription created/updated
    */
   private async handleSubscriptionUpdate(stripeSubscription: any): Promise<void> {
     try {
+      this.logger.log(`🔍 Subscription update: ID=${stripeSubscription.id}, Status=${stripeSubscription.status}`);
+
       // Find or create subscription record
       const existingSubscription = await this.prisma.subscription.findFirst({
         where: {
@@ -235,6 +254,7 @@ export class SubscriptionService {
           where: { id: existingSubscription.id },
           data: subscriptionData,
         });
+        this.logger.log(`✅ Subscription updated: ${stripeSubscription.id}`);
       } else {
         // Find user by Stripe customer
         const user = await this.findUserByStripeCustomer(
@@ -248,18 +268,18 @@ export class SubscriptionService {
               ...subscriptionData,
             },
           });
+          this.logger.log(`✅ Subscription created for user: ${user.id}`);
 
           // Upgrade user plan
           await this.prisma.user.update({
             where: { id: user.id },
             data: { plan: SubscriptionPlan.PREMIUM },
           });
+          this.logger.log(`🎉 User ${user.id} upgraded to PREMIUM plan`);
+        } else {
+          this.logger.warn(`⚠️ No user found for customer: ${stripeSubscription.customer}`);
         }
       }
-
-      this.logger.log(
-        `Subscription updated: ${stripeSubscription.id} - ${stripeSubscription.status}`,
-      );
     } catch (error) {
       this.logger.error('Subscription update failed', error);
       throw error;
@@ -271,6 +291,8 @@ export class SubscriptionService {
    */
   private async handleSubscriptionCanceled(stripeSubscription: any): Promise<void> {
     try {
+      this.logger.log(`🔍 Processing subscription cancellation: ${stripeSubscription.id}`);
+
       const subscription = await this.prisma.subscription.findFirst({
         where: {
           stripeSubscriptionId: stripeSubscription.id,
@@ -292,7 +314,9 @@ export class SubscriptionService {
           where: { id: subscription.id },
         });
 
-        this.logger.log(`User ${subscription.userId} downgraded to FREE plan`);
+        this.logger.log(`⬇️ User ${subscription.userId} downgraded to FREE plan`);
+      } else {
+        this.logger.warn(`⚠️ Subscription not found: ${stripeSubscription.id}`);
       }
     } catch (error) {
       this.logger.error('Subscription cancellation handling failed', error);

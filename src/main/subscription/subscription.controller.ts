@@ -12,6 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SubscriptionService } from './subscription.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/user.decorators.js';
+import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
 
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
@@ -24,23 +25,13 @@ export class SubscriptionController {
   @ApiOperation({ summary: 'Create Stripe checkout session' })
   async createCheckout(
     @CurrentUser() userId: string,
-    @Body() body: any,
+    @Body() dto: CreateCheckoutDto,
   ) {
     if (!userId) {
       throw new UnauthorizedException('Missing or invalid authentication');
     }
 
-    const plan = body?.plan;
-
-    if (!plan) {
-      throw new BadRequestException('Missing required field: plan. Expected: {"plan": "monthly" | "yearly"}');
-    }
-
-    if (plan !== 'monthly' && plan !== 'yearly') {
-      throw new BadRequestException(`Invalid plan value. Got: "${plan}". Expected: "monthly" or "yearly"`);
-    }
-
-    return this.subscriptionService.createCheckoutSession(userId, plan);
+    return this.subscriptionService.createCheckoutSession(userId, dto.plan);
   }
 
   @ApiBearerAuth('access-token')
@@ -57,6 +48,22 @@ export class SubscriptionController {
   @ApiOperation({ summary: 'Check impact of subscription downgrade' })
   async checkDowngradeImpact(@CurrentUser() userId: string) {
     return this.subscriptionService.checkDowngradeImpact(userId);
+  }
+
+  // Dev-only: set stripe customer id for current user (used for testing webhooks)
+  @ApiBearerAuth('access-token')
+  @Post('test/set-customer')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: '[DEV] Set Stripe customer id for user' })
+  async setCustomer(
+    @CurrentUser() userId: string,
+    @Body('customerId') customerId: string,
+  ) {
+    if (!customerId) {
+      throw new BadRequestException('Missing customerId');
+    }
+
+    return this.subscriptionService.setUserStripeCustomer(userId, customerId);
   }
 
   @Post('webhook')
