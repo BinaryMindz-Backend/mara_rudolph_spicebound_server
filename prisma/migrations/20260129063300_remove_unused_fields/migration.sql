@@ -1,4 +1,4 @@
--- Remove unused columns from Book table
+-- Drop unused columns from Book table
 ALTER TABLE "Book" DROP COLUMN IF EXISTS "coverImageUrl";
 ALTER TABLE "Book" DROP COLUMN IF EXISTS "isStandalone";
 ALTER TABLE "Book" DROP COLUMN IF EXISTS "externalRatingSource";

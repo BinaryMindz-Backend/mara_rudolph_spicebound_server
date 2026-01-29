@@ -7,9 +7,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SubscriptionPlan } from '../../../prisma/generated/prisma-client/enums.js';
-
-
- 
+import Stripe from 'stripe';
 @Injectable()
 export class SubscriptionService {
   private readonly logger = new Logger(SubscriptionService.name);
@@ -24,18 +22,22 @@ export class SubscriptionService {
 
   private initializeStripe(): void {
     try {
-      // Dynamically import Stripe (supports optional dependency)
-      const Stripe = require('stripe');
-      const stripeKey = this.configService.get<string>('stripe.secretKey');
+      // Try multiple paths to get the key
+      let stripeKey = this.configService.get<string>('stripe.secretKey');
+      if (!stripeKey) {
+        stripeKey = this.configService.get<string>('STRIPE_SECRET_KEY');
+      }
 
       if (!stripeKey) {
-        this.logger.warn('Stripe key not configured');
+        this.logger.warn('⚠️ Stripe key not configured. Check STRIPE_SECRET_KEY in .env');
         this.stripe = null;
-      } else {
-        this.stripe = new Stripe(stripeKey);
+        return;
       }
+
+      this.stripe = new Stripe(stripeKey);
+      this.logger.log('✅ Stripe initialized successfully');
     } catch (error) {
-      this.logger.warn('Stripe SDK not installed. Install with: npm install stripe');
+      this.logger.error('❌ Failed to initialize Stripe:', error?.message || error);
       this.stripe = null;
     }
   }
@@ -48,7 +50,10 @@ export class SubscriptionService {
     plan: 'monthly' | 'yearly',
   ): Promise<{ sessionId: string; url: string }> {
     if (!this.stripe) {
-      throw new BadRequestException('Stripe not configured');
+      this.logger.error('❌ Stripe not initialized - check STRIPE_SECRET_KEY env variable');
+      throw new BadRequestException(
+        'Payment system not configured. Please contact support.',
+      );
     }
 
     const user = await this.prisma.user.findUnique({
@@ -59,12 +64,27 @@ export class SubscriptionService {
       throw new NotFoundException('User not found');
     }
 
-    const priceId =
-      plan === 'yearly'
-        ? this.configService.get('stripe.priceYearly')
-        : this.configService.get('stripe.priceMonthly');
+    // Get price IDs from config - try multiple paths
+    let priceMonthly = this.configService.get('stripe.priceMonthly');
+    let priceYearly = this.configService.get('stripe.priceYearly');
+    
+    if (!priceMonthly) {
+      priceMonthly = this.configService.get('STRIPE_PRICE_PRO_MONTHLY');
+    }
+    if (!priceYearly) {
+      priceYearly = this.configService.get('STRIPE_PRICE_PRO_YEARLY');
+    }
+
+    const priceId = plan === 'yearly' ? priceYearly : priceMonthly;
+
+    if (!priceId) {
+      this.logger.error(`❌ Missing Stripe price ID for plan: ${plan}`);
+      throw new BadRequestException(`Stripe price not configured for ${plan} plan`);
+    }
 
     try {
+      this.logger.log(`🔄 Creating Stripe checkout session for user ${userId}, plan: ${plan}`);
+      
       const session = await this.stripe.checkout.sessions.create({
         customer_email: user.email,
         payment_method_types: ['card'],
@@ -82,13 +102,15 @@ export class SubscriptionService {
         },
       });
 
+      this.logger.log(`✅ Checkout session created: ${session.id}`);
+      
       return {
         sessionId: session.id,
         url: session.url,
       };
     } catch (error) {
-      this.logger.error('Stripe session creation failed', error);
-      throw new BadRequestException('Failed to create checkout session');
+      this.logger.error('❌ Stripe session creation failed', error);
+      throw new BadRequestException(`Failed to create checkout session: ${error.message}`);
     }
   }
 

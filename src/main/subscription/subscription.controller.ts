@@ -3,10 +3,10 @@ import {
   Controller,
   Get,
   Post,
-  Req,
   UseGuards,
-  Request,
   BadRequestException,
+  UnauthorizedException,
+  Req,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { SubscriptionService } from './subscription.service.js';
@@ -24,9 +24,23 @@ export class SubscriptionController {
   @ApiOperation({ summary: 'Create Stripe checkout session' })
   async createCheckout(
     @CurrentUser() userId: string,
-    @Body() body: { plan: 'monthly' | 'yearly' },
+    @Body() body: any,
   ) {
-    return this.subscriptionService.createCheckoutSession(userId, body.plan);
+    if (!userId) {
+      throw new UnauthorizedException('Missing or invalid authentication');
+    }
+
+    const plan = body?.plan;
+
+    if (!plan) {
+      throw new BadRequestException('Missing required field: plan. Expected: {"plan": "monthly" | "yearly"}');
+    }
+
+    if (plan !== 'monthly' && plan !== 'yearly') {
+      throw new BadRequestException(`Invalid plan value. Got: "${plan}". Expected: "monthly" or "yearly"`);
+    }
+
+    return this.subscriptionService.createCheckoutSession(userId, plan);
   }
 
   @ApiBearerAuth('access-token')
