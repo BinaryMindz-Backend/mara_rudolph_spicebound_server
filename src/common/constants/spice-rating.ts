@@ -7,7 +7,10 @@ export const SPICE_RATING_SCALE = {
   2: { label: 'Sweet', description: 'Closed door' },
   3: { label: 'Warm', description: '1–2 open door scenes' },
   4: { label: 'Spicy', description: 'Descriptive, >2 scenes, ≥ NA' },
-  5: { label: 'Hot Spicy', description: 'Heavy spice, descriptive and regular' },
+  5: {
+    label: 'Hot Spicy',
+    description: 'Heavy spice, descriptive and regular',
+  },
   6: { label: 'Explicit/Kink', description: 'Erotica, light-no plot' },
 } as const;
 

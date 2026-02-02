@@ -11,12 +11,12 @@ import { PrismaClient } from '../../../prisma/generated/prisma-client/client.js'
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy {
+  implements OnModuleInit, OnModuleDestroy
+{
   private readonly logger = new Logger(PrismaService.name);
 
   constructor(private readonly configService: ConfigService) {
-    const connectionString =
-      configService.getOrThrow<string>('DATABASE_URL');
+    const connectionString = configService.getOrThrow<string>('DATABASE_URL');
 
     const adapter = new PrismaPg({ connectionString });
 
