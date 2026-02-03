@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { isValidTrope, APPROVED_TROPES } from '../../../common/constants/tropes.js';
+import {
+  isValidTrope,
+  APPROVED_TROPES,
+} from '../../../common/constants/tropes.js';
 import { isValidSpiceRating } from '../../../common/constants/spice-rating.js';
 
 export interface EnrichedBookData {
@@ -39,38 +42,47 @@ export class AiEnrichmentService {
       }
 
       const prompt = this.buildEnrichmentPrompt(bookData);
-      const model = this.configService.get<string>('openai.model') || 'gpt-3.5-turbo';
+      const model =
+        this.configService.get<string>('openai.model') || 'gpt-3.5-turbo';
 
       this.logger.log(`🔹 Calling OpenAI with model: ${model}`);
-      this.logger.debug(`🔹 OpenAI API Key exists: ${apiKey.substring(0, 20)}...`);
+      this.logger.debug(
+        `🔹 OpenAI API Key exists: ${apiKey.substring(0, 20)}...`,
+      );
 
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${apiKey}`,
+      const response = await fetch(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${apiKey}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [
+              {
+                role: 'system',
+                content:
+                  'You are a romance book metadata enrichment engine. Return ONLY valid JSON, no markdown or extra text.',
+              },
+              {
+                role: 'user',
+                content: prompt,
+              },
+            ],
+            temperature: 0.5,
+            max_tokens: 500,
+          }),
         },
-        body: JSON.stringify({
-          model,
-          messages: [
-            {
-              role: 'system',
-              content:
-                'You are a romance book metadata enrichment engine. Return ONLY valid JSON, no markdown or extra text.',
-            },
-            {
-              role: 'user',
-              content: prompt,
-            },
-          ],
-          temperature: 0.5,
-          max_tokens: 500,
-        }),
-      });
+      );
 
       if (!response.ok) {
         const errorData = await response.json();
-        this.logger.error(`OpenAI API error: ${response.status} ${response.statusText}`, errorData);
+        this.logger.error(
+          `OpenAI API error: ${response.status} ${response.statusText}`,
+          errorData,
+        );
         return {
           ageLevel: 'UNKNOWN',
           spiceRating: 0,
@@ -103,7 +115,10 @@ export class AiEnrichmentService {
       // Validate and sanitize output
       return this.sanitizeEnrichedData(enriched);
     } catch (error) {
-      this.logger.error('AI enrichment failed', error instanceof Error ? error.message : error);
+      this.logger.error(
+        'AI enrichment failed',
+        error instanceof Error ? error.message : error,
+      );
       return {
         ageLevel: 'UNKNOWN',
         spiceRating: 0,

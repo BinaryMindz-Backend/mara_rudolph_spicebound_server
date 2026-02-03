@@ -4,7 +4,7 @@ import { ExternalBookData } from '../types/book-source.types.js';
 @Injectable()
 export class OpenLibraryProvider {
   private readonly logger = new Logger(OpenLibraryProvider.name);
-   private readonly baseUrl = 'https://openlibrary.org/search.json';
+  private readonly baseUrl = 'https://openlibrary.org/search.json';
   /**
    * Search Open Library by title/author
    */
@@ -50,7 +50,10 @@ export class OpenLibraryProvider {
         const enrichedData = await this.fetchById(workId);
         if (enrichedData?.description) {
           mapped.description = enrichedData.description;
-          this.logger.log('✅ OpenLibrary fetched description for work:', workId);
+          this.logger.log(
+            '✅ OpenLibrary fetched description for work:',
+            workId,
+          );
         }
       }
 
@@ -87,7 +90,7 @@ export class OpenLibraryProvider {
         description:
           typeof data.description === 'string'
             ? data.description
-            : data.description?.value ?? undefined,
+            : (data.description?.value ?? undefined),
         openLibraryId: cleanId,
       };
 

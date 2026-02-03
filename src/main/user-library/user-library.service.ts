@@ -118,10 +118,7 @@ export class UserLibraryService {
   /**
    * Get user's library with optional filtering
    */
-  async getUserLibrary(
-    userId: string,
-    status?: string,
-  ): Promise<any[]> {
+  async getUserLibrary(userId: string, status?: string): Promise<any[]> {
     const books = await this.prisma.userBook.findMany({
       where: {
         userId,
@@ -191,10 +188,7 @@ export class UserLibraryService {
   /**
    * Reorder books (for drag & drop)
    */
-  async reorderBooks(
-    userId: string,
-    dto: ReorderBooksDto,
-  ): Promise<any[]> {
+  async reorderBooks(userId: string, dto: ReorderBooksDto): Promise<any[]> {
     // Validate all books belong to user
     const userBooks = await this.prisma.userBook.findMany({
       where: {
@@ -204,9 +198,7 @@ export class UserLibraryService {
     });
 
     if (userBooks.length !== dto.bookIds.length) {
-      throw new BadRequestException(
-        'Some books do not belong to your library',
-      );
+      throw new BadRequestException('Some books do not belong to your library');
     }
 
     // Update order indices

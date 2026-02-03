@@ -12,11 +12,11 @@ import { mergeExternalData } from './utils/merge-book-data.js';
 import { calculateCombinedRating } from '../../common/utils/rating-utils.js';
 import { generateLinks } from './utils/link-generator.js';
 
+import { ExternalBookData, InputType } from './types/book-source.types.js';
 import {
-  ExternalBookData,
-  InputType,
-} from './types/book-source.types.js';
-import { BookAliasType, AgeLevel } from '../../../prisma/generated/prisma-client/enums.js';
+  BookAliasType,
+  AgeLevel,
+} from '../../../prisma/generated/prisma-client/enums.js';
 
 /**
  * Normalize strings for canonical matching
@@ -252,11 +252,11 @@ export class BookSlipService {
 
       series: book.seriesName
         ? {
-          name: book.seriesName,
-          index: book.seriesIndex,
-          total: book.seriesTotal,
-          status: book.seriesStatus,
-        }
+            name: book.seriesName,
+            index: book.seriesIndex,
+            total: book.seriesTotal,
+            status: book.seriesStatus,
+          }
         : undefined,
 
       ratings: ratings.count || ratings.average ? ratings : undefined,

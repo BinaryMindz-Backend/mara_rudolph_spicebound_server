@@ -13,6 +13,8 @@ export class CreateCheckoutDto {
     example: 'monthly',
   })
   @IsNotEmpty({ message: 'Plan is required' })
-  @IsEnum(CheckoutPlan, { message: 'Plan must be either "monthly" or "yearly"' })
+  @IsEnum(CheckoutPlan, {
+    message: 'Plan must be either "monthly" or "yearly"',
+  })
   plan: 'monthly' | 'yearly';
 }

@@ -27,4 +27,5 @@ export function isFreeUser(plan: SubscriptionPlan): boolean {
 }
 
 export function isPremiumUser(plan: SubscriptionPlan): boolean {
-  return plan === SubscriptionPlan.PREMIUM;}
+  return plan === SubscriptionPlan.PREMIUM;
+}

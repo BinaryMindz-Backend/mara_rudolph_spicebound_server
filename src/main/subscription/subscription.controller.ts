@@ -17,7 +17,7 @@ import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) { }
+  constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @ApiBearerAuth('access-token')
   @Post('checkout')

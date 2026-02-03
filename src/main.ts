@@ -10,12 +10,14 @@ async function bootstrap() {
   });
 
   // Configure CORS
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? [
-        'https://readspicebound.com',
-        'https://www.readspicebound.com',
-      ]
-    : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:5050'];
+  const allowedOrigins =
+    process.env.NODE_ENV === 'production'
+      ? ['https://readspicebound.com', 'https://www.readspicebound.com']
+      : [
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://localhost:5050',
+        ];
 
   app.enableCors({
     origin: allowedOrigins,

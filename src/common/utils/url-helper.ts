@@ -2,7 +2,10 @@
  * URL helper for affiliate links and normalization
  */
 
-export function buildAmazonUrl(asin: string, affiliate: boolean = false): string {
+export function buildAmazonUrl(
+  asin: string,
+  affiliate: boolean = false,
+): string {
   const baseUrl = `https://amazon.com/dp/${asin}`;
   if (!affiliate) return baseUrl;
   // Placeholder for affiliate tag setup

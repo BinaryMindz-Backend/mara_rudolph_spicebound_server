@@ -1,4 +1,4 @@
-import { ExternalBookData } from "../types/book-source.types.js";
+import { ExternalBookData } from '../types/book-source.types.js';
 
 export function mergeExternalData(
   google?: ExternalBookData,

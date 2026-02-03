@@ -6,7 +6,6 @@ import { GoogleBooksProvider } from './providers/google-books.provider.js';
 import { OpenLibraryProvider } from './providers/open-library.provider.js';
 import { AiEnrichmentService } from './ai/ai-enrichment.service.js';
 
-
 @Module({
   imports: [ConfigModule],
   controllers: [BookSlipController],

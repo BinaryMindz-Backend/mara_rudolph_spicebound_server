@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateRatingDto } from './dto/create-rating.dto.js';
 
@@ -96,9 +100,10 @@ export class RatingService {
       where: { bookId },
     });
 
-    const average = ratings.length > 0
-      ? ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length
-      : null;
+    const average =
+      ratings.length > 0
+        ? ratings.reduce((sum, r) => sum + r.value, 0) / ratings.length
+        : null;
 
     return {
       average,
