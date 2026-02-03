@@ -1,25 +1,3 @@
-<<<<<<< HEAD
-FROM node:20-alpine
-
-WORKDIR /usr/src/app
-
-# Copy package files
-COPY package*.json ./
-
-# Install deps
-RUN npm install
-
-# Copy source code
-COPY . .
-
-# Build NestJS
-RUN npm run build
-
-# Expose port
-EXPOSE 3000
-
-# Start production server
-=======
 # syntax=docker/dockerfile:1
 
 FROM node:24-bookworm AS deps
@@ -66,5 +44,4 @@ COPY --from=build /app/prisma ./prisma
 
 EXPOSE 5050
 
->>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
 CMD ["node", "dist/src/main.js"]
