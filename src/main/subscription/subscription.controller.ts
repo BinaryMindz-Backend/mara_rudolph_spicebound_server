@@ -17,7 +17,7 @@ import { CreateCheckoutDto } from './dto/create-checkout.dto.js';
 @ApiTags('Subscriptions')
 @Controller('subscriptions')
 export class SubscriptionController {
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(private readonly subscriptionService: SubscriptionService) { }
 
   @ApiBearerAuth('access-token')
   @Post('checkout')
@@ -51,25 +51,25 @@ export class SubscriptionController {
   }
 
   // Dev-only: set stripe customer id for current user (used for testing webhooks)
-  @ApiBearerAuth('access-token')
-  @Post('test/set-customer')
-  @UseGuards(JwtAuthGuard)
-  @ApiOperation({ summary: '[DEV] Set Stripe customer id for user' })
-  async setCustomer(
-    @CurrentUser() userId: string,
-    @Body('customerId') customerId: string,
-  ) {
-    if (!customerId) {
-      throw new BadRequestException('Missing customerId');
-    }
+  // @ApiBearerAuth('access-token')
+  // @Post('test/set-customer')
+  // @UseGuards(JwtAuthGuard)
+  // @ApiOperation({ summary: '[DEV] Set Stripe customer id for user' })
+  // async setCustomer(
+  //   @CurrentUser() userId: string,
+  //   @Body('customerId') customerId: string,
+  // ) {
+  //   if (!customerId) {
+  //     throw new BadRequestException('Missing customerId');
+  //   }
 
-    return this.subscriptionService.setUserStripeCustomer(userId, customerId);
-  }
+  //   return this.subscriptionService.setUserStripeCustomer(userId, customerId);
+  // }
 
   @Post('webhook')
   async handleWebhook(@Req() req: any) {
     const signature = req.headers['stripe-signature'];
-    
+
     if (!signature) {
       throw new BadRequestException('Missing Stripe signature header');
     }
