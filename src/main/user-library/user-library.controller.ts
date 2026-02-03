@@ -15,7 +15,12 @@ import { UpdateBookStatusDto } from './dto/update-book-status.dto.js';
 import { ReorderBooksDto } from './dto/reorder-books.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/user.decorators.js';
-import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 
 @ApiTags('User Library')
 @Controller('user-library')
@@ -35,6 +40,7 @@ export class UserLibraryController {
 
   @ApiBearerAuth('access-token')
   @Get()
+  @ApiQuery({ name: 'status', required: false })
   @ApiOperation({ summary: 'Get user library with optional status filter' })
   async getLibrary(
     @CurrentUser() userId: string,
