@@ -17,7 +17,6 @@ import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
 
-
 @Injectable()
 export class AuthService {
   constructor(
@@ -60,10 +59,14 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+<<<<<<< HEAD
     const passwordMatch = await bcrypt.compare(
       dto.password,
       user.password,
     );
+=======
+    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+>>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
@@ -73,6 +76,7 @@ export class AuthService {
     return this.generateAuthResponse(safeUser);
   }
 
+<<<<<<< HEAD
   async changePassword(
     userId: string,
     dto: ChangePasswordDto,
@@ -108,6 +112,8 @@ export class AuthService {
     );
   }
 
+=======
+>>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
   private generateAuthResponse(user: any) {
     const payload = {
       sub: user.id,

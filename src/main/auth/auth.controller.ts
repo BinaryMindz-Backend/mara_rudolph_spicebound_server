@@ -9,7 +9,6 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
-
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) { }

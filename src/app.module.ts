@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './main/auth/auth.module.js';
 import { PrismaModule } from './main/prisma/prisma.module.js';
+<<<<<<< HEAD
 import { BookSlipModule } from './main/book-slip/book-slip.module.js';
 import { UserLibraryModule } from './main/user-library/user-library.module.js';
 import { RatingModule } from './main/rating/rating.module.js';
@@ -14,6 +15,8 @@ import jwtConfig from './config/jwt.config.js';
 import openaiConfig from './config/openai.config.js';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+=======
+>>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
 
 @Module({
   imports: [
