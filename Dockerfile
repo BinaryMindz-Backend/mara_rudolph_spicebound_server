@@ -44,4 +44,4 @@ COPY --from=build /app/prisma ./prisma
 
 EXPOSE 5050
 
-CMD ["pnpm", "start:prod"]
+CMD ["node", "dist/src/main.js"]
