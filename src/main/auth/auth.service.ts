@@ -23,7 +23,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) {}
+  ) { }
 
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
@@ -107,6 +107,34 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedNewPassword },
+    });
+
+    return ApiResponseUtil.success({ success: true }, 'Password changed successfully', 200);
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {
