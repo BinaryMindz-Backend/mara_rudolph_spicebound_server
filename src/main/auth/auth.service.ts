@@ -23,7 +23,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) { }
+  ) {}
 
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
@@ -59,14 +59,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-<<<<<<< HEAD
-    const passwordMatch = await bcrypt.compare(
-      dto.password,
-      user.password,
-    );
-=======
     const passwordMatch = await bcrypt.compare(dto.password, user.password);
->>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
@@ -76,44 +69,6 @@ export class AuthService {
     return this.generateAuthResponse(safeUser);
   }
 
-<<<<<<< HEAD
-  async changePassword(
-    userId: string,
-    dto: ChangePasswordDto,
-  ) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const passwordMatch = await bcrypt.compare(
-      dto.currentPassword,
-      user.password,
-    );
-
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedNewPassword },
-    });
-
-    return ApiResponseUtil.success(
-      { success: true },
-      'Password changed successfully',
-      200,
-    );
-  }
-
-=======
->>>>>>> 891f4ee122a63280f71cb53dd1cdcf15936f426b
   private generateAuthResponse(user: any) {
     const payload = {
       sub: user.id,
@@ -132,10 +87,7 @@ export class AuthService {
       },
     };
 
-    return ApiResponseUtil.created(
-      authData,
-      'Authentication successful',
-    );
+    return ApiResponseUtil.created(authData, 'Authentication successful');
   }
 
   async getMe(userId: string) {
@@ -210,9 +162,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException(
-        'Invalid or expired reset token',
-      );
+      throw new BadRequestException('Invalid or expired reset token');
     }
 
     const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
