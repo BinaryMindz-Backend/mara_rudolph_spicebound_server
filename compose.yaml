@@ -25,9 +25,9 @@ services:
     command: >
       sh -c "
         echo '🏁 Waiting for DB...';
-        sleep 5;
+        sleep 10;
         echo '📦 Running migrations...';
-        npx prisma migrate deploy;
+        npx prisma migrate deploy || exit 1;
         echo '🚀 Starting app...';
         node dist/src/main.js
       "
