@@ -21,7 +21,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "format:fix": "prettier --ignore-path .gitignore --write \"**/*.+(js|ts|json)\"",
     "ci:fix": "npm run format:fix",
-    "start:docker": "npx prisma migrate deploy && NODE_ENV=production node dist/src/main.js"
+    "start:docker": "npx prisma migrate deploy && node dist/src/main.js"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
