@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { SignupDto } from './dto/signup.dto.js';
@@ -23,6 +24,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
+    private configService: ConfigService,
   ) { }
 
   async signup(dto: SignupDto) {
@@ -76,8 +78,14 @@ export class AuthService {
       plan: user.plan,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+
+    // Create and store a refresh token (rotating refresh tokens)
+    const refreshToken = this.createAndSaveRefreshToken(user.id);
+
     const authData = {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -88,6 +96,70 @@ export class AuthService {
     };
 
     return ApiResponseUtil.created(authData, 'Authentication successful');
+  }
+
+  private async createAndSaveRefreshToken(userId: string) {
+    const refreshTokenPlain = crypto.randomBytes(64).toString('hex');
+    const hashed = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+
+    const days = parseInt(this.configService.get<string>('REFRESH_TOKEN_EXPIRES_DAYS') || '30', 10);
+    const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: hashed, refreshTokenExpiry: expiry },
+    });
+
+    return refreshTokenPlain;
+  }
+
+  async refresh(dto: { refreshToken: string }) {
+    if (!dto?.refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    const hashed = crypto.createHash('sha256').update(dto.refreshToken).digest('hex');
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        refreshToken: hashed,
+        refreshTokenExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    // Generate new access token
+    const payload = { sub: user.id, email: user.email, plan: user.plan };
+    const accessToken = this.jwtService.sign(payload);
+
+    // Rotate refresh token
+    const newRefreshToken = await this.createAndSaveRefreshToken(user.id);
+
+    const authData = {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        plan: user.plan,
+        createdAt: user.createdAt,
+      },
+    };
+
+    return ApiResponseUtil.success(authData, 'Token refreshed', 200);
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null, refreshTokenExpiry: null },
+    });
+
+    return ApiResponseUtil.success({ success: true }, 'Logged out successfully', 200);
   }
 
   async getMe(userId: string) {

@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
+import { RefreshTokenDto } from './dto/refresh-token.dto.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/user.decorators.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
@@ -25,6 +26,12 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refresh(dto);
+  }
+
   @ApiTags('Auth')
   @ApiBearerAuth('access-token')
   @Get('me')
@@ -44,6 +51,15 @@ export class AuthController {
     @Body() dto: ChangePasswordDto,
   ) {
     return this.authService.changePassword(userId, dto);
+  }
+
+  @ApiTags('Auth')
+  @ApiBearerAuth('access-token')
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Logout and revoke refresh token' })
+  logout(@CurrentUser() userId: string) {
+    return this.authService.logout(userId);
   }
 
   @Post('forgot-password')
