@@ -56,8 +56,6 @@ services:
       POSTGRES_DB: ${PACKAGE_NAME}_db
     volumes:
       - db_data:/var/lib/postgresql/data
-    ports:
-      - "${DB_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
