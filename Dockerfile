@@ -44,5 +44,4 @@ COPY --from=build /app/prisma ./prisma
 
 EXPOSE 5050
 
-RUN npx prisma migrate deploy
 CMD ["node", "dist/src/main.js"]
