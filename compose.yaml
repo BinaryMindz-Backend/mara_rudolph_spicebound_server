@@ -1,0 +1,95 @@
+services:
+  server:
+    platform: linux/amd64
+    image: ${DOCKER_USERNAME}/${PACKAGE_NAME}:${PACKAGE_VERSION}
+    container_name: ${PACKAGE_NAME}_api
+    profiles:
+      - prod
+    restart: always
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: ${PORT:-5050}
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/${PACKAGE_NAME}_db?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: ${REDIS_PORT:-6379}
+      BASE_URL: http://0.0.0.0:${PORT:-5050}
+    ports:
+      - "${PORT:-5050}:${PORT:-5050}"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo '🏁 Waiting for DB...';
+        sleep 10;
+        echo '📦 Running migrations...';
+        npx prisma migrate deploy || exit 1;
+        echo '🚀 Starting app...';
+        node dist/src/main.js
+      "
+    volumes:
+      - files-data:/app/uploads
+      - temp-data:/app/tmp
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://0.0.0.0:${PORT:-5050}/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - spicebound-net
+
+  db:
+    image: postgres:17
+    container_name: ${PACKAGE_NAME}_db
+    restart: always
+    profiles:
+      - dev
+      - prod
+    user: postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: ${PACKAGE_NAME}_db
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spicebound-net
+
+  redis:
+    image: redis:7-alpine
+    container_name: ${PACKAGE_NAME}_redis
+    restart: always
+    profiles:
+      - dev
+      - prod
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spicebound-net
+
+volumes:
+  db_data:
+  files-data:
+  temp-data:
+  redis_data:
+
+networks:
+  spicebound-net:
+    driver: bridge

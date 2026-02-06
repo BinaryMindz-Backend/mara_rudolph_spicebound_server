@@ -11,10 +11,13 @@ export class EmailService {
     // Configure nodemailer transporter with env variables
     const mailUser = this.configService.get<string>('MAIL_USER');
     const mailPassword = this.configService.get<string>('MAIL_PASSWORD');
-    const mailService = this.configService.get<string>('MAIL_SERVICE') || 'gmail';
+    const mailService =
+      this.configService.get<string>('MAIL_SERVICE') || 'gmail';
 
     if (!mailUser || !mailPassword) {
-      this.logger.warn('Email credentials not configured. Email sending will fail.');
+      this.logger.warn(
+        'Email credentials not configured. Email sending will fail.',
+      );
     }
 
     this.transporter = nodemailer.createTransport({
@@ -26,11 +29,17 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(email: string, resetToken: string): Promise<void> {
-    const frontendUrl = this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
+  async sendPasswordResetEmail(
+    email: string,
+    resetToken: string,
+  ): Promise<void> {
+    const frontendUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:3000';
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    const mailFrom = this.configService.get<string>('MAIL_FROM') || this.configService.get<string>('MAIL_USER');
+    const mailFrom =
+      this.configService.get<string>('MAIL_FROM') ||
+      this.configService.get<string>('MAIL_USER');
 
     const mailOptions = {
       from: mailFrom,

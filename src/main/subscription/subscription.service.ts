@@ -29,7 +29,9 @@ export class SubscriptionService {
       }
 
       if (!stripeKey) {
-        this.logger.warn('⚠️ Stripe key not configured. Check STRIPE_SECRET_KEY in .env');
+        this.logger.warn(
+          '⚠️ Stripe key not configured. Check STRIPE_SECRET_KEY in .env',
+        );
         this.stripe = null;
         return;
       }
@@ -37,7 +39,10 @@ export class SubscriptionService {
       this.stripe = new Stripe(stripeKey);
       this.logger.log('✅ Stripe initialized successfully');
     } catch (error) {
-      this.logger.error('❌ Failed to initialize Stripe:', error?.message || error);
+      this.logger.error(
+        '❌ Failed to initialize Stripe:',
+        error?.message || error,
+      );
       this.stripe = null;
     }
   }
@@ -50,7 +55,9 @@ export class SubscriptionService {
     plan: 'monthly' | 'yearly',
   ): Promise<{ sessionId: string; url: string }> {
     if (!this.stripe) {
-      this.logger.error('❌ Stripe not initialized - check STRIPE_SECRET_KEY env variable');
+      this.logger.error(
+        '❌ Stripe not initialized - check STRIPE_SECRET_KEY env variable',
+      );
       throw new BadRequestException(
         'Payment system not configured. Please contact support.',
       );
@@ -67,7 +74,7 @@ export class SubscriptionService {
     // Get price IDs from config - try multiple paths
     let priceMonthly = this.configService.get('stripe.priceMonthly');
     let priceYearly = this.configService.get('stripe.priceYearly');
-    
+
     if (!priceMonthly) {
       priceMonthly = this.configService.get('STRIPE_PRICE_PRO_MONTHLY');
     }
@@ -79,12 +86,16 @@ export class SubscriptionService {
 
     if (!priceId) {
       this.logger.error(`❌ Missing Stripe price ID for plan: ${plan}`);
-      throw new BadRequestException(`Stripe price not configured for ${plan} plan`);
+      throw new BadRequestException(
+        `Stripe price not configured for ${plan} plan`,
+      );
     }
 
     try {
-      this.logger.log(`🔄 Creating Stripe checkout session for user ${userId}, plan: ${plan}`);
-      
+      this.logger.log(
+        `🔄 Creating Stripe checkout session for user ${userId}, plan: ${plan}`,
+      );
+
       const session = await this.stripe.checkout.sessions.create({
         customer_email: user.email,
         payment_method_types: ['card'],
@@ -103,14 +114,16 @@ export class SubscriptionService {
       });
 
       this.logger.log(`✅ Checkout session created: ${session.id}`);
-      
+
       return {
         sessionId: session.id,
         url: session.url,
       };
     } catch (error) {
       this.logger.error('❌ Stripe session creation failed', error);
-      throw new BadRequestException(`Failed to create checkout session: ${error.message}`);
+      throw new BadRequestException(
+        `Failed to create checkout session: ${error.message}`,
+      );
     }
   }
 
@@ -122,7 +135,9 @@ export class SubscriptionService {
       throw new BadRequestException('Stripe not configured');
     }
 
-    const webhookSecret = this.configService.get<string>('stripe.webhookSecret');
+    const webhookSecret = this.configService.get<string>(
+      'stripe.webhookSecret',
+    );
 
     if (!webhookSecret) {
       this.logger.error('Stripe webhook secret not configured');
@@ -140,7 +155,9 @@ export class SubscriptionService {
       this.logger.log(`✅ Webhook signature verified: ${event.type}`);
     } catch (error) {
       this.logger.error('Webhook signature verification failed', error);
-      throw new BadRequestException(`Webhook signature verification failed: ${error.message}`);
+      throw new BadRequestException(
+        `Webhook signature verification failed: ${error.message}`,
+      );
     }
 
     try {
@@ -231,9 +248,13 @@ export class SubscriptionService {
   /**
    * Internal: Handle subscription created/updated
    */
-  private async handleSubscriptionUpdate(stripeSubscription: any): Promise<void> {
+  private async handleSubscriptionUpdate(
+    stripeSubscription: any,
+  ): Promise<void> {
     try {
-      this.logger.log(`🔍 Subscription update: ID=${stripeSubscription.id}, Status=${stripeSubscription.status}`);
+      this.logger.log(
+        `🔍 Subscription update: ID=${stripeSubscription.id}, Status=${stripeSubscription.status}`,
+      );
 
       // Find or create subscription record
       const existingSubscription = await this.prisma.subscription.findFirst({
@@ -277,7 +298,9 @@ export class SubscriptionService {
           });
           this.logger.log(`🎉 User ${user.id} upgraded to PREMIUM plan`);
         } else {
-          this.logger.warn(`⚠️ No user found for customer: ${stripeSubscription.customer}`);
+          this.logger.warn(
+            `⚠️ No user found for customer: ${stripeSubscription.customer}`,
+          );
         }
       }
     } catch (error) {
@@ -289,9 +312,13 @@ export class SubscriptionService {
   /**
    * Internal: Handle subscription canceled
    */
-  private async handleSubscriptionCanceled(stripeSubscription: any): Promise<void> {
+  private async handleSubscriptionCanceled(
+    stripeSubscription: any,
+  ): Promise<void> {
     try {
-      this.logger.log(`🔍 Processing subscription cancellation: ${stripeSubscription.id}`);
+      this.logger.log(
+        `🔍 Processing subscription cancellation: ${stripeSubscription.id}`,
+      );
 
       const subscription = await this.prisma.subscription.findFirst({
         where: {
@@ -314,7 +341,9 @@ export class SubscriptionService {
           where: { id: subscription.id },
         });
 
-        this.logger.log(`⬇️ User ${subscription.userId} downgraded to FREE plan`);
+        this.logger.log(
+          `⬇️ User ${subscription.userId} downgraded to FREE plan`,
+        );
       } else {
         this.logger.warn(`⚠️ Subscription not found: ${stripeSubscription.id}`);
       }

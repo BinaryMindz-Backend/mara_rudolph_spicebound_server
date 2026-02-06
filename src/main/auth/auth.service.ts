@@ -6,6 +6,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { SignupDto } from './dto/signup.dto.js';
@@ -18,14 +19,14 @@ import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
 import { UpdateNameDto } from './dto/update-name.dto.js';
 
-
 @Injectable()
 export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) {}
+    private configService: ConfigService,
+  ) { }
 
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
@@ -71,38 +72,6 @@ export class AuthService {
     return this.generateAuthResponse(safeUser);
   }
 
-  async changePassword(userId: string, dto: ChangePasswordDto) {
-    const user = await this.prisma.user.findUnique({
-      where: { id: userId },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    const passwordMatch = await bcrypt.compare(
-      dto.currentPassword,
-      user.password,
-    );
-
-    if (!passwordMatch) {
-      throw new UnauthorizedException('Current password is incorrect');
-    }
-
-    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
-
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { password: hashedNewPassword },
-    });
-
-    return ApiResponseUtil.success(
-      { success: true },
-      'Password changed successfully',
-      200,
-    );
-  }
-
   private generateAuthResponse(user: any) {
     const payload = {
       sub: user.id,
@@ -110,8 +79,14 @@ export class AuthService {
       plan: user.plan,
     };
 
+    const accessToken = this.jwtService.sign(payload);
+
+    // Create and store a refresh token (rotating refresh tokens)
+    const refreshToken = this.createAndSaveRefreshToken(user.id);
+
     const authData = {
-      accessToken: this.jwtService.sign(payload),
+      accessToken,
+      refreshToken,
       user: {
         id: user.id,
         name: user.name,
@@ -122,6 +97,70 @@ export class AuthService {
     };
 
     return ApiResponseUtil.created(authData, 'Authentication successful');
+  }
+
+  private async createAndSaveRefreshToken(userId: string) {
+    const refreshTokenPlain = crypto.randomBytes(64).toString('hex');
+    const hashed = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+
+    const days = parseInt(this.configService.get<string>('REFRESH_TOKEN_EXPIRES_DAYS') || '30', 10);
+    const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: hashed, refreshTokenExpiry: expiry },
+    });
+
+    return refreshTokenPlain;
+  }
+
+  async refresh(dto: { refreshToken: string }) {
+    if (!dto?.refreshToken) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    const hashed = crypto.createHash('sha256').update(dto.refreshToken).digest('hex');
+
+    const user = await this.prisma.user.findFirst({
+      where: {
+        refreshToken: hashed,
+        refreshTokenExpiry: { gt: new Date() },
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    // Generate new access token
+    const payload = { sub: user.id, email: user.email, plan: user.plan };
+    const accessToken = this.jwtService.sign(payload);
+
+    // Rotate refresh token
+    const newRefreshToken = await this.createAndSaveRefreshToken(user.id);
+
+    const authData = {
+      accessToken,
+      refreshToken: newRefreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        plan: user.plan,
+        createdAt: user.createdAt,
+      },
+    };
+
+    return ApiResponseUtil.success(authData, 'Token refreshed', 200);
+  }
+
+  async logout(userId: string) {
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { refreshToken: null, refreshTokenExpiry: null },
+    });
+
+    return ApiResponseUtil.success({ success: true }, 'Logged out successfully', 200);
   }
 
   async getMe(userId: string) {
@@ -141,6 +180,34 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const passwordMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (dto.currentPassword === dto.newPassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedNewPassword },
+    });
+
+    return ApiResponseUtil.success({ success: true }, 'Password changed successfully', 200);
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {

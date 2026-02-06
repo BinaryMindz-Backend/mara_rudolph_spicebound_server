@@ -1,5 +1,7 @@
-import { AgeLevel, SeriesStatus } from "prisma/generated/prisma-client/enums.js";
-
+import {
+  AgeLevel,
+  SeriesStatus,
+} from 'prisma/generated/prisma-client/enums.js';
 
 export interface BookSlipResponse {
   bookId: string;

@@ -9,7 +9,10 @@ export interface BookLinks {
 /**
  * Generate Amazon link from ASIN or ISBN
  */
-export function generateAmazonLink(asin?: string, isbn13?: string): string | undefined {
+export function generateAmazonLink(
+  asin?: string,
+  isbn13?: string,
+): string | undefined {
   if (asin) {
     return `https://amazon.com/dp/${asin}`;
   }

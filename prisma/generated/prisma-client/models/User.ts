@@ -33,6 +33,8 @@ export type UserMinAggregateOutputType = {
   stripeCustomerId: string | null
   resetToken: string | null
   resetTokenExpiry: Date | null
+  refreshToken: string | null
+  refreshTokenExpiry: Date | null
   createdAt: Date | null
 }
 
@@ -45,6 +47,8 @@ export type UserMaxAggregateOutputType = {
   stripeCustomerId: string | null
   resetToken: string | null
   resetTokenExpiry: Date | null
+  refreshToken: string | null
+  refreshTokenExpiry: Date | null
   createdAt: Date | null
 }
 
@@ -57,6 +61,8 @@ export type UserCountAggregateOutputType = {
   stripeCustomerId: number
   resetToken: number
   resetTokenExpiry: number
+  refreshToken: number
+  refreshTokenExpiry: number
   createdAt: number
   _all: number
 }
@@ -71,6 +77,8 @@ export type UserMinAggregateInputType = {
   stripeCustomerId?: true
   resetToken?: true
   resetTokenExpiry?: true
+  refreshToken?: true
+  refreshTokenExpiry?: true
   createdAt?: true
 }
 
@@ -83,6 +91,8 @@ export type UserMaxAggregateInputType = {
   stripeCustomerId?: true
   resetToken?: true
   resetTokenExpiry?: true
+  refreshToken?: true
+  refreshTokenExpiry?: true
   createdAt?: true
 }
 
@@ -95,6 +105,8 @@ export type UserCountAggregateInputType = {
   stripeCustomerId?: true
   resetToken?: true
   resetTokenExpiry?: true
+  refreshToken?: true
+  refreshTokenExpiry?: true
   createdAt?: true
   _all?: true
 }
@@ -180,6 +192,8 @@ export type UserGroupByOutputType = {
   stripeCustomerId: string | null
   resetToken: string | null
   resetTokenExpiry: Date | null
+  refreshToken: string | null
+  refreshTokenExpiry: Date | null
   createdAt: Date
   _count: UserCountAggregateOutputType | null
   _min: UserMinAggregateOutputType | null
@@ -213,6 +227,8 @@ export type UserWhereInput = {
   stripeCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   resetToken?: Prisma.StringNullableFilter<"User"> | string | null
   resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  refreshToken?: Prisma.StringNullableFilter<"User"> | string | null
+  refreshTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   library?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -228,6 +244,8 @@ export type UserOrderByWithRelationInput = {
   stripeCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
   resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
+  refreshToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  refreshTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   library?: Prisma.UserBookOrderByRelationAggregateInput
   ratings?: Prisma.RatingOrderByRelationAggregateInput
@@ -246,6 +264,8 @@ export type UserWhereUniqueInput = Prisma.AtLeast<{
   stripeCustomerId?: Prisma.StringNullableFilter<"User"> | string | null
   resetToken?: Prisma.StringNullableFilter<"User"> | string | null
   resetTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
+  refreshToken?: Prisma.StringNullableFilter<"User"> | string | null
+  refreshTokenExpiry?: Prisma.DateTimeNullableFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeFilter<"User"> | Date | string
   library?: Prisma.UserBookListRelationFilter
   ratings?: Prisma.RatingListRelationFilter
@@ -261,6 +281,8 @@ export type UserOrderByWithAggregationInput = {
   stripeCustomerId?: Prisma.SortOrderInput | Prisma.SortOrder
   resetToken?: Prisma.SortOrderInput | Prisma.SortOrder
   resetTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
+  refreshToken?: Prisma.SortOrderInput | Prisma.SortOrder
+  refreshTokenExpiry?: Prisma.SortOrderInput | Prisma.SortOrder
   createdAt?: Prisma.SortOrder
   _count?: Prisma.UserCountOrderByAggregateInput
   _max?: Prisma.UserMaxOrderByAggregateInput
@@ -279,6 +301,8 @@ export type UserScalarWhereWithAggregatesInput = {
   stripeCustomerId?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   resetToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
   resetTokenExpiry?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
+  refreshToken?: Prisma.StringNullableWithAggregatesFilter<"User"> | string | null
+  refreshTokenExpiry?: Prisma.DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"User"> | Date | string
 }
 
@@ -291,6 +315,8 @@ export type UserCreateInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -306,6 +332,8 @@ export type UserUncheckedCreateInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
@@ -321,6 +349,8 @@ export type UserUpdateInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -336,6 +366,8 @@ export type UserUncheckedUpdateInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
@@ -351,6 +383,8 @@ export type UserCreateManyInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
 }
 
@@ -363,6 +397,8 @@ export type UserUpdateManyMutationInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -375,6 +411,8 @@ export type UserUncheckedUpdateManyInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
 }
 
@@ -387,6 +425,8 @@ export type UserCountOrderByAggregateInput = {
   stripeCustomerId?: Prisma.SortOrder
   resetToken?: Prisma.SortOrder
   resetTokenExpiry?: Prisma.SortOrder
+  refreshToken?: Prisma.SortOrder
+  refreshTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -399,6 +439,8 @@ export type UserMaxOrderByAggregateInput = {
   stripeCustomerId?: Prisma.SortOrder
   resetToken?: Prisma.SortOrder
   resetTokenExpiry?: Prisma.SortOrder
+  refreshToken?: Prisma.SortOrder
+  refreshTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -411,6 +453,8 @@ export type UserMinOrderByAggregateInput = {
   stripeCustomerId?: Prisma.SortOrder
   resetToken?: Prisma.SortOrder
   resetTokenExpiry?: Prisma.SortOrder
+  refreshToken?: Prisma.SortOrder
+  refreshTokenExpiry?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
 }
 
@@ -490,6 +534,8 @@ export type UserCreateWithoutLibraryInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutUserInput
@@ -504,6 +550,8 @@ export type UserUncheckedCreateWithoutLibraryInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -534,6 +582,8 @@ export type UserUpdateWithoutLibraryInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutUserNestedInput
@@ -548,6 +598,8 @@ export type UserUncheckedUpdateWithoutLibraryInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -562,6 +614,8 @@ export type UserCreateWithoutRatingsInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionCreateNestedManyWithoutUserInput
@@ -576,6 +630,8 @@ export type UserUncheckedCreateWithoutRatingsInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   subscriptions?: Prisma.SubscriptionUncheckedCreateNestedManyWithoutUserInput
@@ -606,6 +662,8 @@ export type UserUpdateWithoutRatingsInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUpdateManyWithoutUserNestedInput
@@ -620,6 +678,8 @@ export type UserUncheckedUpdateWithoutRatingsInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   subscriptions?: Prisma.SubscriptionUncheckedUpdateManyWithoutUserNestedInput
@@ -634,6 +694,8 @@ export type UserCreateWithoutSubscriptionsInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingCreateNestedManyWithoutUserInput
@@ -648,6 +710,8 @@ export type UserUncheckedCreateWithoutSubscriptionsInput = {
   stripeCustomerId?: string | null
   resetToken?: string | null
   resetTokenExpiry?: Date | string | null
+  refreshToken?: string | null
+  refreshTokenExpiry?: Date | string | null
   createdAt?: Date | string
   library?: Prisma.UserBookUncheckedCreateNestedManyWithoutUserInput
   ratings?: Prisma.RatingUncheckedCreateNestedManyWithoutUserInput
@@ -678,6 +742,8 @@ export type UserUpdateWithoutSubscriptionsInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUpdateManyWithoutUserNestedInput
@@ -692,6 +758,8 @@ export type UserUncheckedUpdateWithoutSubscriptionsInput = {
   stripeCustomerId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   resetTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  refreshToken?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
+  refreshTokenExpiry?: Prisma.NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
   library?: Prisma.UserBookUncheckedUpdateManyWithoutUserNestedInput
   ratings?: Prisma.RatingUncheckedUpdateManyWithoutUserNestedInput
@@ -755,6 +823,8 @@ export type UserSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   stripeCustomerId?: boolean
   resetToken?: boolean
   resetTokenExpiry?: boolean
+  refreshToken?: boolean
+  refreshTokenExpiry?: boolean
   createdAt?: boolean
   library?: boolean | Prisma.User$libraryArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -771,6 +841,8 @@ export type UserSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stripeCustomerId?: boolean
   resetToken?: boolean
   resetTokenExpiry?: boolean
+  refreshToken?: boolean
+  refreshTokenExpiry?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -783,6 +855,8 @@ export type UserSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   stripeCustomerId?: boolean
   resetToken?: boolean
   resetTokenExpiry?: boolean
+  refreshToken?: boolean
+  refreshTokenExpiry?: boolean
   createdAt?: boolean
 }, ExtArgs["result"]["user"]>
 
@@ -795,10 +869,12 @@ export type UserSelectScalar = {
   stripeCustomerId?: boolean
   resetToken?: boolean
   resetTokenExpiry?: boolean
+  refreshToken?: boolean
+  refreshTokenExpiry?: boolean
   createdAt?: boolean
 }
 
-export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "plan" | "stripeCustomerId" | "resetToken" | "resetTokenExpiry" | "createdAt", ExtArgs["result"]["user"]>
+export type UserOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "name" | "email" | "password" | "plan" | "stripeCustomerId" | "resetToken" | "resetTokenExpiry" | "refreshToken" | "refreshTokenExpiry" | "createdAt", ExtArgs["result"]["user"]>
 export type UserInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   library?: boolean | Prisma.User$libraryArgs<ExtArgs>
   ratings?: boolean | Prisma.User$ratingsArgs<ExtArgs>
@@ -824,6 +900,8 @@ export type $UserPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     stripeCustomerId: string | null
     resetToken: string | null
     resetTokenExpiry: Date | null
+    refreshToken: string | null
+    refreshTokenExpiry: Date | null
     createdAt: Date
   }, ExtArgs["result"]["user"]>
   composites: {}
@@ -1259,6 +1337,8 @@ export interface UserFieldRefs {
   readonly stripeCustomerId: Prisma.FieldRef<"User", 'String'>
   readonly resetToken: Prisma.FieldRef<"User", 'String'>
   readonly resetTokenExpiry: Prisma.FieldRef<"User", 'DateTime'>
+  readonly refreshToken: Prisma.FieldRef<"User", 'String'>
+  readonly refreshTokenExpiry: Prisma.FieldRef<"User", 'DateTime'>
   readonly createdAt: Prisma.FieldRef<"User", 'DateTime'>
 }
     
