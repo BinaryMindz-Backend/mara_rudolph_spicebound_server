@@ -16,6 +16,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
+import { UpdateNameDto } from './dto/update-name.dto.js';
 
 
 @Injectable()
@@ -24,7 +25,7 @@ export class AuthService {
     private prisma: PrismaService,
     private jwtService: JwtService,
     private emailService: EmailService,
-  ) { }
+  ) {}
 
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
@@ -60,10 +61,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const passwordMatch = await bcrypt.compare(
-      dto.password,
-      user.password,
-    );
+    const passwordMatch = await bcrypt.compare(dto.password, user.password);
 
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
@@ -73,10 +71,7 @@ export class AuthService {
     return this.generateAuthResponse(safeUser);
   }
 
-  async changePassword(
-    userId: string,
-    dto: ChangePasswordDto,
-  ) {
+  async changePassword(userId: string, dto: ChangePasswordDto) {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
     });
@@ -126,10 +121,7 @@ export class AuthService {
       },
     };
 
-    return ApiResponseUtil.created(
-      authData,
-      'Authentication successful',
-    );
+    return ApiResponseUtil.created(authData, 'Authentication successful');
   }
 
   async getMe(userId: string) {
@@ -204,9 +196,7 @@ export class AuthService {
     });
 
     if (!user) {
-      throw new BadRequestException(
-        'Invalid or expired reset token',
-      );
+      throw new BadRequestException('Invalid or expired reset token');
     }
 
     const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
@@ -223,6 +213,25 @@ export class AuthService {
     return ApiResponseUtil.success(
       { success: true },
       'Password reset successful',
+      200,
+    );
+  }
+
+  async updateName(userId: string, dto: UpdateNameDto) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name: dto.name },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+      },
+    });
+
+    return ApiResponseUtil.success(
+      updatedUser,
+      'Name updated successfully',
       200,
     );
   }

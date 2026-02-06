@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -12,7 +12,7 @@ import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   @ApiOperation({ summary: 'Create a new user account' })
@@ -57,5 +57,14 @@ export class AuthController {
   @ApiOperation({ summary: 'Reset password with token' })
   resetPassword(@Body() dto: ResetPasswordDto) {
     return this.authService.resetPassword(dto);
+  }
+
+  @ApiTags('Auth')
+  @ApiBearerAuth('access-token')
+  @Patch('update-name')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Update user name' })
+  updateName(@CurrentUser() userId: string, @Body() dto: UpdateNameDto) {
+    return this.authService.updateName(userId, dto);
   }
 }
