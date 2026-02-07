@@ -17,6 +17,7 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
+import { UpdateNameDto } from './dto/update-name.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -324,6 +325,25 @@ export class AuthService {
     return ApiResponseUtil.success(
       { success: true },
       'Password reset successful',
+      200,
+    );
+  }
+
+  async updateName(userId: string, dto: UpdateNameDto) {
+    const updatedUser = await this.prisma.user.update({
+      where: { id: userId },
+      data: { name: dto.name },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        plan: true,
+      },
+    });
+
+    return ApiResponseUtil.success(
+      updatedUser,
+      'Name updated successfully',
       200,
     );
   }
