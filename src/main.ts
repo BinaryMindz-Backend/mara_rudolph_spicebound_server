@@ -3,21 +3,25 @@ import { AppModule } from './app.module.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { ValidationPipe } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+import bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     rawBody: true, // Required for Stripe webhook signature verification
   });
 
+
+app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+app.use(bodyParser.json());
   // Configure CORS
   const allowedOrigins =
     process.env.NODE_ENV === 'production'
       ? ['https://readspicebound.com', 'https://www.readspicebound.com']
       : [
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'http://localhost:5050',
-        ];
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5050',
+      ];
 
   app.enableCors({
     origin: allowedOrigins,
@@ -60,6 +64,7 @@ async function bootstrap() {
       persistAuthorization: true,
     },
   });
+
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();

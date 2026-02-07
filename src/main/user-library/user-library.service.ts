@@ -13,6 +13,7 @@ import { AddBookToLibraryDto } from './dto/add-book-to-library.dto.js';
 import { UpdateBookStatusDto } from './dto/update-book-status.dto.js';
 import { ReorderBooksDto } from './dto/reorder-books.dto.js';
 import { ReadingStatus } from '../../../prisma/generated/prisma-client/enums.js';
+import { BookAliasType } from '../../../prisma/generated/prisma-client/enums.js';
 
 @Injectable()
 export class UserLibraryService {
@@ -81,6 +82,46 @@ export class UserLibraryService {
         book: true,
       },
     });
+
+    // If book doesn't have purchase links, generate them from aliases
+    if (!userBook.book.amazonUrl || !userBook.book.bookshopUrl) {
+      const aliases = await this.prisma.bookAlias.findMany({
+        where: { bookId: userBook.book.id },
+      });
+
+      let asin: string | undefined;
+      let isbn13: string | undefined;
+
+      for (const alias of aliases) {
+        if (alias.type === BookAliasType.ASIN) asin = alias.value;
+        if (alias.type === BookAliasType.ISBN_13) isbn13 = alias.value;
+      }
+
+      const amazonUrl =
+        userBook.book.amazonUrl ||
+        (asin ? `https://amazon.com/dp/${asin}` : isbn13 ? `https://amazon.com/s?k=${isbn13}` : null);
+      const bookshopUrl =
+        userBook.book.bookshopUrl ||
+        (isbn13 ? `https://bookshop.org/search?q=${isbn13}` : null);
+
+      // Update book with generated links if they were null
+      if (
+        (!userBook.book.amazonUrl && amazonUrl) ||
+        (!userBook.book.bookshopUrl && bookshopUrl)
+      ) {
+        await this.prisma.book.update({
+          where: { id: userBook.book.id },
+          data: {
+            ...(amazonUrl && !userBook.book.amazonUrl && { amazonUrl }),
+            ...(bookshopUrl && !userBook.book.bookshopUrl && { bookshopUrl }),
+          },
+        });
+
+        // Refresh the book data
+        userBook.book.amazonUrl = amazonUrl || userBook.book.amazonUrl;
+        userBook.book.bookshopUrl = bookshopUrl || userBook.book.bookshopUrl;
+      }
+    }
 
     return userBook;
   }
