@@ -23,8 +23,8 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
-    private emailService: EmailService,
     private configService: ConfigService,
+    private emailService: EmailService,
   ) { }
 
   async signup(dto: SignupDto) {
@@ -49,7 +49,7 @@ export class AuthService {
     // Explicitly remove password
     const { password, ...user } = createdUser;
 
-    return this.generateAuthResponse(user);
+    return await this.generateAuthResponse(user);
   }
 
   async login(dto: LoginDto) {
@@ -68,10 +68,10 @@ export class AuthService {
     }
     const { password, ...safeUser } = user;
 
-    return this.generateAuthResponse(safeUser);
+    return await this.generateAuthResponse(safeUser);
   }
 
-  private generateAuthResponse(user: any) {
+  private async generateAuthResponse(user: any) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -81,7 +81,7 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
 
     // Create and store a refresh token (rotating refresh tokens)
-    const refreshToken = this.createAndSaveRefreshToken(user.id);
+    const refreshToken = await this.createAndSaveRefreshToken(user.id);
 
     const authData = {
       accessToken,
@@ -160,6 +160,51 @@ export class AuthService {
     });
 
     return ApiResponseUtil.success({ success: true }, 'Logged out successfully', 200);
+  }
+
+  async updateProfile(userId: string, dto: any) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check if email is being changed and if it's already taken
+    if (dto.email && dto.email !== user.email) {
+      const existingUser = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+      });
+
+      if (existingUser) {
+        throw new ConflictException('Email already in use');
+      }
+    }
+
+    // Hash password if being updated
+    let hashedPassword: string | undefined;
+    if (dto.password) {
+      hashedPassword = await bcrypt.hash(dto.password, 12);
+    }
+
+    const updated = await this.prisma.user.update({
+      where: { id: userId },
+      data: {
+        ...(dto.name && { name: dto.name }),
+        ...(dto.email && { email: dto.email }),
+        ...(hashedPassword && { password: hashedPassword }),
+      },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        plan: true,
+        createdAt: true,
+      },
+    });
+
+    return ApiResponseUtil.success(updated, 'Profile updated successfully', 200);
   }
 
   async getMe(userId: string) {

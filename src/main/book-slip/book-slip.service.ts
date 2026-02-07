@@ -116,6 +116,10 @@ export class BookSlipService {
     /**
      * 6️⃣ Create Book
      */
+    // Generate links first to save them to the book record
+    const amazonUrl = (asin ? `https://amazon.com/dp/${asin}` : merged.isbn13 ? `https://amazon.com/s?k=${merged.isbn13}` : null);
+    const bookshopUrl = (merged.isbn13 ? `https://bookshop.org/search?q=${merged.isbn13}` : null);
+
     const book = await this.prisma.book.create({
       data: {
         title: merged.title,
@@ -131,6 +135,8 @@ export class BookSlipService {
         tropes: enriched.tropes ?? [],
         creatures: enriched.creatures ?? [],
         subgenres: enriched.subgenres ?? [],
+        amazonUrl: amazonUrl ?? null,
+        bookshopUrl: bookshopUrl ?? null,
       },
     });
 
