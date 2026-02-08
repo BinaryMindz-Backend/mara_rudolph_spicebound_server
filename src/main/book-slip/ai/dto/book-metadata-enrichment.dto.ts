@@ -9,7 +9,12 @@ export class SeriesInfo {
 
 export class ConfidenceLevel {
   spiceRating: 'HIGH' | 'MEDIUM' | 'LOW';
-  overall: 'HIGH' | 'MEDIUM' | 'LOW';
+  ageLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
+  tropes?: 'HIGH' | 'MEDIUM' | 'LOW';
+  creatures?: 'HIGH' | 'MEDIUM' | 'LOW';
+  subgenres?: 'HIGH' | 'MEDIUM' | 'LOW';
+  series?: 'HIGH' | 'MEDIUM' | 'LOW';
+  overall?: 'HIGH' | 'MEDIUM' | 'LOW';
 }
 
 export class BookMetadataEnrichmentResponse {

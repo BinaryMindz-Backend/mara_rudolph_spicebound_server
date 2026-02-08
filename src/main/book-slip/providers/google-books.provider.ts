@@ -49,6 +49,16 @@ export class GoogleBooksProvider {
       (id: any) => id.type === 'ISBN_13',
     )?.identifier;
 
+    // Attempt to extract series information if present
+    const seriesName = info.series?.[0] ?? info?.seriesInfo?.volumeSeries?.title ?? undefined;
+
+    // Google Books does not consistently expose series index/total; leave undefined unless present
+    let seriesIndex: number | undefined = undefined;
+    if (info?.seriesInfo?.volumeNumber) {
+      const pn = Number(info.seriesInfo.volumeNumber);
+      if (!Number.isNaN(pn)) seriesIndex = pn;
+    }
+
     return {
       title: info.title,
       author: info.authors?.[0],
@@ -62,6 +72,9 @@ export class GoogleBooksProvider {
 
       externalAvgRating: info.averageRating,
       externalRatingCount: info.ratingsCount,
+
+      seriesName,
+      seriesIndex,
     };
   }
 }

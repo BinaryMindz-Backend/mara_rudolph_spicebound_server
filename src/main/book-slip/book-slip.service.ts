@@ -16,6 +16,7 @@ import { ExternalBookData, InputType } from './types/book-source.types.js';
 import {
   BookAliasType,
   AgeLevel,
+  SeriesStatus,
 } from '../../../prisma/generated/prisma-client/enums.js';
 
 /**
@@ -137,6 +138,21 @@ export class BookSlipService {
         subgenres: enriched.subgenres ?? [],
         amazonUrl: amazonUrl ?? null,
         bookshopUrl: bookshopUrl ?? null,
+
+        // Series information - prefer AI enrichment, then external providers
+        seriesName: enriched.series?.name ?? merged.seriesName ?? null,
+        seriesIndex:
+          (enriched.series && 'index' in enriched.series ? enriched.series.index as number : undefined) ??
+          merged.seriesIndex ??
+          null,
+        seriesTotal:
+          (enriched.series && 'total' in enriched.series ? enriched.series.total as number : undefined) ??
+          merged.seriesTotal ??
+          null,
+        seriesStatus:
+          ((enriched.series?.status as SeriesStatus) ??
+            (merged.seriesStatus as SeriesStatus) ??
+            SeriesStatus.UNKNOWN),
       },
     });
 

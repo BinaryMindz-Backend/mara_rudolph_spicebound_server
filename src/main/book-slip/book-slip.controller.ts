@@ -128,6 +128,21 @@ export class BookSlipController {
       await this.metadataEnrichmentService.enrichBookMetadata(enrichmentData);
 
     // Step 4: Merge discovered book info with enriched metadata
+    // Prefer AI-provided series info, but fall back to discovered DB series when AI omitted it
+    const finalSeries =
+      enrichedMetadata.series ??
+      (discoveredBook.series
+        ? {
+            name: discoveredBook.series.name ?? null,
+            position: discoveredBook.series.index ?? undefined,
+            totalBooks:
+              typeof discoveredBook.series.total === 'number'
+                ? discoveredBook.series.total
+                : null,
+            status: discoveredBook.series.status,
+          }
+        : null);
+
     const enrichedResponse: EnrichedBookSlipResponse = {
       bookId: discoveredBook.bookId,
       title: discoveredBook.title,
@@ -139,8 +154,10 @@ export class BookSlipController {
       tropes: enrichedMetadata.tropes,
       creatures: enrichedMetadata.creatures,
       subgenres: enrichedMetadata.subgenres,
+      series: finalSeries as any,
       links: discoveredBook.links || {},
       created: discoveredBook.created || false,
+      confidence: enrichedMetadata.confidence,
     };
 
     return {

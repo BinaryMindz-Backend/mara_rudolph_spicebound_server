@@ -1,5 +1,42 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class SeriesInfo {
+  @ApiProperty({ example: 'The Empyrean' })
+  name: string | null;
+
+  @ApiProperty({ example: 1 })
+  position: number;
+
+  @ApiProperty({ example: 5 })
+  totalBooks: number | null;
+
+  @ApiProperty({ example: 'INCOMPLETE', enum: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN', 'ONGOING'] })
+  status: string;
+}
+
+export class ConfidenceLevel {
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'] })
+  spiceRating: string;
+
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  ageLevel?: string;
+
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  tropes?: string;
+
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  creatures?: string;
+
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  subgenres?: string;
+
+  @ApiProperty({ example: 'LOW', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  series?: string;
+
+  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  overall?: string;
+}
+
 export class EnrichedBookSlipResponse {
   @ApiProperty({
     description: 'Unique book identifier',
@@ -70,8 +107,14 @@ export class EnrichedBookSlipResponse {
   subgenres: string[];
 
   @ApiProperty({
+    description: 'Series information',
+    type: SeriesInfo,
+  })
+  series: SeriesInfo;
+
+  @ApiProperty({
     description: 'External links (Amazon, Goodreads, etc)',
-    example: {},
+    example: { amazon: 'https://amazon.com/...', bookshop: 'https://bookshop.org/...' },
   })
   links: Record<string, string>;
 
@@ -80,4 +123,10 @@ export class EnrichedBookSlipResponse {
     example: false,
   })
   created: boolean;
+
+  @ApiProperty({
+    description: 'Confidence levels for metadata extraction',
+    type: ConfidenceLevel,
+  })
+  confidence: ConfidenceLevel;
 }

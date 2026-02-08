@@ -41,6 +41,7 @@ export class OpenLibraryProvider {
         publishedYear: doc.first_publish_year ?? undefined,
         isbn13: doc.isbn?.find((i: string) => i.length === 13),
         openLibraryId: workId,
+        seriesName: doc.series?.[0] ?? undefined,
       };
 
       this.logger.log('✅ OpenLibrary search mapped:', mapped);
@@ -92,6 +93,7 @@ export class OpenLibraryProvider {
             ? data.description
             : (data.description?.value ?? undefined),
         openLibraryId: cleanId,
+        seriesName: Array.isArray(data.series) ? data.series[0] : data.series ?? undefined,
       };
 
       this.logger.log('✅ OpenLibrary fetchById mapped:', mapped);

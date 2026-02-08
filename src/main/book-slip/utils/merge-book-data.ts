@@ -16,5 +16,11 @@ export function mergeExternalData(
 
     externalAvgRating: google?.externalAvgRating,
     externalRatingCount: google?.externalRatingCount,
+
+    // Series info
+    seriesName: google?.seriesName ?? openLibrary?.seriesName,
+    seriesIndex: google?.seriesIndex ?? openLibrary?.seriesIndex,
+    seriesTotal: google?.seriesTotal ?? openLibrary?.seriesTotal,
+    seriesStatus: google?.seriesStatus ?? openLibrary?.seriesStatus,
   };
 }

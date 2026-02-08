@@ -19,4 +19,10 @@ export interface ExternalBookData {
 
   externalAvgRating?: number;
   externalRatingCount?: number;
+
+  // Series-related fields
+  seriesName?: string;
+  seriesIndex?: number;
+  seriesTotal?: number;
+  seriesStatus?: string;
 }
