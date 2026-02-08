@@ -1,87 +1,74 @@
 import { Body, Controller, Post, HttpCode, ValidationPipe } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { BookSlipService } from './book-slip.service.js';
 import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.service.js';
-import { BookMetadataEnrichmentResponse } from './ai/dto/book-metadata-enrichment.dto.js';
 import { DiscoverBookDto } from './dto/discover-book.dto.js';
+import { EnrichedBookSlipResponse } from './dto/enriched-book-slip.response.js';
 
 @ApiTags('Book Slip')
 @Controller('book-slip')
 export class BookSlipController {
   constructor(
+    private readonly bookSlipService: BookSlipService,
     private readonly metadataEnrichmentService: BookMetadataEnrichmentService,
   ) {}
 
   @Post('discover')
-  @HttpCode(200)
+  @HttpCode(201)
   @ApiOperation({
     summary:
-      'Discover and enrich book metadata with AI analysis (age level, spice rating, tropes, creatures, subgenres, etc)',
+      'Discover and enrich a book with AI analysis from Amazon URL, title, or title+author',
     description: `
-    Analyzes a book using OpenAI GPT-4 and returns comprehensive metadata including:
+    Accepts a single input (Amazon URL, book title, or title+author) to discover a book and enrich it with AI metadata including:
     - Age Level classification (CHILDRENS, YA, NA, ADULT, EROTICA)
     - Spice Rating (0-6 scale)
-    - Tropes (Enemies to Lovers, Fated Mates, etc.)
+    - Tropes (story dynamics and themes)
     - Fantasy Creatures
     - Subgenres
-    - Series Information
-    - AI-generated reader-friendly description
-    - Confidence levels for review flagging
+    
+    The response combines the discovered book information with AI-enriched metadata.
     `,
   })
   @ApiBody({
     type: DiscoverBookDto,
-    description: 'Book information for metadata enrichment',
+    description:
+      'Single input for book discovery - can be Amazon URL, book title, or title+author',
     examples: {
-      fourthWing: {
-        summary: 'Fourth Wing - Romantasy',
+      amazonUrl: {
+        summary: 'Amazon Product URL',
         value: {
-          title: 'Fourth Wing',
-          author: 'Rebecca Yarros',
-          publishedYear: 2023,
-          description:
-            'Twenty-year-old Violet Sorrengail was supposed to enter the Scribe Quadrant, where she could live a quiet life among books and history. But her mother, the commanding general, orders her into the brutal Riders Quadrant instead, where dragon riders are made.',
-          categories: ['Fantasy', 'Romance', 'Dragons'],
-          pageCount: 640,
-          seriesInfo: 'Book 1 of The Empyrean series',
+          input: 'https://www.amazon.com/Fourth-Wing-Rebecca-Yarros/dp/1635573815',
         },
       },
-      hungerGames: {
-        summary: 'The Hunger Games - YA Dystopian',
+      titleOnly: {
+        summary: 'Book title only',
         value: {
-          title: 'The Hunger Games',
-          author: 'Suzanne Collins',
-          publishedYear: 2008,
-          description:
-            'In the dystopian nation of Panem, sixteen-year-old Katniss Everdeen volunteers to participate in the annual Hunger Games, a televised fight to the death.',
-          categories: ['Dystopian', 'YA', 'Action'],
-          pageCount: 374,
-          seriesInfo: 'Book 1 of The Hunger Games trilogy',
+          input: 'Fourth Wing',
         },
       },
-      acotar: {
-        summary: 'A Court of Thorns and Roses - Fae Romance',
+      titleAndAuthor: {
+        summary: 'Title and author',
         value: {
-          title: 'A Court of Thorns and Roses',
-          author: 'Sarah J. Maas',
-          publishedYear: 2015,
-          description:
-            'When nineteen-year-old huntress Feyre kills a wolf in the woods, a beast-like creature arrives to demand retribution. Dragged to the magical land of Prythian, she finds herself in the estate of Tamlin, a masked High Fae lord.',
-          categories: ['Fantasy', 'Romance', 'Fae'],
-          pageCount: 416,
-          seriesInfo: 'Book 1 of A Court of Thorns and Roses series',
+          input: 'Fourth Wing by Rebecca Yarros',
         },
       },
     },
   })
   @ApiResponse({
-    status: 200,
-    description: 'Book metadata successfully enriched',
-    type: BookMetadataEnrichmentResponse,
+    status: 201,
+    description: 'Book discovered and enriched successfully',
+    type: EnrichedBookSlipResponse,
     example: {
       success: true,
-      statusCode: 200,
-      message: 'Request successful',
+      statusCode: 201,
+      message: 'Resource created successfully',
       data: {
+        bookId: '39b9033d-d9a3-45a2-8609-fbdde09d2087',
+        title: 'Fourth Wing',
+        author: 'Rebecca Yarros',
+        description:
+          'Twenty-year-old Violet Sorrengail was supposed to enter the Scribe Quadrant...',
+        releaseYear: 2023,
         ageLevel: 'NA',
         spiceRating: 4,
         tropes: [
@@ -92,42 +79,76 @@ export class BookSlipController {
         ],
         creatures: ['Dragons'],
         subgenres: ['Romantasy', 'Military Fantasy'],
-        series: {
-          name: 'The Empyrean',
-          position: 1,
-          totalBooks: 5,
-          status: 'INCOMPLETE',
-        },
-        description:
-          'Twenty-year-old Violet Sorrengail, fragile-boned and better suited for the scholarly Scribe Quadrant, is forced by her commanding general mother into the brutal Riders Quadrant...',
-        confidence: {
-          spiceRating: 'HIGH',
-          overall: 'HIGH',
-        },
+        links: {},
+        created: false,
       },
       meta: {},
     },
   })
   @ApiResponse({
     status: 400,
-    description:
-      'Bad request - missing required fields (title, author) or invalid data format',
+    description: 'Bad request - invalid input format',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Book not found with the provided input',
   })
   @ApiResponse({
     status: 500,
-    description:
-      'Internal server error - OpenAI API error or response parsing failure',
+    description: 'Internal server error - book discovery or enrichment failed',
   })
   async discoverBook(
-    @Body(
-      new ValidationPipe({
-        whitelist: true,
-        forbidNonWhitelisted: false,
-        transform: true,
-      }),
-    )
+    @Body(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: false }))
     dto: DiscoverBookDto,
-  ): Promise<BookMetadataEnrichmentResponse> {
-    return this.metadataEnrichmentService.enrichBookMetadata(dto);
+  ): Promise<{
+    success: boolean;
+    statusCode: number;
+    message: string;
+    data: EnrichedBookSlipResponse;
+    meta: Record<string, any>;
+  }> {
+    // Step 1: Discover book using the input
+    const discoveredBook = await this.bookSlipService.discoverBook(dto.input);
+
+    // Step 2: Extract metadata for enrichment
+    const enrichmentData = {
+      title: discoveredBook.title,
+      author: discoveredBook.author,
+      publishedYear: discoveredBook.releaseYear,
+      description: discoveredBook.description || '',
+      categories: [],
+      pageCount: 0,
+      seriesInfo: discoveredBook.series
+        ? `Book ${discoveredBook.series.index} of ${discoveredBook.series.name}`
+        : undefined,
+    };
+
+    // Step 3: Enrich with AI metadata
+    const enrichedMetadata =
+      await this.metadataEnrichmentService.enrichBookMetadata(enrichmentData);
+
+    // Step 4: Merge discovered book info with enriched metadata
+    const enrichedResponse: EnrichedBookSlipResponse = {
+      bookId: discoveredBook.bookId,
+      title: discoveredBook.title,
+      author: discoveredBook.author,
+      description: discoveredBook.description || '',
+      releaseYear: discoveredBook.releaseYear || 0,
+      ageLevel: enrichedMetadata.ageLevel,
+      spiceRating: enrichedMetadata.spiceRating,
+      tropes: enrichedMetadata.tropes,
+      creatures: enrichedMetadata.creatures,
+      subgenres: enrichedMetadata.subgenres,
+      links: discoveredBook.links || {},
+      created: discoveredBook.created || false,
+    };
+
+    return {
+      success: true,
+      statusCode: 201,
+      message: 'Resource created successfully',
+      data: enrichedResponse,
+      meta: {},
+    };
   }
 }

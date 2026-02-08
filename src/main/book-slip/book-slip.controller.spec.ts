@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BookSlipController } from './book-slip.controller';
+import { BookSlipController } from './book-slip.controller.js';
 
 describe('BookSlipController', () => {
   let controller: BookSlipController;
