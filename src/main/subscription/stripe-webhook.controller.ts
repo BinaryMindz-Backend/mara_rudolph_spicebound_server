@@ -2,10 +2,9 @@ import {
   Controller,
   Post,
   Req,
-  Res,
   BadRequestException,
 } from '@nestjs/common';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 import { SubscriptionService } from './subscription.service.js';
 
 
@@ -16,21 +15,28 @@ export class StripeWebhookController {
   ) {}
 
   @Post('webhook')
-  async handleStripeWebhook(
-    @Req() req: Request,
-    @Res() res: Response,
-  ) {
-    const signature = req.headers['stripe-signature'];
+  async handleWebhook(@Req() req: Request) {
+    const signature = req.headers['stripe-signature'] as string;
 
     if (!signature) {
-      throw new BadRequestException('Missing Stripe signature');
+      throw new BadRequestException('Missing Stripe signature header');
     }
 
-    await this.subscriptionService.handleWebhook(
-      req.body as Buffer, // ✅ RAW BUFFER
-      signature as string,
-    );
+    // Raw body is now available from body-parser middleware
+    const rawBody = req.body;
 
-    return res.json({ received: true });
+    if (!rawBody) {
+      throw new BadRequestException('Request body is empty');
+    }
+
+    // Convert to Buffer if it's not already
+    const buffer = Buffer.isBuffer(rawBody) 
+      ? rawBody 
+      : Buffer.from(JSON.stringify(rawBody));
+
+  console.log('[WEBHOOK] Body is Buffer:', Buffer.isBuffer(rawBody), 'Type:', typeof rawBody);
+  await this.subscriptionService.handleWebhook(buffer, signature);
+
+    return { received: true };
   }
 }

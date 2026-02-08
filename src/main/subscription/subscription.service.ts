@@ -108,6 +108,10 @@ export class SubscriptionService {
         '❌ Stripe webhook verification failed',
         err.message,
       );
+      console.log('[WEBHOOK ERROR] Raw body type:', typeof rawBody, 'Is Buffer:', Buffer.isBuffer(rawBody));
+      console.log('[WEBHOOK ERROR] Body length:', Buffer.isBuffer(rawBody) ? rawBody.length : 'N/A');
+      console.log('[WEBHOOK ERROR] Signature length:', signature?.length);
+      console.log('[WEBHOOK ERROR] Error details:', err);
       throw new BadRequestException(err.message);
     }
 

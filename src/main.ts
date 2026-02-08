@@ -11,7 +11,12 @@ async function bootstrap() {
   });
 
 
+// Middleware order is CRITICAL: Raw parser MUST come first for webhooks
+// Otherwise the JSON parser will consume the body before webhook middleware sees it
+// Use application/octet-stream to capture the raw bytes exactly as Stripe sends them
+app.use('/stripe/webhook', bodyParser.raw({ type: 'application/octet-stream' }));
 app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+// Then apply JSON parser for all other routes
 app.use(bodyParser.json());
   // Configure CORS
   const allowedOrigins =
@@ -37,6 +42,7 @@ app.use(bodyParser.json());
       whitelist: true,
       forbidNonWhitelisted: true,
       transform: true,
+      skipMissingProperties: false,
     }),
   );
 
