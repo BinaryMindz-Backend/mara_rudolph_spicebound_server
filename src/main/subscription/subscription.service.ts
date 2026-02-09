@@ -44,6 +44,7 @@ export class SubscriptionService {
     });
 
     if (!user) {
+      this.logger.error(`User not found: ${userId}`);
       throw new NotFoundException('User not found');
     }
 
@@ -53,6 +54,7 @@ export class SubscriptionService {
         : this.configService.get('STRIPE_PRICE_PRO_MONTHLY');
 
     if (!priceId) {
+      this.logger.error(`Stripe price ID not configured for plan: ${plan}`);
       throw new BadRequestException('Stripe price not configured');
     }
 
@@ -78,7 +80,7 @@ export class SubscriptionService {
     });
 
     this.logger.log(`✅ Checkout session created: ${session.id}`);
-
+    this.logger.log('Subscription plan bought successfully');
     return { url: session.url };
   }
 
@@ -94,12 +96,14 @@ export class SubscriptionService {
       this.configService.get<string>('stripe.webhookSecret');
 
     if (!webhookSecret) {
+      this.logger.error('❌ Stripe webhook secret is missing');
       throw new BadRequestException('Webhook secret missing');
     }
 
     let event: Stripe.Event;
 
     try {
+      this.logger.log('🔐 Verifying Stripe webhook signature');
       event = this.stripe.webhooks.constructEvent(
         rawBody,
         signature,
