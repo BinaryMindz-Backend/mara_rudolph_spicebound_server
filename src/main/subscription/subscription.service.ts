@@ -87,6 +87,8 @@ export class SubscriptionService {
   /* -------------------------------------------------------------------------- */
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
+
+        this.logger.log('✅ Stripe webhook handler invoked');
     const webhookSecret =
       this.configService.get<string>('STRIPE_WEBHOOK_SECRET') ||
       this.configService.get<string>('stripe.webhookSecret');
