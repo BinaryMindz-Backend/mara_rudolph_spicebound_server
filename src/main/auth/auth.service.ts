@@ -18,6 +18,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto.js';
 import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
 import { UpdateNameDto } from './dto/update-name.dto.js';
+import { DeleteAccountDto } from './dto/delete-account.dto.js';
 
 @Injectable()
 export class AuthService {
@@ -344,6 +345,34 @@ export class AuthService {
     return ApiResponseUtil.success(
       updatedUser,
       'Name updated successfully',
+      200,
+    );
+  }
+
+  async deleteAccount(userId: string, dto: DeleteAccountDto) {
+    // Verify user exists
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Verify password
+    const passwordMatch = await bcrypt.compare(dto.password, user.password);
+    if (!passwordMatch) {
+      throw new UnauthorizedException('Password is incorrect');
+    }
+
+    // Delete user account (cascading delete will handle related records)
+    await this.prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return ApiResponseUtil.success(
+      { success: true },
+      'Account deleted successfully. All associated data has been removed.',
       200,
     );
   }

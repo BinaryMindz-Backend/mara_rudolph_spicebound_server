@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Patch, Post, Put, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -9,8 +9,9 @@ import { CurrentUser } from '../../common/decorators/user.decorators.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags, ApiBody, ApiResponse } from '@nestjs/swagger';
 import { UpdateNameDto } from './dto/update-name.dto.js';
+import { DeleteAccountDto } from './dto/delete-account.dto.js';
 
 @Controller('auth')
 export class AuthController {
@@ -121,5 +122,35 @@ export class AuthController {
   @ApiOperation({ summary: 'Update user name' })
   updateName(@CurrentUser() userId: string, @Body() dto: UpdateNameDto) {
     return this.authService.updateName(userId, dto);
+  }
+
+  @ApiTags('Auth')
+  @ApiBearerAuth('access-token')
+  @Delete('account')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({ summary: 'Delete user account permanently' })
+  @ApiBody({
+    type: DeleteAccountDto,
+    description: 'Password confirmation required to delete account',
+    examples: {
+      'Delete Account': {
+        value: { password: 'currentPassword123' },
+        description: 'User must provide their current password to confirm deletion',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Account deleted successfully',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Password is incorrect or user not found',
+  })
+  deleteAccount(
+    @CurrentUser() userId: string,
+    @Body() dto: DeleteAccountDto,
+  ) {
+    return this.authService.deleteAccount(userId, dto);
   }
 }
