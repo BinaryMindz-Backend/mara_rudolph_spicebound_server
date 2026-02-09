@@ -15,7 +15,7 @@ import { DeleteAccountDto } from './dto/delete-account.dto.js';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(private readonly authService: AuthService) { }
 
   @Post('signup')
   @ApiOperation({ summary: 'Create a new user account' })
@@ -126,7 +126,7 @@ export class AuthController {
 
   @ApiTags('Auth')
   @ApiBearerAuth('access-token')
-  @Delete('account')
+  @Delete('account-delete')
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Delete user account permanently' })
   @ApiBody({
