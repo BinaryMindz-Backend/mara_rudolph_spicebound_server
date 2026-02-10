@@ -27,7 +27,6 @@ export class SubscriptionService {
     }
 
     this.stripe = new Stripe(secretKey);
-
     this.logger.log('✅ Stripe initialized');
   }
 
@@ -44,7 +43,6 @@ export class SubscriptionService {
     });
 
     if (!user) {
-      this.logger.error(`User not found: ${userId}`);
       throw new NotFoundException('User not found');
     }
 
@@ -54,7 +52,6 @@ export class SubscriptionService {
         : this.configService.get('STRIPE_PRICE_PRO_MONTHLY');
 
     if (!priceId) {
-      this.logger.error(`Stripe price ID not configured for plan: ${plan}`);
       throw new BadRequestException('Stripe price not configured');
     }
 
@@ -62,41 +59,28 @@ export class SubscriptionService {
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: user.email,
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
-      success_url: `${this.configService.get(
-        'FRONTEND_URL',
-      )}/subscription?success=true`,
-      cancel_url: `${this.configService.get(
-        'FRONTEND_URL',
-      )}/subscription?canceled=true`,
-      metadata: {
-        userId,
-      },
+      line_items: [{ price: priceId, quantity: 1 }],
+      success_url: `${this.configService.get('FRONTEND_URL')}/subscription?success=true`,
+      cancel_url: `${this.configService.get('FRONTEND_URL')}/subscription?canceled=true`,
+      metadata: { userId },
     });
 
     this.logger.log(`✅ Checkout session created: ${session.id}`);
-    this.logger.log('Subscription plan bought successfully');
     return { url: session.url };
   }
 
   /* -------------------------------------------------------------------------- */
-  /*                                 WEBHOOK                                    */
+  /*                                   WEBHOOK                                  */
   /* -------------------------------------------------------------------------- */
 
   async handleWebhook(rawBody: Buffer, signature: string): Promise<void> {
+    this.logger.log('✅ Stripe webhook handler invoked');
 
-        this.logger.log('✅ Stripe webhook handler invoked');
     const webhookSecret =
       this.configService.get<string>('STRIPE_WEBHOOK_SECRET') ||
       this.configService.get<string>('stripe.webhookSecret');
 
     if (!webhookSecret) {
-      this.logger.error('❌ Stripe webhook secret is missing');
       throw new BadRequestException('Webhook secret missing');
     }
 
@@ -110,14 +94,7 @@ export class SubscriptionService {
         webhookSecret,
       );
     } catch (err) {
-      this.logger.error(
-        '❌ Stripe webhook verification failed',
-        err.message,
-      );
-      console.log('[WEBHOOK ERROR] Raw body type:', typeof rawBody, 'Is Buffer:', Buffer.isBuffer(rawBody));
-      console.log('[WEBHOOK ERROR] Body length:', Buffer.isBuffer(rawBody) ? rawBody.length : 'N/A');
-      console.log('[WEBHOOK ERROR] Signature length:', signature?.length);
-      console.log('[WEBHOOK ERROR] Error details:', err);
+      this.logger.error('❌ Webhook verification failed', err.message);
       throw new BadRequestException(err.message);
     }
 
@@ -125,6 +102,7 @@ export class SubscriptionService {
 
     switch (event.type) {
       case 'checkout.session.completed':
+        this.logger.log(`[EVENT] Processing checkout.session.completed`);
         await this.handleCheckoutCompleted(
           event.data.object as Stripe.Checkout.Session,
         );
@@ -132,12 +110,21 @@ export class SubscriptionService {
 
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
+        this.logger.log(`[EVENT] Processing ${event.type}`);
         await this.handleSubscriptionUpsert(
           event.data.object as Stripe.Subscription,
         );
         break;
 
+      case 'invoice.payment_succeeded':
+        this.logger.log(`[EVENT] Processing invoice.payment_succeeded`);
+        await this.handleInvoicePaid(
+          event.data.object as Stripe.Invoice,
+        );
+        break;
+
       case 'customer.subscription.deleted':
+        this.logger.log(`[EVENT] Processing customer.subscription.deleted`);
         await this.handleSubscriptionCanceled(
           event.data.object as Stripe.Subscription,
         );
@@ -153,7 +140,7 @@ export class SubscriptionService {
   /* -------------------------------------------------------------------------- */
 
   /**
-   * Only link Stripe customer → user
+   * Step 1: Link Stripe customer → user
    */
   private async handleCheckoutCompleted(
     session: Stripe.Checkout.Session,
@@ -171,48 +158,53 @@ export class SubscriptionService {
       data: { stripeCustomerId: customerId },
     });
 
-    this.logger.log(
-      `🔗 Linked user ${userId} → Stripe customer ${customerId}`,
-    );
+    this.logger.log(`🔗 Linked user ${userId} → customer ${customerId}`);
   }
 
   /**
-   * Create or update subscription + upgrade user plan
+   * Step 2: Subscription created/updated → upgrade user plan
    */
   private async handleSubscriptionUpsert(
     subscription: Stripe.Subscription,
   ): Promise<void> {
     const customerId = subscription.customer as string;
-    const priceId = subscription.items.data[0].price.id;
+    const subscriptionId = subscription.id;
+
+    this.logger.log(
+      `[SUBSCRIPTION UPSERT] Subscription ID: ${subscriptionId}, Customer: ${customerId}, Status: ${subscription.status}`,
+    );
 
     const user = await this.prisma.user.findFirst({
       where: { stripeCustomerId: customerId },
     });
 
     if (!user) {
-      this.logger.warn(`⚠️ No user found for customer ${customerId}`);
+      this.logger.warn(`❌ No user found for customer ${customerId}`);
       return;
     }
 
-    let plan: SubscriptionPlan;
+    this.logger.log(`✅ Found user ${user.id} (${user.email}) for customer ${customerId}`);
 
-    // Map any known paid price to PREMIUM plan. Adjust mapping if you add tiers.
-    plan = SubscriptionPlan.PREMIUM;
+    const plan = SubscriptionPlan.PREMIUM;
 
-    // Upsert is not possible on non-unique fields; do a find then create/update
+    // Check if subscription record exists
     const existing = await this.prisma.subscription.findFirst({
-      where: { stripeSubscriptionId: subscription.id },
+      where: { stripeSubscriptionId: subscriptionId },
     });
 
     if (existing) {
+      this.logger.log(
+        `[UPDATE] Existing subscription found: ${existing.id}. Updating status to ${subscription.status}`,
+      );
       await this.prisma.subscription.update({
         where: { id: existing.id },
         data: { status: subscription.status, plan },
       });
     } else {
+      this.logger.log(`[CREATE] Creating new subscription for user ${user.id}`);
       await this.prisma.subscription.create({
         data: {
-          stripeSubscriptionId: subscription.id,
+          stripeSubscriptionId: subscriptionId,
           stripeCustomerId: customerId,
           status: subscription.status,
           plan,
@@ -221,29 +213,99 @@ export class SubscriptionService {
       });
     }
 
+    // Upgrade user plan to PREMIUM
+    this.logger.log(`[UPDATE USER PLAN] Upgrading user ${user.id} to ${plan}`);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { plan },
     });
 
-    this.logger.log(`🎉 User ${user.id} upgraded to ${plan}`);
+    this.logger.log(`🎉 User ${user.id} (${user.email}) upgraded to ${plan}`);
   }
 
   /**
-   * Downgrade user when subscription is canceled
+   * Step 3: Payment confirmed → create subscription + upgrade plan
+
+   */
+private async handleInvoicePaid(
+  invoice: Stripe.Invoice,
+): Promise<void> {
+  const customerId = invoice.customer as string;
+  const invoiceId = invoice.id;
+
+  this.logger.log(
+    `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
+  );
+
+  const line = invoice.lines?.data?.[0];
+  const subscriptionId = line?.subscription as string;
+
+  this.logger.log(
+    `[INVOICE] Lines count: ${invoice.lines?.data?.length || 0}, SubscriptionId from line: ${subscriptionId}`,
+  );
+
+  if (!customerId || !subscriptionId) {
+    this.logger.warn(
+      `❌ invoice.payment_succeeded missing data - customerId: ${customerId}, subscriptionId: ${subscriptionId}`,
+    );
+    return;
+  }
+
+  const user = await this.prisma.user.findFirst({
+    where: { stripeCustomerId: customerId },
+  });
+
+  if (!user) {
+    this.logger.warn(`❌ No user found for customer ${customerId}`);
+    return;
+  }
+
+  this.logger.log(`✅ Found user ${user.id} (${user.email}) for customer ${customerId}`);
+
+  const plan = SubscriptionPlan.PREMIUM;
+
+  const existing = await this.prisma.subscription.findFirst({
+    where: { stripeSubscriptionId: subscriptionId },
+  });
+
+  if (existing) {
+    await this.prisma.subscription.update({
+      where: { id: existing.id },
+      data: { status: 'active', plan },
+    });
+  } else {
+    await this.prisma.subscription.create({
+      data: {
+        stripeSubscriptionId: subscriptionId,
+        stripeCustomerId: customerId,
+        status: 'active',
+        plan,
+        userId: user.id,
+      },
+    });
+  }
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: { plan },
+  });
+
+  this.logger.log(
+    `💰 Invoice paid → User ${user.id} upgraded to PREMIUM`,
+  );
+}
+  /**
+   * Step 3: Subscription canceled → downgrade
    */
   private async handleSubscriptionCanceled(
     subscription: Stripe.Subscription,
   ): Promise<void> {
     const sub = await this.prisma.subscription.findFirst({
       where: { stripeSubscriptionId: subscription.id },
-      include: { user: true },
     });
 
     if (!sub) {
-      this.logger.warn(
-        `⚠️ Subscription not found: ${subscription.id}`,
-      );
+      this.logger.warn(`⚠️ Subscription not found: ${subscription.id}`);
       return;
     }
 
@@ -267,6 +329,10 @@ export class SubscriptionService {
     const sub = await this.prisma.subscription.findFirst({
       where: { userId },
     });
+
+    this.logger.log(
+      `Retrieved subscription for user ${userId}: ${sub ? sub.plan : 'FREE'}`,
+    );
 
     return (
       sub ?? {
