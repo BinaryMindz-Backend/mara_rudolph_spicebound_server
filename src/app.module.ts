@@ -9,6 +9,7 @@ import { BookSlipModule } from './main/book-slip/book-slip.module.js';
 import { UserLibraryModule } from './main/user-library/user-library.module.js';
 import { RatingModule } from './main/rating/rating.module.js';
 import { SubscriptionModule } from './main/subscription/subscription.module.js';
+import { ContactModule } from './main/contact/contact.module.js';
 import stripeConfig from './config/stripe.config.js';
 import jwtConfig from './config/jwt.config.js';
 import openaiConfig from './config/openai.config.js';
@@ -28,6 +29,7 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
     UserLibraryModule,
     RatingModule,
     SubscriptionModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [
@@ -42,4 +44,4 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
     },
   ],
 })
-export class AppModule {}
+export class AppModule { }

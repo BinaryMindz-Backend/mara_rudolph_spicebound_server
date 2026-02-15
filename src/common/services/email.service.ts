@@ -92,4 +92,43 @@ export class EmailService {
       </html>
     `;
   }
+  async sendContactFormEmail(contactDto: any): Promise<void> {
+    const mailTo =
+      this.configService.get<string>('MAIL_USER') ||
+      this.configService.get<string>('ADMIN_EMAIL');
+
+    if (!mailTo) {
+      this.logger.warn('No admin email configured. Contact form email not sent.');
+      return;
+    }
+
+    const mailOptions = {
+      from: contactDto.email, // legitimate 'from' might be restricted by SMTP, usually better to put in reply-to
+      to: mailTo,
+      subject: `New Contact Form Submission`,
+      text: `
+        Name: ${contactDto.name}
+        Email: ${contactDto.email}
+        Message:
+        ${contactDto.message}
+      `,
+      html: `
+        <h3>New Contact Form Submission</h3>
+        <p><strong>Name:</strong> ${contactDto.name}</p>
+        <p><strong>Email:</strong> ${contactDto.email}</p>
+        <p><strong>Message:</strong></p>
+        <p>${contactDto.message}</p>
+      `,
+    };
+
+    try {
+      await this.transporter.sendMail(mailOptions);
+      this.logger.log(`Contact form email sent from ${contactDto.email}`);
+    } catch (error) {
+      this.logger.error('Failed to send contact form email:', error);
+      // We don't throw here to avoid failing the HTTP request if email fails, 
+      // but you might want to throw depending on requirement.
+      // For now, logging error is safer.
+    }
+  }
 }
