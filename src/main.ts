@@ -10,23 +10,25 @@ async function bootstrap() {
     rawBody: true, // Required for Stripe webhook signature verification
   });
 
-
-// Middleware order is CRITICAL: Raw parser MUST come first for webhooks
-// Otherwise the JSON parser will consume the body before webhook middleware sees it
-// Use application/octet-stream to capture the raw bytes exactly as Stripe sends them
-app.use('/stripe/webhook', bodyParser.raw({ type: 'application/octet-stream' }));
-app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
-// Then apply JSON parser for all other routes
-app.use(bodyParser.json());
+  // Middleware order is CRITICAL: Raw parser MUST come first for webhooks
+  // Otherwise the JSON parser will consume the body before webhook middleware sees it
+  // Use application/octet-stream to capture the raw bytes exactly as Stripe sends them
+  app.use(
+    '/stripe/webhook',
+    bodyParser.raw({ type: 'application/octet-stream' }),
+  );
+  app.use('/stripe/webhook', bodyParser.raw({ type: 'application/json' }));
+  // Then apply JSON parser for all other routes
+  app.use(bodyParser.json());
   // Configure CORS
   const allowedOrigins =
     process.env.NODE_ENV === 'production'
       ? ['https://readspicebound.com', 'https://www.readspicebound.com']
       : [
-        'http://localhost:3000',
-        'http://localhost:3001',
-        'http://localhost:5050',
-      ];
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'http://localhost:5050',
+        ];
 
   app.enableCors({
     origin: allowedOrigins,

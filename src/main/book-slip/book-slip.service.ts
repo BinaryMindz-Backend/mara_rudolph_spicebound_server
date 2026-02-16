@@ -118,8 +118,14 @@ export class BookSlipService {
      * 6️⃣ Create Book
      */
     // Generate links first to save them to the book record
-    const amazonUrl = (asin ? `https://amazon.com/dp/${asin}` : merged.isbn13 ? `https://amazon.com/s?k=${merged.isbn13}` : null);
-    const bookshopUrl = (merged.isbn13 ? `https://bookshop.org/search?q=${merged.isbn13}` : null);
+    const amazonUrl = asin
+      ? `https://amazon.com/dp/${asin}`
+      : merged.isbn13
+        ? `https://amazon.com/s?k=${merged.isbn13}`
+        : null;
+    const bookshopUrl = merged.isbn13
+      ? `https://bookshop.org/search?q=${merged.isbn13}`
+      : null;
 
     const book = await this.prisma.book.create({
       data: {
@@ -142,17 +148,21 @@ export class BookSlipService {
         // Series information - prefer AI enrichment, then external providers
         seriesName: enriched.series?.name ?? merged.seriesName ?? null,
         seriesIndex:
-          (enriched.series && 'index' in enriched.series ? enriched.series.index as number : undefined) ??
+          (enriched.series && 'index' in enriched.series
+            ? (enriched.series.index as number)
+            : undefined) ??
           merged.seriesIndex ??
           null,
         seriesTotal:
-          (enriched.series && 'total' in enriched.series ? enriched.series.total as number : undefined) ??
+          (enriched.series && 'total' in enriched.series
+            ? (enriched.series.total as number)
+            : undefined) ??
           merged.seriesTotal ??
           null,
         seriesStatus:
-          ((enriched.series?.status as SeriesStatus) ??
-            (merged.seriesStatus as SeriesStatus) ??
-            SeriesStatus.UNKNOWN),
+          (enriched.series?.status as SeriesStatus) ??
+          (merged.seriesStatus as SeriesStatus) ??
+          SeriesStatus.UNKNOWN,
       },
     });
 

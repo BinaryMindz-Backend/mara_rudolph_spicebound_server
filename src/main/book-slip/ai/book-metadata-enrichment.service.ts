@@ -1,7 +1,10 @@
 import { Injectable, Logger, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import OpenAI from 'openai';
-import { BookMetadataEnrichmentResponse, EnrichBookRequest } from './dto/book-metadata-enrichment.dto.js';
+import {
+  BookMetadataEnrichmentResponse,
+  EnrichBookRequest,
+} from './dto/book-metadata-enrichment.dto.js';
 
 @Injectable()
 export class BookMetadataEnrichmentService {
@@ -168,10 +171,14 @@ Return ONLY valid JSON, no other text.`;
 
       // Validate required fields
       if (!parsed.ageLevel) throw new Error('Missing ageLevel');
-      if (parsed.spiceRating === undefined || parsed.spiceRating === null) throw new Error('Missing spiceRating');
-      if (!Array.isArray(parsed.tropes)) throw new Error('Invalid tropes: must be array');
-      if (!Array.isArray(parsed.creatures)) throw new Error('Invalid creatures: must be array');
-      if (!Array.isArray(parsed.subgenres)) throw new Error('Invalid subgenres: must be array');
+      if (parsed.spiceRating === undefined || parsed.spiceRating === null)
+        throw new Error('Missing spiceRating');
+      if (!Array.isArray(parsed.tropes))
+        throw new Error('Invalid tropes: must be array');
+      if (!Array.isArray(parsed.creatures))
+        throw new Error('Invalid creatures: must be array');
+      if (!Array.isArray(parsed.subgenres))
+        throw new Error('Invalid subgenres: must be array');
       if (!parsed.series) throw new Error('Missing series object');
       if (!parsed.description) throw new Error('Missing description');
       if (!parsed.confidence) throw new Error('Missing confidence object');
@@ -179,27 +186,64 @@ Return ONLY valid JSON, no other text.`;
       // Validate age level
       const validAgeLevels = ['CHILDRENS', 'YA', 'NA', 'ADULT', 'EROTICA'];
       if (!validAgeLevels.includes(parsed.ageLevel)) {
-        throw new Error(`Invalid ageLevel: "${parsed.ageLevel}". Must be: ${validAgeLevels.join(', ')}`);
+        throw new Error(
+          `Invalid ageLevel: "${parsed.ageLevel}". Must be: ${validAgeLevels.join(', ')}`,
+        );
       }
 
       // Validate spice rating
-      if (!Number.isInteger(parsed.spiceRating) || parsed.spiceRating < 0 || parsed.spiceRating > 6) {
-        throw new Error(`Invalid spiceRating: ${parsed.spiceRating}. Must be integer 0-6`);
+      if (
+        !Number.isInteger(parsed.spiceRating) ||
+        parsed.spiceRating < 0 ||
+        parsed.spiceRating > 6
+      ) {
+        throw new Error(
+          `Invalid spiceRating: ${parsed.spiceRating}. Must be integer 0-6`,
+        );
       }
 
       // Validate tropes are exact matches
       const approvedTropes = [
-        'Enemies to Lovers', 'Friends to Lovers', 'Forbidden Love', 'Slow Burn', 'Instalove',
-        'Forced Proximity', 'Fake Relationship', 'Marriage of Convenience', 'Arranged Marriage', 'Captive/Captor', 'Trials',
-        'Grumpy x Sunshine', 'Morally Grey', 'Touch Her and Die', 'Mutual Pining', 'Angst with a Happy Ending', 'Alphahole',
-        'Fated Mates', 'Chosen One', 'Magic-Bonded Pair', 'Soulmates', 'Power Imbalance', 'Hidden Identity', 'Secret Royalty', 'Villain Gets the Girl', 'Dark Savior', 'Reincarnation',
-        'Found Family', 'Ragtag Group on a Quest',
-        'LGBTQ+', 'Love Triangle', 'Reverse Harem',
-        'Age Gap', 'Teacher x Student'
+        'Enemies to Lovers',
+        'Friends to Lovers',
+        'Forbidden Love',
+        'Slow Burn',
+        'Instalove',
+        'Forced Proximity',
+        'Fake Relationship',
+        'Marriage of Convenience',
+        'Arranged Marriage',
+        'Captive/Captor',
+        'Trials',
+        'Grumpy x Sunshine',
+        'Morally Grey',
+        'Touch Her and Die',
+        'Mutual Pining',
+        'Angst with a Happy Ending',
+        'Alphahole',
+        'Fated Mates',
+        'Chosen One',
+        'Magic-Bonded Pair',
+        'Soulmates',
+        'Power Imbalance',
+        'Hidden Identity',
+        'Secret Royalty',
+        'Villain Gets the Girl',
+        'Dark Savior',
+        'Reincarnation',
+        'Found Family',
+        'Ragtag Group on a Quest',
+        'LGBTQ+',
+        'Love Triangle',
+        'Reverse Harem',
+        'Age Gap',
+        'Teacher x Student',
       ];
       for (const trope of parsed.tropes) {
         if (!approvedTropes.includes(trope)) {
-          throw new Error(`Invalid trope: "${trope}". Use exact approved string`);
+          throw new Error(
+            `Invalid trope: "${trope}". Use exact approved string`,
+          );
         }
       }
       if (parsed.tropes.length > 4) {
@@ -208,12 +252,16 @@ Return ONLY valid JSON, no other text.`;
 
       // Validate creatures
       if (parsed.creatures.length > 3) {
-        throw new Error(`Too many creatures (${parsed.creatures.length}). Max is 3`);
+        throw new Error(
+          `Too many creatures (${parsed.creatures.length}). Max is 3`,
+        );
       }
 
       // Validate subgenres
       if (parsed.subgenres.length > 3) {
-        throw new Error(`Too many subgenres (${parsed.subgenres.length}). Max is 3`);
+        throw new Error(
+          `Too many subgenres (${parsed.subgenres.length}). Max is 3`,
+        );
       }
 
       // Validate series object
@@ -222,16 +270,32 @@ Return ONLY valid JSON, no other text.`;
       }
       const validStatuses = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'];
       if (!validStatuses.includes(parsed.series.status)) {
-        throw new Error(`Invalid series.status: "${parsed.series.status}". Must be: ${validStatuses.join(', ')}`);
+        throw new Error(
+          `Invalid series.status: "${parsed.series.status}". Must be: ${validStatuses.join(', ')}`,
+        );
       }
-      if (parsed.series.position !== null && parsed.series.position !== undefined) {
-        if (!Number.isInteger(parsed.series.position) || parsed.series.position < 1) {
+      if (
+        parsed.series.position !== null &&
+        parsed.series.position !== undefined
+      ) {
+        if (
+          !Number.isInteger(parsed.series.position) ||
+          parsed.series.position < 1
+        ) {
           throw new Error(`Invalid series.position: ${parsed.series.position}`);
         }
       }
-      if (parsed.series.totalBooks !== null && parsed.series.totalBooks !== undefined) {
-        if (!Number.isInteger(parsed.series.totalBooks) || parsed.series.totalBooks < 1) {
-          throw new Error(`Invalid series.totalBooks: ${parsed.series.totalBooks}`);
+      if (
+        parsed.series.totalBooks !== null &&
+        parsed.series.totalBooks !== undefined
+      ) {
+        if (
+          !Number.isInteger(parsed.series.totalBooks) ||
+          parsed.series.totalBooks < 1
+        ) {
+          throw new Error(
+            `Invalid series.totalBooks: ${parsed.series.totalBooks}`,
+          );
         }
       }
 
@@ -241,20 +305,29 @@ Return ONLY valid JSON, no other text.`;
       }
       const validConfidence = ['HIGH', 'MEDIUM', 'LOW'];
       if (!validConfidence.includes(parsed.confidence.spiceRating)) {
-        throw new Error(`Invalid confidence.spiceRating: "${parsed.confidence.spiceRating}"`);
+        throw new Error(
+          `Invalid confidence.spiceRating: "${parsed.confidence.spiceRating}"`,
+        );
       }
       if (!validConfidence.includes(parsed.confidence.overall)) {
-        throw new Error(`Invalid confidence.overall: "${parsed.confidence.overall}"`);
+        throw new Error(
+          `Invalid confidence.overall: "${parsed.confidence.overall}"`,
+        );
       }
 
       // Validate description
-      if (typeof parsed.description !== 'string' || parsed.description.trim().length === 0) {
+      if (
+        typeof parsed.description !== 'string' ||
+        parsed.description.trim().length === 0
+      ) {
         throw new Error('Description must be non-empty string');
       }
 
       // Validate YA/Spice constraint
       if (parsed.ageLevel === 'YA' && parsed.spiceRating >= 4) {
-        throw new Error('YA books cannot have spice 4+. YA requires fade-to-black');
+        throw new Error(
+          'YA books cannot have spice 4+. YA requires fade-to-black',
+        );
       }
 
       this.logger.debug(`✓ Validated: ${parsed.series.name || 'standalone'}`);

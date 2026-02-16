@@ -1,4 +1,10 @@
-import { Body, Controller, Post, HttpCode, ValidationPipe } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  HttpCode,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { BookSlipService } from './book-slip.service.js';
 import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.service.js';
@@ -37,7 +43,8 @@ export class BookSlipController {
       amazonUrl: {
         summary: 'Amazon Product URL',
         value: {
-          input: 'https://www.amazon.com/Fourth-Wing-Rebecca-Yarros/dp/1635573815',
+          input:
+            'https://www.amazon.com/Fourth-Wing-Rebecca-Yarros/dp/1635573815',
         },
       },
       titleOnly: {

@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Patch, Post, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Patch,
+  Post,
+  Put,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { SignupDto } from './dto/signup.dto.js';
 import { LoginDto } from './dto/login.dto.js';
@@ -9,13 +18,19 @@ import { CurrentUser } from '../../common/decorators/user.decorators.js';
 import { ChangePasswordDto } from './dto/change-password.dto.js';
 import { ForgotPasswordDto } from './dto/forgot-password.dto.js';
 import { ResetPasswordDto } from './dto/reset-password.dto.js';
-import { ApiBearerAuth, ApiOperation, ApiTags, ApiBody, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiTags,
+  ApiBody,
+  ApiResponse,
+} from '@nestjs/swagger';
 import { UpdateNameDto } from './dto/update-name.dto.js';
 import { DeleteAccountDto } from './dto/delete-account.dto.js';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) { }
+  constructor(private readonly authService: AuthService) {}
 
   @Post('signup')
   @ApiOperation({ summary: 'Create a new user account' })
@@ -71,7 +86,8 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiOperation({ summary: 'Update user profile (name, email, password)' })
   @ApiBody({
-    description: 'Update profile - all fields optional. At least one field must be provided.',
+    description:
+      'Update profile - all fields optional. At least one field must be provided.',
     type: UpdateProfileDto,
     examples: {
       'Change Name': {
@@ -96,10 +112,7 @@ export class AuthController {
       },
     },
   })
-  updateProfile(
-    @CurrentUser() userId: string,
-    @Body() dto: UpdateProfileDto,
-  ) {
+  updateProfile(@CurrentUser() userId: string, @Body() dto: UpdateProfileDto) {
     return this.authService.updateProfile(userId, dto);
   }
 
@@ -135,7 +148,8 @@ export class AuthController {
     examples: {
       'Delete Account': {
         value: { password: 'currentPassword123' },
-        description: 'User must provide their current password to confirm deletion',
+        description:
+          'User must provide their current password to confirm deletion',
       },
     },
   })
@@ -147,10 +161,7 @@ export class AuthController {
     status: 401,
     description: 'Password is incorrect or user not found',
   })
-  deleteAccount(
-    @CurrentUser() userId: string,
-    @Body() dto: DeleteAccountDto,
-  ) {
+  deleteAccount(@CurrentUser() userId: string, @Body() dto: DeleteAccountDto) {
     return this.authService.deleteAccount(userId, dto);
   }
 }

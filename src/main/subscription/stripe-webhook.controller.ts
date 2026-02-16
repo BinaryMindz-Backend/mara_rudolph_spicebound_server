@@ -8,19 +8,16 @@ import {
 import type { Request } from 'express';
 import { SubscriptionService } from './subscription.service.js';
 
-
 @Controller('stripe')
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
 
-  constructor(
-    private readonly subscriptionService: SubscriptionService,
-  ) {}
+  constructor(private readonly subscriptionService: SubscriptionService) {}
 
   @Post('webhook')
   async handleWebhook(@Req() req: Request) {
     this.logger.log('[WEBHOOK] POST /stripe/webhook received');
-    
+
     const signature = req.headers['stripe-signature'] as string;
 
     if (!signature) {
@@ -37,15 +34,20 @@ export class StripeWebhookController {
     }
 
     // Convert to Buffer if it's not already
-    const buffer = Buffer.isBuffer(rawBody) 
-      ? rawBody 
+    const buffer = Buffer.isBuffer(rawBody)
+      ? rawBody
       : Buffer.from(JSON.stringify(rawBody));
 
-    this.logger.log('[WEBHOOK] Body is Buffer:', Buffer.isBuffer(rawBody), 'Type:', typeof rawBody);
+    this.logger.log(
+      '[WEBHOOK] Body is Buffer:',
+      Buffer.isBuffer(rawBody),
+      'Type:',
+      typeof rawBody,
+    );
     this.logger.log('[WEBHOOK] Processing webhook event...');
-    
+
     await this.subscriptionService.handleWebhook(buffer, signature);
-    
+
     this.logger.log('[WEBHOOK] Webhook processed successfully');
     return { received: true };
   }

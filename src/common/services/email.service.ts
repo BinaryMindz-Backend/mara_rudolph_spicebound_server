@@ -98,7 +98,9 @@ export class EmailService {
       this.configService.get<string>('ADMIN_EMAIL');
 
     if (!mailTo) {
-      this.logger.warn('No admin email configured. Contact form email not sent.');
+      this.logger.warn(
+        'No admin email configured. Contact form email not sent.',
+      );
       return;
     }
 
@@ -126,7 +128,7 @@ export class EmailService {
       this.logger.log(`Contact form email sent from ${contactDto.email}`);
     } catch (error) {
       this.logger.error('Failed to send contact form email:', error);
-      // We don't throw here to avoid failing the HTTP request if email fails, 
+      // We don't throw here to avoid failing the HTTP request if email fails,
       // but you might want to throw depending on requirement.
       // For now, logging error is safer.
     }
