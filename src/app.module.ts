@@ -25,11 +25,11 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
     }),
     PrismaModule,
     AuthModule,
+    ContactModule,
     BookSlipModule,
     UserLibraryModule,
     RatingModule,
     SubscriptionModule,
-    ContactModule,
   ],
   controllers: [AppController],
   providers: [

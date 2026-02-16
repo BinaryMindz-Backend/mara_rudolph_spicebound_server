@@ -227,73 +227,73 @@ export class SubscriptionService {
    * Step 3: Payment confirmed → create subscription + upgrade plan
 
    */
-private async handleInvoicePaid(
-  invoice: Stripe.Invoice,
-): Promise<void> {
-  const customerId = invoice.customer as string;
-  const invoiceId = invoice.id;
+  private async handleInvoicePaid(
+    invoice: Stripe.Invoice,
+  ): Promise<void> {
+    const customerId = invoice.customer as string;
+    const invoiceId = invoice.id;
 
-  this.logger.log(
-    `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
-  );
-
-  const line = invoice.lines?.data?.[0];
-  const subscriptionId = line?.subscription as string;
-
-  this.logger.log(
-    `[INVOICE] Lines count: ${invoice.lines?.data?.length || 0}, SubscriptionId from line: ${subscriptionId}`,
-  );
-
-  if (!customerId || !subscriptionId) {
-    this.logger.warn(
-      `❌ invoice.payment_succeeded missing data - customerId: ${customerId}, subscriptionId: ${subscriptionId}`,
+    this.logger.log(
+      `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
     );
-    return;
-  }
 
-  const user = await this.prisma.user.findFirst({
-    where: { stripeCustomerId: customerId },
-  });
+    const line = invoice.lines?.data?.[0];
+    const subscriptionId = line?.subscription as string;
 
-  if (!user) {
-    this.logger.warn(`❌ No user found for customer ${customerId}`);
-    return;
-  }
+    this.logger.log(
+      `[INVOICE] Lines count: ${invoice.lines?.data?.length || 0}, SubscriptionId from line: ${subscriptionId}`,
+    );
 
-  this.logger.log(`✅ Found user ${user.id} (${user.email}) for customer ${customerId}`);
+    if (!customerId || !subscriptionId) {
+      this.logger.warn(
+        `❌ invoice.payment_succeeded missing data - customerId: ${customerId}, subscriptionId: ${subscriptionId}`,
+      );
+      return;
+    }
 
-  const plan = SubscriptionPlan.PREMIUM;
-
-  const existing = await this.prisma.subscription.findFirst({
-    where: { stripeSubscriptionId: subscriptionId },
-  });
-
-  if (existing) {
-    await this.prisma.subscription.update({
-      where: { id: existing.id },
-      data: { status: 'active', plan },
+    const user = await this.prisma.user.findFirst({
+      where: { stripeCustomerId: customerId },
     });
-  } else {
-    await this.prisma.subscription.create({
-      data: {
-        stripeSubscriptionId: subscriptionId,
-        stripeCustomerId: customerId,
-        status: 'active',
-        plan,
-        userId: user.id,
-      },
+
+    if (!user) {
+      this.logger.warn(`❌ No user found for customer ${customerId}`);
+      return;
+    }
+
+    this.logger.log(`✅ Found user ${user.id} (${user.email}) for customer ${customerId}`);
+
+    const plan = SubscriptionPlan.PREMIUM;
+
+    const existing = await this.prisma.subscription.findFirst({
+      where: { stripeSubscriptionId: subscriptionId },
     });
+
+    if (existing) {
+      await this.prisma.subscription.update({
+        where: { id: existing.id },
+        data: { status: 'active', plan },
+      });
+    } else {
+      await this.prisma.subscription.create({
+        data: {
+          stripeSubscriptionId: subscriptionId,
+          stripeCustomerId: customerId,
+          status: 'active',
+          plan,
+          userId: user.id,
+        },
+      });
+    }
+
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { plan },
+    });
+
+    this.logger.log(
+      `💰 Invoice paid → User ${user.id} upgraded to PREMIUM`,
+    );
   }
-
-  await this.prisma.user.update({
-    where: { id: user.id },
-    data: { plan },
-  });
-
-  this.logger.log(
-    `💰 Invoice paid → User ${user.id} upgraded to PREMIUM`,
-  );
-}
   /**
    * Step 3: Subscription canceled → downgrade
    */
