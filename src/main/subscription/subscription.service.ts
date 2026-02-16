@@ -303,12 +303,11 @@ export class SubscriptionService {
       `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
     );
 
-    const line = invoice.lines?.data?.[0];
-    const subscriptionId = line?.subscription as string;
+    const subscriptionId =
+      (invoice.parent?.subscription_details?.subscription as string) ??
+      undefined;
 
-    this.logger.log(
-      `[INVOICE] Lines count: ${invoice.lines?.data?.length || 0}, SubscriptionId from line: ${subscriptionId}`,
-    );
+    this.logger.log(`[INVOICE] SubscriptionId: ${subscriptionId}`);
 
     if (!customerId || !subscriptionId) {
       this.logger.warn(
