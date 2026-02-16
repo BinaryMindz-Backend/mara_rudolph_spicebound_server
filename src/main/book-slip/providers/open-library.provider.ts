@@ -93,7 +93,9 @@ export class OpenLibraryProvider {
             ? data.description
             : (data.description?.value ?? undefined),
         openLibraryId: cleanId,
-        seriesName: Array.isArray(data.series) ? data.series[0] : data.series ?? undefined,
+        seriesName: Array.isArray(data.series)
+          ? data.series[0]
+          : (data.series ?? undefined),
       };
 
       this.logger.log('✅ OpenLibrary fetchById mapped:', mapped);

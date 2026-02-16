@@ -50,7 +50,8 @@ export class GoogleBooksProvider {
     )?.identifier;
 
     // Attempt to extract series information if present
-    const seriesName = info.series?.[0] ?? info?.seriesInfo?.volumeSeries?.title ?? undefined;
+    const seriesName =
+      info.series?.[0] ?? info?.seriesInfo?.volumeSeries?.title ?? undefined;
 
     // Google Books does not consistently expose series index/total; leave undefined unless present
     let seriesIndex: number | undefined = undefined;

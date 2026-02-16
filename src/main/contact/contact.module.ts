@@ -5,8 +5,8 @@ import { ContactController } from './contact.controller.js';
 import { EmailService } from '../../common/services/email.service.js';
 
 @Module({
-    imports: [ConfigModule],
-    controllers: [ContactController],
-    providers: [ContactService, EmailService],
+  imports: [ConfigModule],
+  controllers: [ContactController],
+  providers: [ContactService, EmailService],
 })
-export class ContactModule { }
+export class ContactModule {}

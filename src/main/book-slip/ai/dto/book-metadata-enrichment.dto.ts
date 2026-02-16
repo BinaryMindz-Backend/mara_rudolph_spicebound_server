@@ -55,4 +55,3 @@ export class EnrichBookRequest {
   @IsString({ message: 'Series info must be a string' })
   seriesInfo?: string;
 }
-

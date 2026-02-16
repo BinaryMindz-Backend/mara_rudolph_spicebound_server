@@ -44,4 +44,4 @@ import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
     },
   ],
 })
-export class AppModule { }
+export class AppModule {}

@@ -99,7 +99,11 @@ export class UserLibraryService {
 
       const amazonUrl =
         userBook.book.amazonUrl ||
-        (asin ? `https://amazon.com/dp/${asin}` : isbn13 ? `https://amazon.com/s?k=${isbn13}` : null);
+        (asin
+          ? `https://amazon.com/dp/${asin}`
+          : isbn13
+            ? `https://amazon.com/s?k=${isbn13}`
+            : null);
       const bookshopUrl =
         userBook.book.bookshopUrl ||
         (isbn13 ? `https://bookshop.org/search?q=${isbn13}` : null);

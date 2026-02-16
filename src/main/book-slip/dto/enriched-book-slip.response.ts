@@ -10,7 +10,10 @@ export class SeriesInfo {
   @ApiProperty({ example: 5 })
   totalBooks: number | null;
 
-  @ApiProperty({ example: 'INCOMPLETE', enum: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN', 'ONGOING'] })
+  @ApiProperty({
+    example: 'INCOMPLETE',
+    enum: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN', 'ONGOING'],
+  })
   status: string;
 }
 
@@ -18,22 +21,46 @@ export class ConfidenceLevel {
   @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'] })
   spiceRating: string;
 
-  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'HIGH',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   ageLevel?: string;
 
-  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'HIGH',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   tropes?: string;
 
-  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'HIGH',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   creatures?: string;
 
-  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'HIGH',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   subgenres?: string;
 
-  @ApiProperty({ example: 'LOW', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'LOW',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   series?: string;
 
-  @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'], required: false })
+  @ApiProperty({
+    example: 'HIGH',
+    enum: ['HIGH', 'MEDIUM', 'LOW'],
+    required: false,
+  })
   overall?: string;
 }
 
@@ -70,8 +97,7 @@ export class EnrichedBookSlipResponse {
   releaseYear: number;
 
   @ApiProperty({
-    description:
-      'Age level classification (CHILDRENS, YA, NA, ADULT, EROTICA)',
+    description: 'Age level classification (CHILDRENS, YA, NA, ADULT, EROTICA)',
     enum: ['CHILDRENS', 'YA', 'NA', 'ADULT', 'EROTICA'],
     example: 'ADULT',
   })
@@ -114,7 +140,10 @@ export class EnrichedBookSlipResponse {
 
   @ApiProperty({
     description: 'External links (Amazon, Goodreads, etc)',
-    example: { amazon: 'https://amazon.com/...', bookshop: 'https://bookshop.org/...' },
+    example: {
+      amazon: 'https://amazon.com/...',
+      bookshop: 'https://bookshop.org/...',
+    },
   })
   links: Record<string, string>;
 

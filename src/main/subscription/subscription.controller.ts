@@ -26,10 +26,7 @@ export class SubscriptionController {
     @CurrentUser() userId: string,
     @Body() dto: CreateCheckoutDto,
   ) {
-    return this.subscriptionService.createCheckoutSession(
-      userId,
-      dto.plan,
-    );
+    return this.subscriptionService.createCheckoutSession(userId, dto.plan);
   }
 
   @ApiBearerAuth('access-token')

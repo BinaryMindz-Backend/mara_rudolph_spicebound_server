@@ -27,7 +27,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
-  ) { }
+  ) {}
 
   async signup(dto: SignupDto) {
     const exists = await this.prisma.user.findUnique({
@@ -102,9 +102,15 @@ export class AuthService {
 
   private async createAndSaveRefreshToken(userId: string) {
     const refreshTokenPlain = crypto.randomBytes(64).toString('hex');
-    const hashed = crypto.createHash('sha256').update(refreshTokenPlain).digest('hex');
+    const hashed = crypto
+      .createHash('sha256')
+      .update(refreshTokenPlain)
+      .digest('hex');
 
-    const days = parseInt(this.configService.get<string>('REFRESH_TOKEN_EXPIRES_DAYS') || '30', 10);
+    const days = parseInt(
+      this.configService.get<string>('REFRESH_TOKEN_EXPIRES_DAYS') || '30',
+      10,
+    );
     const expiry = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
     await this.prisma.user.update({
@@ -120,7 +126,10 @@ export class AuthService {
       throw new UnauthorizedException('Refresh token missing');
     }
 
-    const hashed = crypto.createHash('sha256').update(dto.refreshToken).digest('hex');
+    const hashed = crypto
+      .createHash('sha256')
+      .update(dto.refreshToken)
+      .digest('hex');
 
     const user = await this.prisma.user.findFirst({
       where: {
@@ -161,7 +170,11 @@ export class AuthService {
       data: { refreshToken: null, refreshTokenExpiry: null },
     });
 
-    return ApiResponseUtil.success({ success: true }, 'Logged out successfully', 200);
+    return ApiResponseUtil.success(
+      { success: true },
+      'Logged out successfully',
+      200,
+    );
   }
 
   async updateProfile(userId: string, dto: any) {
@@ -206,7 +219,11 @@ export class AuthService {
       },
     });
 
-    return ApiResponseUtil.success(updated, 'Profile updated successfully', 200);
+    return ApiResponseUtil.success(
+      updated,
+      'Profile updated successfully',
+      200,
+    );
   }
 
   async getMe(userId: string) {
@@ -237,13 +254,18 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    const passwordMatch = await bcrypt.compare(dto.currentPassword, user.password);
+    const passwordMatch = await bcrypt.compare(
+      dto.currentPassword,
+      user.password,
+    );
     if (!passwordMatch) {
       throw new UnauthorizedException('Current password is incorrect');
     }
 
     if (dto.currentPassword === dto.newPassword) {
-      throw new BadRequestException('New password must be different from current password');
+      throw new BadRequestException(
+        'New password must be different from current password',
+      );
     }
 
     const hashedNewPassword = await bcrypt.hash(dto.newPassword, 12);
@@ -253,7 +275,11 @@ export class AuthService {
       data: { password: hashedNewPassword },
     });
 
-    return ApiResponseUtil.success({ success: true }, 'Password changed successfully', 200);
+    return ApiResponseUtil.success(
+      { success: true },
+      'Password changed successfully',
+      200,
+    );
   }
 
   async forgotPassword(dto: ForgotPasswordDto) {

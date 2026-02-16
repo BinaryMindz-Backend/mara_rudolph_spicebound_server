@@ -6,7 +6,8 @@ export class DiscoverBookDto {
     description:
       'The input to discover the book. Can be: Amazon book URL, book title, or book title + author',
     examples: {
-      amazonUrl: 'https://www.amazon.com/Fourth-Wing-Rebecca-Yarros/dp/1635573815',
+      amazonUrl:
+        'https://www.amazon.com/Fourth-Wing-Rebecca-Yarros/dp/1635573815',
       title: 'Fourth Wing',
       titleAuthor: 'Fourth Wing by Rebecca Yarros',
     },
