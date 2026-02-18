@@ -1,7 +1,7 @@
 # ===========================
 # Frontend - Next.js
 # ===========================
-spicebound-sv.saikat.com.bd {
+readspicebound.com {
 	tls {
 		protocols tls1.2 tls1.3
 	}
@@ -44,7 +44,7 @@ spicebound-sv.saikat.com.bd {
 # ===========================
 # Backend - NestJS API
 # ===========================
-spicebound-server-sv.saikat.com.bd {
+api.readspicebound.com {
 	tls {
 		protocols tls1.2 tls1.3
 	}

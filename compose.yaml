@@ -115,4 +115,5 @@ volumes:
 
 networks:
   spicebound-net:
-    external: true
+    name: spicebound-net
+    driver: bridge
