@@ -295,13 +295,7 @@ export class SubscriptionService {
    * Step 3: Payment confirmed → create subscription + upgrade plan
 
    */
-<<<<<<< HEAD
-  private async handleInvoicePaid(
-    invoice: Stripe.Invoice,
-  ): Promise<void> {
-=======
   private async handleInvoicePaid(invoice: Stripe.Invoice): Promise<void> {
->>>>>>> be767d5d978a36ec701f9e35ccc71f7ec24e720c
     const customerId = invoice.customer as string;
     const invoiceId = invoice.id;
 
@@ -309,20 +303,11 @@ export class SubscriptionService {
       `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
     );
 
-<<<<<<< HEAD
-    const line = invoice.lines?.data?.[0];
-    const subscriptionId = line?.subscription as string;
-
-    this.logger.log(
-      `[INVOICE] Lines count: ${invoice.lines?.data?.length || 0}, SubscriptionId from line: ${subscriptionId}`,
-    );
-=======
     const subscriptionId =
       (invoice.parent?.subscription_details?.subscription as string) ??
       undefined;
 
     this.logger.log(`[INVOICE] SubscriptionId: ${subscriptionId}`);
->>>>>>> be767d5d978a36ec701f9e35ccc71f7ec24e720c
 
     if (!customerId || !subscriptionId) {
       this.logger.warn(
@@ -331,12 +316,6 @@ export class SubscriptionService {
       return;
     }
 
-<<<<<<< HEAD
-    const user = await this.prisma.user.findFirst({
-      where: { stripeCustomerId: customerId },
-    });
-
-=======
     let user = await this.prisma.user.findFirst({
       where: { stripeCustomerId: customerId },
     });
@@ -367,19 +346,14 @@ export class SubscriptionService {
       }
     }
 
->>>>>>> be767d5d978a36ec701f9e35ccc71f7ec24e720c
     if (!user) {
       this.logger.warn(`❌ No user found for customer ${customerId}`);
       return;
     }
 
-<<<<<<< HEAD
-    this.logger.log(`✅ Found user ${user.id} (${user.email}) for customer ${customerId}`);
-=======
     this.logger.log(
       `✅ Found user ${user.id} (${user.email}) for customer ${customerId}`,
     );
->>>>>>> be767d5d978a36ec701f9e35ccc71f7ec24e720c
 
     const plan = SubscriptionPlan.PREMIUM;
 
@@ -409,13 +383,7 @@ export class SubscriptionService {
       data: { plan },
     });
 
-<<<<<<< HEAD
-    this.logger.log(
-      `💰 Invoice paid → User ${user.id} upgraded to PREMIUM`,
-    );
-=======
     this.logger.log(`💰 Invoice paid → User ${user.id} upgraded to PREMIUM`);
->>>>>>> be767d5d978a36ec701f9e35ccc71f7ec24e720c
   }
   /**
    * Step 3: Subscription canceled → downgrade
@@ -447,7 +415,6 @@ export class SubscriptionService {
   /* -------------------------------------------------------------------------- */
   /*                               READ HELPERS                                 */
   /* -------------------------------------------------------------------------- */
-
   async getUserSubscription(userId: string) {
     const sub = await this.prisma.subscription.findFirst({
       where: { userId },

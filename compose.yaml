@@ -15,8 +15,8 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: ${REDIS_PORT:-6379}
       BASE_URL: http://0.0.0.0:${PORT:-5050}
-    ports:
-      - "${PORT:-5050}:${PORT:-5050}"
+    expose:
+      - "${PORT:-5050}"
     depends_on:
       db:
         condition: service_healthy
@@ -86,12 +86,34 @@ services:
     networks:
       - spicebound-net
 
+  caddy:
+    image: caddy:2-alpine
+    container_name: ${PACKAGE_NAME}_caddy
+    profiles:
+      - prod
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - server
+    networks:
+      - spicebound-net
+
 volumes:
   db_data:
   files-data:
   temp-data:
   redis_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   spicebound-net:
+    name: spicebound-net
     driver: bridge

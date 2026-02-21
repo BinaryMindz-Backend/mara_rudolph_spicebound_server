@@ -1,0 +1,97 @@
+# ===========================
+# Frontend - Next.js
+# ===========================
+readspicebound.com {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-XSS-Protection "1; mode=block"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+		-X-Powered-By
+	}
+
+	@nextStatic path /_next/static/*
+	header @nextStatic Cache-Control "public, max-age=31536000, immutable"
+
+	@publicAssets path /fonts/* *.ico *.svg *.png *.jpg *.jpeg *.webp *.woff *.woff2 *.ttf
+	header @publicAssets Cache-Control "public, max-age=86400, stale-while-revalidate=43200"
+
+	reverse_proxy frontend:3000 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+		header_up X-Forwarded-Host {host}
+	}
+
+	log {
+		output file /data/logs/frontend-access.log {
+			roll_size 10mb
+			roll_keep 5
+			roll_keep_for 168h
+		}
+	}
+}
+
+# ===========================
+# Backend - NestJS API
+# ===========================
+api.readspicebound.com {
+	tls {
+		protocols tls1.2 tls1.3
+	}
+
+	encode zstd gzip
+
+	header {
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-XSS-Protection "1; mode=block"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		-Server
+		-X-Powered-By
+	}
+
+	handle /stripe/webhook {
+		reverse_proxy server:5050 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle /docs* {
+		reverse_proxy server:5050 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+		}
+	}
+
+	handle {
+		reverse_proxy server:5050 {
+			header_up X-Real-IP {remote_host}
+			header_up X-Forwarded-For {remote_host}
+			header_up X-Forwarded-Proto {scheme}
+			header_up X-Forwarded-Host {host}
+		}
+	}
+
+	log {
+		output file /data/logs/backend-access.log {
+			roll_size 10mb
+			roll_keep 5
+			roll_keep_for 168h
+		}
+	}
+}
