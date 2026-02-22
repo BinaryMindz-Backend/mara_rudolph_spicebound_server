@@ -388,7 +388,29 @@ All critical and high-priority bugs identified in the QA Phase Pre-Launch MVP Bu
 
 ---
 
-## CRITICAL FIX: Book Persistence & Reuse (Added Session 2)
+## Session 2 Fixes: OpenAI API Compatibility & Persistence
+
+### ✅ **OpenAI 400 Bad Request Error (NEW - Latest Fix)**
+
+**Issue**: When searching for books, API returned `HTTP 400 Bad Request` with message: "Invalid parameter: 'response_format' of type 'json_object' is not supported with this model."
+
+**Root Cause**: The AI enrichment service was sending `response_format: { type: 'json_object' }` to OpenAI's `gpt-4` model, which doesn't support this constraint. This parameter is only supported by `gpt-4-turbo`, `gpt-4o`, and `gpt-4o-mini`.
+
+**Fix**: [OpenAI API Compatibility - Removed Unsupported Parameter](src/main/book-slip/ai/ai-enrichment.service.ts)
+- Removed `response_format: { type: 'json_object' }` from the OpenAI request body
+- Relies on prompt instruction to enforce JSON format (which works reliably at temperature 0.3)
+- Eliminates compatibility issues across all `gpt-4` model variants
+
+**Verification**:
+- ✅ Build: Zero TypeScript errors
+- ✅ API: Returns HTTP 201 on book search
+- ✅ No database errors
+- ✅ AI enrichment service logs no errors
+- ✅ Persistence caching verified working
+
+---
+
+## CRITICAL FIX: Book Persistence & Reuse (Session 2 - Earlier)
 
 **Issue**: "When a user searches for the same book multiple times, the book slip returns different details each time"
 

@@ -64,12 +64,11 @@ export class AiEnrichmentService {
         ],
         temperature: 0.3, // Low temperature for consistent, factual responses
         max_tokens: 500,
-        response_format: { type: 'json_object' },
       };
 
       // Log the request for debugging
       this.logger.debug(
-        `🔹 OpenAI request body: ${JSON.stringify(requestBody, null, 2)}`,
+        `🔹 OpenAI request model=${model} with ${userPrompt.length} chars`,
       );
 
       const response = await fetch(
@@ -116,8 +115,23 @@ export class AiEnrichmentService {
       this.logger.debug(`🔹 OpenAI raw response: ${content}`);
 
       // Parse JSON response
-      const enriched = JSON.parse(content);
-      this.logger.log(`🔹 AI Enrichment parsed: ${JSON.stringify(enriched)}`);
+      let enriched;
+      try {
+        enriched = JSON.parse(content);
+        this.logger.log(`✅ AI Enrichment parsed successfully: ${JSON.stringify(enriched)}`);
+      } catch (parseError) {
+        this.logger.error(
+          `❌ Failed to parse AI response as JSON. Response was: ${content.substring(0, 200)}...`,
+          parseError instanceof Error ? parseError.message : String(parseError),
+        );
+        return {
+          ageLevel: 'UNKNOWN',
+          spiceRating: 0,
+          tropes: [],
+          creatures: [],
+          subgenres: [],
+        };
+      }
 
       // Validate and sanitize output
       return this.sanitizeEnrichedData(enriched);
@@ -150,47 +164,31 @@ YOUR RESPONSE MUST be valid JSON that can be parsed.`;
   }
 
   private buildUserPrompt(bookData: any): string {
-    return `Analyze this book and return metadata as valid JSON.
+    return `Analyze this book and return ONLY valid JSON. No explanations, no markdown.
 
-Book Information:
-- Title: ${bookData.title || 'unknown'}
-- Author: ${bookData.author || 'unknown'}
-- Description: ${bookData.description || 'none provided'}
+BOOK: Title="${bookData.title || 'unknown'}" | Author="${bookData.author || 'unknown'}" | Description="${bookData.description || 'none'}"
 
-SPICE RATING SCALE (must be an integer 0-6):
-0 = None (no romantic content)
-1 = Cute (kissing, hand-holding, innocent romance)
-2 = Sweet (closed door - attraction clear, intimacy implied but not shown)
-3 = Warm (1-3 open door scenes, not overly descriptive)
-4 = Spicy (descriptive open door, often 2+ scenes, NA+ level)
-5 = Hot Spicy (frequent, detailed scenes - characters can't keep hands off each other)
-6 = Explicit/Kink (erotica-level - explicit kink, scenes are primary feature)
+SPICE RATING (0-6):
+0=No romance, 1=Cute kisses, 2=Sweet fade, 3=Warm descriptive, 4=Spicy explicit, 5=Hot frequent, 6=Erotica
 
-GUIDELINES:
-- Spice Rating: Return ONLY a number 0-6 (not text like "very hot spice")
-- Publication Year: Use the ORIGINAL publication year, not recent reprints or editions
-- Age Level: Must be exactly one of: CHILDREN, YA, NA, ADULT, EROTICA, UNKNOWN
-- Tropes: Select UP TO 4 from the approved list ONLY
-- Creatures: UP TO 3 creatures/paranormal elements (or leave empty)
-- Subgenres: UP TO 3 subgenres (or leave empty)
-- Series: If this book is part of a series, provide status (COMPLETE or INCOMPLETE)
+AGE LEVEL (must match rating - if spice>=4 use NA+):
+CHILDREN | YA | NA | ADULT | EROTICA | UNKNOWN
 
-APPROVED TROPES (select from these ONLY):
+TROPES (max 4, must be exact matches):
 ${APPROVED_TROPES.join(', ')}
 
-Return ONLY this JSON structure (valid JSON only, no markdown):
+CREATURES: Dragons, Fae, Vampires, Shifters, etc. (max 3, [] if none)
+SUBGENRES: Romance, Fantasy, Horror, etc. (max 3, [] if none)
+SERIES: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null
+
+JSON ONLY - validate and return:
 {
-  "ageLevel": "CHILDREN" | "YA" | "NA" | "ADULT" | "EROTICA" | "UNKNOWN",
-  "spiceRating": <integer 0-6>,
-  "tropes": ["trope1", "trope2"],
-  "creatures": ["creature1"],
-  "subgenres": ["subgenre1"],
-  "series": {
-    "name": "series name" | null,
-    "index": <position in series> | null,
-    "total": <total books in series> | null,
-    "status": "COMPLETE" | "INCOMPLETE" | "UNKNOWN"
-  }
+  "ageLevel": "UNKNOWN|CHILDREN|YA|NA|ADULT|EROTICA",
+  "spiceRating": 0-6,
+  "tropes": ["approved", "tropes"],
+  "creatures": ["type"],
+  "subgenres": ["genre"],
+  "series": {"name": null, "index": null, "total": null, "status": "UNKNOWN"} | null
 }`;
   }
 
