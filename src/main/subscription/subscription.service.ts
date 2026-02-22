@@ -303,11 +303,14 @@ export class SubscriptionService {
       `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
     );
 
-    // Stripe Invoice has top-level subscription (string id or expanded object)
+    // Subscription ID: Stripe types use parent.subscription_details.subscription;
+    // some webhook payloads also expose top-level subscription (use as fallback).
+    const subFromParent = invoice.parent?.subscription_details?.subscription;
+    const subFromTop = (invoice as { subscription?: string | Stripe.Subscription })
+      .subscription;
+    const sub = subFromParent ?? subFromTop;
     const subscriptionId =
-      typeof invoice.subscription === 'string'
-        ? invoice.subscription
-        : invoice.subscription?.id ?? undefined;
+      typeof sub === 'string' ? sub : (sub as Stripe.Subscription)?.id ?? undefined;
 
     this.logger.log(`[INVOICE] SubscriptionId: ${subscriptionId}`);
 
