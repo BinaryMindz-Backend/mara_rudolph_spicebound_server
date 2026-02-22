@@ -10,9 +10,15 @@ async function bootstrap() {
     rawBody: true, // Required for Stripe webhook signature verification
   });
 
+  // Log EVERY request to /stripe/webhook (so we can see if Stripe POSTs reach the server)
+  app.use('/stripe/webhook', (req: any, _res, next) => {
+    console.log(
+      `[STRIPE WEBHOOK] ${req.method} /stripe/webhook at ${new Date().toISOString()}`,
+    );
+    next();
+  });
   // Middleware order is CRITICAL: Raw parser MUST come first for webhooks
   // Otherwise the JSON parser will consume the body before webhook middleware sees it
-  // Use application/octet-stream to capture the raw bytes exactly as Stripe sends them
   app.use(
     '/stripe/webhook',
     bodyParser.raw({ type: 'application/octet-stream' }),
