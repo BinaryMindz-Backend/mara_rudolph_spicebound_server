@@ -303,9 +303,11 @@ export class SubscriptionService {
       `[INVOICE PAID] Invoice ID: ${invoiceId}, Customer: ${customerId}, Status: ${invoice.status}, Amount: ${invoice.amount_paid}`,
     );
 
+    // Stripe Invoice has top-level subscription (string id or expanded object)
     const subscriptionId =
-      (invoice.parent?.subscription_details?.subscription as string) ??
-      undefined;
+      typeof invoice.subscription === 'string'
+        ? invoice.subscription
+        : invoice.subscription?.id ?? undefined;
 
     this.logger.log(`[INVOICE] SubscriptionId: ${subscriptionId}`);
 
