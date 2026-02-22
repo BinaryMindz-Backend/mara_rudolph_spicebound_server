@@ -7,17 +7,13 @@ import {
 } from '@nestjs/common';
 import { ApiOperation, ApiTags, ApiResponse, ApiBody } from '@nestjs/swagger';
 import { BookSlipService } from './book-slip.service.js';
-import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.service.js';
 import { DiscoverBookDto } from './dto/discover-book.dto.js';
 import { EnrichedBookSlipResponse } from './dto/enriched-book-slip.response.js';
 
 @ApiTags('Book Slip')
 @Controller('book-slip')
 export class BookSlipController {
-  constructor(
-    private readonly bookSlipService: BookSlipService,
-    private readonly metadataEnrichmentService: BookMetadataEnrichmentService,
-  ) {}
+  constructor(private readonly bookSlipService: BookSlipService) {}
 
   @Post('discover')
   @HttpCode(201)
@@ -111,67 +107,20 @@ export class BookSlipController {
     success: boolean;
     statusCode: number;
     message: string;
-    data: EnrichedBookSlipResponse;
+    data: any;
     meta: Record<string, any>;
   }> {
-    // Step 1: Discover book using the input
-    const discoveredBook = await this.bookSlipService.discoverBook(dto.input);
-
-    // Step 2: Extract metadata for enrichment
-    const enrichmentData = {
-      title: discoveredBook.title,
-      author: discoveredBook.author,
-      publishedYear: discoveredBook.releaseYear,
-      description: discoveredBook.description || '',
-      categories: [],
-      pageCount: 0,
-      seriesInfo: discoveredBook.series
-        ? `Book ${discoveredBook.series.index} of ${discoveredBook.series.name}`
-        : undefined,
-    };
-
-    // Step 3: Enrich with AI metadata
-    const enrichedMetadata =
-      await this.metadataEnrichmentService.enrichBookMetadata(enrichmentData);
-
-    // Step 4: Merge discovered book info with enriched metadata
-    // Prefer AI-provided series info, but fall back to discovered DB series when AI omitted it
-    const finalSeries =
-      enrichedMetadata.series ??
-      (discoveredBook.series
-        ? {
-            name: discoveredBook.series.name ?? null,
-            position: discoveredBook.series.index ?? undefined,
-            totalBooks:
-              typeof discoveredBook.series.total === 'number'
-                ? discoveredBook.series.total
-                : null,
-            status: discoveredBook.series.status,
-          }
-        : null);
-
-    const enrichedResponse: EnrichedBookSlipResponse = {
-      bookId: discoveredBook.bookId,
-      title: discoveredBook.title,
-      author: discoveredBook.author,
-      description: discoveredBook.description || '',
-      releaseYear: discoveredBook.releaseYear || 0,
-      ageLevel: enrichedMetadata.ageLevel,
-      spiceRating: enrichedMetadata.spiceRating,
-      tropes: enrichedMetadata.tropes,
-      creatures: enrichedMetadata.creatures,
-      subgenres: enrichedMetadata.subgenres,
-      series: finalSeries as any,
-      links: discoveredBook.links || {},
-      created: discoveredBook.created || false,
-      confidence: enrichedMetadata.confidence,
-    };
+    // BookSlipService.discoverBook() returns fully enriched book data:
+    // - If book exists in DB (by external ID or title): returns cached enriched data (NO AI call)
+    // - If book is new: performs AI enrichment once, stores in DB, returns enriched data
+    // We use the data directly without redundant re-enrichment
+    const enrichedBook = await this.bookSlipService.discoverBook(dto.input);
 
     return {
       success: true,
       statusCode: 201,
       message: 'Resource created successfully',
-      data: enrichedResponse,
+      data: enrichedBook,
       meta: {},
     };
   }

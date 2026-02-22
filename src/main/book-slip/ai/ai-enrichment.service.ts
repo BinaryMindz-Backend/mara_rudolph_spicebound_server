@@ -14,6 +14,8 @@ export interface EnrichedBookData {
   subgenres?: string[];
   series?: {
     name?: string;
+    index?: number;
+    total?: number;
     status?: string;
   };
 }
@@ -41,13 +43,33 @@ export class AiEnrichmentService {
         };
       }
 
-      const prompt = this.buildEnrichmentPrompt(bookData);
+      const systemPrompt = this.buildSystemPrompt();
+      const userPrompt = this.buildUserPrompt(bookData);
       const model =
-        this.configService.get<string>('openai.model') || 'gpt-3.5-turbo';
+        this.configService.get<string>('openai.model') || 'gpt-4o-mini';
 
       this.logger.log(`🔹 Calling OpenAI with model: ${model}`);
+
+      const requestBody = {
+        model,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt,
+          },
+          {
+            role: 'user',
+            content: userPrompt,
+          },
+        ],
+        temperature: 0.3, // Low temperature for consistent, factual responses
+        max_tokens: 500,
+        response_format: { type: 'json_object' },
+      };
+
+      // Log the request for debugging
       this.logger.debug(
-        `🔹 OpenAI API Key exists: ${apiKey.substring(0, 20)}...`,
+        `🔹 OpenAI request body: ${JSON.stringify(requestBody, null, 2)}`,
       );
 
       const response = await fetch(
@@ -58,22 +80,7 @@ export class AiEnrichmentService {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${apiKey}`,
           },
-          body: JSON.stringify({
-            model,
-            messages: [
-              {
-                role: 'system',
-                content:
-                  'You are a romance book metadata enrichment engine. Return ONLY valid JSON, no markdown or extra text.',
-              },
-              {
-                role: 'user',
-                content: prompt,
-              },
-            ],
-            temperature: 0.5,
-            max_tokens: 500,
-          }),
+          body: JSON.stringify(requestBody),
         },
       );
 
@@ -81,7 +88,7 @@ export class AiEnrichmentService {
         const errorData = await response.json();
         this.logger.error(
           `OpenAI API error: ${response.status} ${response.statusText}`,
-          errorData,
+          JSON.stringify(errorData, null, 2),
         );
         return {
           ageLevel: 'UNKNOWN',
@@ -129,99 +136,159 @@ export class AiEnrichmentService {
     }
   }
 
-  private buildEnrichmentPrompt(bookData: any): string {
-    return `
-You are a romance book metadata enrichment engine. Analyze this book and return metadata as valid JSON.
+  private buildSystemPrompt(): string {
+    return `You are a romance book metadata enrichment engine. Your role is to analyze book information and classify it according to the Spicebound taxonomy.
+
+CRITICAL RULES:
+1. Return ONLY valid JSON, no markdown, no explanations, no extra text
+2. All numerical ratings must be integers (0-6 for spice)
+3. All arrays must contain strings from the approved lists ONLY
+4. If a field cannot be determined with confidence, use the minimum/default value
+5. Prefer precision over creativity - if unsure, use UNKNOWN or 0
+
+YOUR RESPONSE MUST be valid JSON that can be parsed.`;
+  }
+
+  private buildUserPrompt(bookData: any): string {
+    return `Analyze this book and return metadata as valid JSON.
 
 Book Information:
 - Title: ${bookData.title || 'unknown'}
 - Author: ${bookData.author || 'unknown'}
 - Description: ${bookData.description || 'none provided'}
 
-If this is NOT primarily a romance book, still classify it appropriately in the romance taxonomy.
+SPICE RATING SCALE (must be an integer 0-6):
+0 = None (no romantic content)
+1 = Cute (kissing, hand-holding, innocent romance)
+2 = Sweet (closed door - attraction clear, intimacy implied but not shown)
+3 = Warm (1-3 open door scenes, not overly descriptive)
+4 = Spicy (descriptive open door, often 2+ scenes, NA+ level)
+5 = Hot Spicy (frequent, detailed scenes - characters can't keep hands off each other)
+6 = Explicit/Kink (erotica-level - explicit kink, scenes are primary feature)
 
-Return ONLY this JSON structure (no markdown, no extra text):
+GUIDELINES:
+- Spice Rating: Return ONLY a number 0-6 (not text like "very hot spice")
+- Publication Year: Use the ORIGINAL publication year, not recent reprints or editions
+- Age Level: Must be exactly one of: CHILDREN, YA, NA, ADULT, EROTICA, UNKNOWN
+- Tropes: Select UP TO 4 from the approved list ONLY
+- Creatures: UP TO 3 creatures/paranormal elements (or leave empty)
+- Subgenres: UP TO 3 subgenres (or leave empty)
+- Series: If this book is part of a series, provide status (COMPLETE or INCOMPLETE)
+
+APPROVED TROPES (select from these ONLY):
+${APPROVED_TROPES.join(', ')}
+
+Return ONLY this JSON structure (valid JSON only, no markdown):
 {
   "ageLevel": "CHILDREN" | "YA" | "NA" | "ADULT" | "EROTICA" | "UNKNOWN",
-  "spiceRating": 0-6,
+  "spiceRating": <integer 0-6>,
   "tropes": ["trope1", "trope2"],
-  "creatures": ["creature1", "creature2"],
-  "subgenres": ["subgenre1", "subgenre2"],
+  "creatures": ["creature1"],
+  "subgenres": ["subgenre1"],
   "series": {
-    "name": "series name or null",
+    "name": "series name" | null,
+    "index": <position in series> | null,
+    "total": <total books in series> | null,
     "status": "COMPLETE" | "INCOMPLETE" | "UNKNOWN"
   }
-}
-
-Allowed tropes: ${APPROVED_TROPES.join(', ')}
-
-Rules:
-- spiceRating: 0=clean, 1=sweet/closed-door, 2=mild tension, 3=some scenes, 4=explicit, 5=very explicit, 6=erotica
-- If unsure about a field, use minimum values (0 for spice, empty arrays for lists, UNKNOWN for levels)
-- For Fourth Wing: This is fantasy romance with high spice and specific tropes - classify accurately
-- Omit null series names from the series object
-
-Examples:
-- "Fourth Wing by Rebecca Yarros" -> ageLevel: NA, spiceRating: 4-5, tropes: [enemies-to-lovers, forbidden-romance, dragons]
-- "Normal non-romance book" -> ageLevel: UNKNOWN, spiceRating: 0, tropes: [], subgenres: [NA or adult-fantasy]
-`;
+}`;
   }
 
   private sanitizeEnrichedData(data: any): EnrichedBookData {
     const sanitized: EnrichedBookData = {};
 
     // Validate ageLevel
+    const validAgeLevels = ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'];
     if (
       data.ageLevel &&
-      ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'].includes(data.ageLevel)
+      validAgeLevels.includes(data.ageLevel.toUpperCase())
     ) {
-      sanitized.ageLevel = data.ageLevel;
+      sanitized.ageLevel = data.ageLevel.toUpperCase();
     } else {
       sanitized.ageLevel = 'UNKNOWN';
     }
 
-    // Validate spiceRating
+    // Validate spiceRating - must be integer 0-6
     if (
       typeof data.spiceRating === 'number' &&
       isValidSpiceRating(data.spiceRating)
     ) {
-      sanitized.spiceRating = data.spiceRating;
+      sanitized.spiceRating = Math.floor(data.spiceRating);
+    } else if (typeof data.spiceRating === 'string') {
+      // Try to extract number from string like "3" or "very hot spice"
+      const numMatch = data.spiceRating.match(/\d+/);
+      if (numMatch) {
+        const num = parseInt(numMatch[0], 10);
+        sanitized.spiceRating = isValidSpiceRating(num) ? num : 0;
+      } else {
+        sanitized.spiceRating = 0;
+      }
     } else {
       sanitized.spiceRating = 0;
     }
 
-    // Validate tropes
+    // Auto-correct age level based on spice rating (high spice requires mature rating)
     if (
-      Array.isArray(data.tropes) &&
-      data.tropes.length > 0 &&
-      data.tropes.every((t: any) => isValidTrope(t))
+      sanitized.spiceRating &&
+      sanitized.spiceRating >= 4 &&
+      sanitized.ageLevel &&
+      !['NA', 'ADULT', 'EROTICA'].includes(sanitized.ageLevel)
     ) {
-      sanitized.tropes = data.tropes.slice(0, 4); // Max 4 tropes
+      this.logger.warn(
+        `Auto-correcting ageLevel from ${sanitized.ageLevel} to NA due to high spice (${sanitized.spiceRating})`,
+      );
+      sanitized.ageLevel = 'NA';
+    }
+
+    // Validate tropes - must be from approved list and max 4
+    if (Array.isArray(data.tropes) && data.tropes.length > 0) {
+      const validTropes = data.tropes
+        .filter((t: any) => isValidTrope(t))
+        .slice(0, 4);
+      sanitized.tropes = validTropes.length > 0 ? validTropes : [];
+
+      // Log any invalid tropes that were filtered
+      const invalidCount = data.tropes.length - validTropes.length;
+      if (invalidCount > 0) {
+        this.logger.warn(
+          `Filtered out ${invalidCount} invalid tropes from AI response`,
+        );
+      }
     } else {
       sanitized.tropes = [];
     }
 
-    // Validate creatures
+    // Validate creatures - max 3
     if (Array.isArray(data.creatures) && data.creatures.length > 0) {
       sanitized.creatures = data.creatures
-        .filter((c: any) => typeof c === 'string')
-        .slice(0, 3); // Max 3
+        .filter((c: any) => typeof c === 'string' && c.trim().length > 0)
+        .slice(0, 3);
     } else {
       sanitized.creatures = [];
     }
 
-    // Validate subgenres
+    // Validate subgenres - max 3
     if (Array.isArray(data.subgenres) && data.subgenres.length > 0) {
       sanitized.subgenres = data.subgenres
-        .filter((s: any) => typeof s === 'string')
-        .slice(0, 3); // Max 3
+        .filter((s: any) => typeof s === 'string' && s.trim().length > 0)
+        .slice(0, 3);
     } else {
       sanitized.subgenres = [];
     }
 
-    // Preserve series info
+    // Preserve series info and validate
     if (data.series && typeof data.series === 'object') {
-      sanitized.series = data.series;
+      sanitized.series = {
+        name: data.series.name || null,
+        index:
+          typeof data.series.index === 'number' ? data.series.index : null,
+        total: typeof data.series.total === 'number' ? data.series.total : null,
+        status:
+          data.series.status &&
+          ['COMPLETE', 'INCOMPLETE'].includes(data.series.status)
+            ? data.series.status
+            : 'UNKNOWN',
+      };
     }
 
     return sanitized;

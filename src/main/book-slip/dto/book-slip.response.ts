@@ -11,7 +11,8 @@ export interface BookSlipResponse {
 
   releaseYear?: number;
 
-  ageLevel?: AgeLevel;
+  // ageLevel is now displayed as formatted string (e.g., "New Adult" instead of "NA")
+  ageLevel?: string;
   spiceRating?: number;
 
   tropes: string[];
@@ -20,8 +21,8 @@ export interface BookSlipResponse {
 
   series?: {
     name: string;
-    index: number;
-    total?: number;
+    index?: number | null;
+    total?: number | null;
     status: SeriesStatus;
   };
 
@@ -36,4 +37,15 @@ export interface BookSlipResponse {
   };
 
   created: boolean;
+
+  // Confidence levels for metadata extraction (from AI enrichment)
+  confidence?: {
+    spiceRating: string;
+    ageLevel?: string;
+    tropes?: string;
+    creatures?: string;
+    subgenres?: string;
+    series?: string;
+    overall?: string;
+  };
 }
