@@ -1,10 +1,12 @@
 import {
   Controller,
+  Get,
   Post,
   Req,
   BadRequestException,
   Logger,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import type { Request } from 'express';
 import { SubscriptionService } from './subscription.service.js';
 
@@ -12,7 +14,29 @@ import { SubscriptionService } from './subscription.service.js';
 export class StripeWebhookController {
   private readonly logger = new Logger(StripeWebhookController.name);
 
-  constructor(private readonly subscriptionService: SubscriptionService) {}
+  constructor(
+    private readonly subscriptionService: SubscriptionService,
+    private readonly configService: ConfigService,
+  ) {}
+
+  /**
+   * GET /stripe/webhook - Use this to verify the webhook URL is reachable.
+   * In Stripe Dashboard → Webhooks, the endpoint URL must be exactly this URL (POST is used by Stripe).
+   */
+  @Get('webhook')
+  webhookInfo() {
+    // Use public API URL for webhook (mara-server: api.readspicebound.com)
+    const base =
+      this.configService.get<string>('PUBLIC_API_URL') ||
+      this.configService.get<string>('API_URL') ||
+      'https://api.readspicebound.com';
+    const webhookUrl = `${base.replace(/\/$/, '')}/stripe/webhook`;
+    return {
+      message: 'Stripe webhooks must use POST. This URL is for endpoint verification.',
+      webhookUrl,
+      stripeDashboard: 'https://dashboard.stripe.com/webhooks',
+    };
+  }
 
   @Post('webhook')
   async handleWebhook(@Req() req: Request) {
