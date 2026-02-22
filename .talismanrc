@@ -1,4 +1,4 @@
 fileignoreconfig:
 - filename: STRIPE_WEBHOOK_SETUP.md
-  checksum: 1c30c5464e7764912b9ffd44e88ef2d9f2d4241b8b40717f0b64252803b26d9d
+  checksum: f0fb21d94c7967498c956a994aada6fb02eb75629f5a177cfb2a940b092c00e1
 version: "1.0"
