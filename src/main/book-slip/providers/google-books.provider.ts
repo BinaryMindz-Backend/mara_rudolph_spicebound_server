@@ -37,7 +37,7 @@ export class GoogleBooksProvider {
       }
 
       // Filter and rank results
-      const filtered = this.filterAndRankResults(data.items);
+      const filtered = this.filterAndRankResults(data.items, query);
       if (!filtered) {
         this.logger.warn('No valid results after filtering');
         return undefined;
@@ -71,7 +71,7 @@ export class GoogleBooksProvider {
    * Filter and rank Google Books results
    * Prefers standard editions with good ratings
    */
-  private filterAndRankResults(items: any[]): any | undefined {
+  private filterAndRankResults(items: any[], query: string): any | undefined {
     // Filter out special editions and box sets
     const filtered = items.filter((item) => {
       const title = (item.volumeInfo?.title || '').toLowerCase();
@@ -85,8 +85,29 @@ export class GoogleBooksProvider {
       return items[0]; // Fall back to first result
     }
 
-    // Sort by ratingsCount (descending), then by averageRating
+    const normalizedQuery = query.toLowerCase().trim();
+    // if query contains " by ", take the first part as assumed title
+    const assumedQueryTitle = normalizedQuery.split(' by ')[0].trim();
+
+    // Sort by exact title match first, then by ratingsCount (descending), then by averageRating
     filtered.sort((a, b) => {
+      const titleA = (a.volumeInfo?.title || '').toLowerCase().trim();
+      const titleB = (b.volumeInfo?.title || '').toLowerCase().trim();
+
+      const aIsExactMatch = titleA === assumedQueryTitle || titleA === normalizedQuery;
+      const bIsExactMatch = titleB === assumedQueryTitle || titleB === normalizedQuery;
+
+      if (aIsExactMatch && !bIsExactMatch) return -1;
+      if (!aIsExactMatch && bIsExactMatch) return 1;
+
+      // Partial contain matches
+      const aContainsMatch = titleA.includes(assumedQueryTitle);
+      const bContainsMatch = titleB.includes(assumedQueryTitle);
+
+      if (aContainsMatch && !bContainsMatch) return -1;
+      if (!aContainsMatch && bContainsMatch) return 1;
+
+      // Fallback to popularity
       const aRatings = a.volumeInfo?.ratingsCount || 0;
       const bRatings = b.volumeInfo?.ratingsCount || 0;
 

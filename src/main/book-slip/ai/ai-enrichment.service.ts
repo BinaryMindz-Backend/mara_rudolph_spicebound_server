@@ -24,7 +24,7 @@ export interface EnrichedBookData {
 export class AiEnrichmentService {
   private readonly logger = new Logger(AiEnrichmentService.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   async enrichBook(bookData: any): Promise<EnrichedBookData> {
     try {
@@ -114,10 +114,17 @@ export class AiEnrichmentService {
 
       this.logger.debug(`🔹 OpenAI raw response: ${content}`);
 
-      // Parse JSON response
       let enriched;
       try {
-        enriched = JSON.parse(content);
+        // Strip out any markdown formatting that the LLM might have added
+        let cleanContent = content.trim();
+        if (cleanContent.startsWith('```json')) {
+          cleanContent = cleanContent.replace(/^```json/, '').replace(/```$/, '').trim();
+        } else if (cleanContent.startsWith('```')) {
+          cleanContent = cleanContent.replace(/^```/, '').replace(/```$/, '').trim();
+        }
+
+        enriched = JSON.parse(cleanContent);
         this.logger.log(`✅ AI Enrichment parsed successfully: ${JSON.stringify(enriched)}`);
       } catch (parseError) {
         this.logger.error(
@@ -151,20 +158,21 @@ export class AiEnrichmentService {
   }
 
   private buildSystemPrompt(): string {
-    return `You are a romance book metadata enrichment engine. Your role is to analyze book information and classify it according to the Spicebound taxonomy.
+    return `You are an expert romance book metadata enrichment engine with deep knowledge of popular literature, BookTok, and romance tropes.
+Your role is to classify books according to the Spicebound taxonomy.
 
 CRITICAL RULES:
-1. Return ONLY valid JSON, no markdown, no explanations, no extra text
-2. All numerical ratings must be integers (0-6 for spice)
-3. All arrays must contain strings from the approved lists ONLY
-4. If a field cannot be determined with confidence, use the minimum/default value
-5. Prefer precision over creativity - if unsure, use UNKNOWN or 0
+1. USE YOUR PRE-TRAINED KNOWLEDGE of the book. Don't rely solely on the provided description. If you know the book (e.g., "Fourth Wing", "ACOTAR"), accurately reflect its actual spice level, tropes, and series information.
+2. Return ONLY valid JSON, no markdown, no explanations, no extra text.
+3. All numerical ratings must be integers (0-6 for spice)
+4. All arrays must contain strings from the exact approved lists ONLY
+5. Do NOT put creatures in the tropes array.
 
 YOUR RESPONSE MUST be valid JSON that can be parsed.`;
   }
 
   private buildUserPrompt(bookData: any): string {
-    return `Analyze this book and return ONLY valid JSON. No explanations, no markdown.
+    return `Analyze this book using both the provided metadata AND your pre-trained knowledge of the book. Return ONLY valid JSON.
 
 BOOK: Title="${bookData.title || 'unknown'}" | Author="${bookData.author || 'unknown'}" | Description="${bookData.description || 'none'}"
 
@@ -283,7 +291,7 @@ JSON ONLY - validate and return:
         total: typeof data.series.total === 'number' ? data.series.total : null,
         status:
           data.series.status &&
-          ['COMPLETE', 'INCOMPLETE'].includes(data.series.status)
+            ['COMPLETE', 'INCOMPLETE'].includes(data.series.status)
             ? data.series.status
             : 'UNKNOWN',
       };
