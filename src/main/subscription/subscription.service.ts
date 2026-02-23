@@ -60,7 +60,7 @@ export class SubscriptionService {
       payment_method_types: ['card'],
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${this.configService.get('FRONTEND_URL')}/subscription?success=true`,
+      success_url: `${this.configService.get('FRONTEND_URL')}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${this.configService.get('FRONTEND_URL')}/subscription?canceled=true`,
       metadata: { userId },
     });
@@ -418,9 +418,131 @@ export class SubscriptionService {
   }
 
   /* -------------------------------------------------------------------------- */
+  /*                     SYNC FROM STRIPE (webhook fallback)                    */
+  /* -------------------------------------------------------------------------- */
+
+  /**
+   * Sync subscription from Stripe when user has stripeCustomerId.
+   * Call this before reading from DB so we pick up payments even if webhooks never arrived.
+   */
+  private async syncSubscriptionFromStripeByCustomer(userId: string): Promise<void> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { stripeCustomerId: true },
+    });
+    if (!user?.stripeCustomerId) return;
+
+    try {
+      const { data: subscriptions } = await this.stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        status: 'active',
+        limit: 1,
+      });
+      if (subscriptions.length === 0) return;
+
+      const stripeSub = subscriptions[0];
+      const subscriptionId = stripeSub.id;
+      const customerId = stripeSub.customer as string;
+
+      const existing = await this.prisma.subscription.findFirst({
+        where: { stripeSubscriptionId: subscriptionId },
+      });
+      if (existing) {
+        await this.prisma.subscription.update({
+          where: { id: existing.id },
+          data: { status: stripeSub.status, plan: SubscriptionPlan.PREMIUM },
+        });
+      } else {
+        await this.prisma.subscription.create({
+          data: {
+            stripeSubscriptionId: subscriptionId,
+            stripeCustomerId: customerId,
+            status: stripeSub.status,
+            plan: SubscriptionPlan.PREMIUM,
+            userId,
+          },
+        });
+      }
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { plan: SubscriptionPlan.PREMIUM },
+      });
+      this.logger.log(`🔄 Synced subscription from Stripe for user ${userId} → PREMIUM`);
+    } catch (err) {
+      this.logger.warn(`Sync from Stripe by customer failed for user ${userId}: ${err.message}`);
+    }
+  }
+
+  /**
+   * Sync from checkout session (success URL has session_id). Use when webhooks don't fire.
+   */
+  async syncFromCheckoutSession(sessionId: string, userId: string) {
+    const session = await this.stripe.checkout.sessions.retrieve(sessionId, {
+      expand: ['subscription'],
+    });
+    const metaUserId = session.metadata?.userId;
+    if (metaUserId !== userId) {
+      this.logger.warn(`syncFromCheckoutSession: session ${sessionId} userId mismatch`);
+      throw new BadRequestException('Session does not belong to this user');
+    }
+    const customerId = session.customer as string;
+    const subscriptionId =
+      typeof session.subscription === 'string'
+        ? session.subscription
+        : session.subscription?.id;
+
+    if (!customerId) {
+      this.logger.warn(`syncFromCheckoutSession: no customer on session ${sessionId}`);
+      return this.getUserSubscription(userId);
+    }
+
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customerId },
+    });
+
+    if (subscriptionId) {
+      const stripeSub =
+        typeof session.subscription === 'object' && session.subscription
+          ? session.subscription
+          : await this.stripe.subscriptions.retrieve(subscriptionId);
+      if (stripeSub) {
+        const existing = await this.prisma.subscription.findFirst({
+          where: { stripeSubscriptionId: stripeSub.id },
+        });
+        if (existing) {
+          await this.prisma.subscription.update({
+            where: { id: existing.id },
+            data: { status: stripeSub.status, plan: SubscriptionPlan.PREMIUM },
+          });
+        } else {
+          await this.prisma.subscription.create({
+            data: {
+              stripeSubscriptionId: stripeSub.id,
+              stripeCustomerId: customerId,
+              status: stripeSub.status,
+              plan: SubscriptionPlan.PREMIUM,
+              userId,
+            },
+          });
+        }
+      }
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { plan: SubscriptionPlan.PREMIUM },
+      });
+      this.logger.log(`🔄 Synced from checkout session ${sessionId} → user ${userId} PREMIUM`);
+    }
+
+    return this.getUserSubscription(userId);
+  }
+
+  /* -------------------------------------------------------------------------- */
   /*                               READ HELPERS                                 */
   /* -------------------------------------------------------------------------- */
   async getUserSubscription(userId: string) {
+    await this.syncSubscriptionFromStripeByCustomer(userId);
+
     const sub = await this.prisma.subscription.findFirst({
       where: { userId },
     });
