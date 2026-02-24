@@ -17,7 +17,7 @@ import { BookAliasType } from '../../../prisma/generated/prisma-client/enums.js'
 
 @Injectable()
 export class UserLibraryService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   /**
    * Add book to user's library
@@ -164,10 +164,17 @@ export class UserLibraryService {
    * Get user's library with optional filtering
    */
   async getUserLibrary(userId: string, status?: string): Promise<any[]> {
+    // If status is TBR, we want to fetch both TBR and READING books
+    const statusFilter = status
+      ? (status === ReadingStatus.TBR
+        ? { status: { in: [ReadingStatus.TBR, ReadingStatus.READING] } }
+        : { status: status as ReadingStatus })
+      : {};
+
     const books = await this.prisma.userBook.findMany({
       where: {
         userId,
-        ...(status && { status: status as ReadingStatus }),
+        ...statusFilter,
       },
       include: {
         book: true,
@@ -179,16 +186,20 @@ export class UserLibraryService {
         },
       },
       orderBy: {
-        orderIndex: 'asc',
+        orderIndex: 'asc', // We will manually sort to ensure READING is at the top
       },
     });
 
-    // Prioritize READING status
-    return books.sort((a, b) => {
-      if (a.status === 'READING' && b.status !== 'READING') return -1;
-      if (a.status !== 'READING' && b.status === 'READING') return 1;
-      return a.orderIndex - b.orderIndex;
-    });
+    // Prioritize READING status for the TBR view
+    if (status === ReadingStatus.TBR) {
+      return books.sort((a, b) => {
+        if (a.status === ReadingStatus.READING && b.status !== ReadingStatus.READING) return -1;
+        if (a.status !== ReadingStatus.READING && b.status === ReadingStatus.READING) return 1;
+        return a.orderIndex - b.orderIndex;
+      });
+    }
+
+    return books;
   }
 
   /**
@@ -210,6 +221,29 @@ export class UserLibraryService {
 
     if (!userBook) {
       throw new NotFoundException('Book not in your library');
+    }
+
+    // If setting to reading, and it isn't already reading, bump it to the top 
+    // by pushing everything else down 1 slot
+    if (dto.status === ReadingStatus.READING && userBook.status !== ReadingStatus.READING) {
+      // Shift all books in TBR/READING down
+      await this.prisma.userBook.updateMany({
+        where: {
+          userId,
+          status: { in: [ReadingStatus.TBR, ReadingStatus.READING] },
+          orderIndex: { lt: userBook.orderIndex }
+        },
+        data: {
+          orderIndex: { increment: 1 }
+        }
+      });
+
+      // Update to 0
+      return await this.prisma.userBook.update({
+        where: { userId_bookId: { userId, bookId } },
+        data: { status: dto.status as ReadingStatus, orderIndex: 0 },
+        include: { book: true },
+      });
     }
 
     const updated = await this.prisma.userBook.update({
