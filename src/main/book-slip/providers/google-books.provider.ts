@@ -69,7 +69,7 @@ export class GoogleBooksProvider {
 
   /**
    * Filter and rank Google Books results
-   * Prefers standard editions with good ratings
+   * Prefers exact matches, accurate authors, and Romance/Fantasy books
    */
   private filterAndRankResults(items: any[], query: string): any | undefined {
     // Filter out special editions and box sets
@@ -86,44 +86,75 @@ export class GoogleBooksProvider {
     }
 
     const normalizedQuery = query.toLowerCase().trim();
-    // if query contains " by ", take the first part as assumed title
-    const assumedQueryTitle = normalizedQuery.split(' by ')[0].trim();
+    let assumedQueryTitle = normalizedQuery;
+    let assumedAuthor = '';
 
-    // Sort by exact title match first, then by ratingsCount (descending), then by averageRating
+    if (normalizedQuery.includes(' by ')) {
+      const parts = normalizedQuery.split(' by ');
+      assumedQueryTitle = parts[0].trim();
+      assumedAuthor = parts[1].trim();
+    }
+
+    // Rank by scoring algorithm to find the absolute closest match
     filtered.sort((a, b) => {
-      const titleA = (a.volumeInfo?.title || '').toLowerCase().trim();
-      const titleB = (b.volumeInfo?.title || '').toLowerCase().trim();
+      const scoreA = this.calculateMatchScore(a, assumedQueryTitle, assumedAuthor);
+      const scoreB = this.calculateMatchScore(b, assumedQueryTitle, assumedAuthor);
 
-      const aIsExactMatch = titleA === assumedQueryTitle || titleA === normalizedQuery;
-      const bIsExactMatch = titleB === assumedQueryTitle || titleB === normalizedQuery;
-
-      if (aIsExactMatch && !bIsExactMatch) return -1;
-      if (!aIsExactMatch && bIsExactMatch) return 1;
-
-      // Partial contain matches
-      const aContainsMatch = titleA.includes(assumedQueryTitle);
-      const bContainsMatch = titleB.includes(assumedQueryTitle);
-
-      if (aContainsMatch && !bContainsMatch) return -1;
-      if (!aContainsMatch && bContainsMatch) return 1;
-
-      // Fallback to popularity
-      const aRatings = a.volumeInfo?.ratingsCount || 0;
-      const bRatings = b.volumeInfo?.ratingsCount || 0;
-
-      if (aRatings !== bRatings) {
-        return bRatings - aRatings; // Prefer more ratings
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA; // Descending order
       }
 
-      const aAvg = a.volumeInfo?.averageRating || 0;
-      const bAvg = b.volumeInfo?.averageRating || 0;
-      return bAvg - aAvg; // Then prefer higher average
+      // Tie breaker: Ratings count (popularity)
+      const aRatings = a.volumeInfo?.ratingsCount || 0;
+      const bRatings = b.volumeInfo?.ratingsCount || 0;
+      return bRatings - aRatings;
     });
 
     this.logger.log(
-      `🔹 Selected Google Books result: ${filtered[0].volumeInfo?.title}`,
+      `🔹 Selected Google Books result: ${filtered[0].volumeInfo?.title} (Score: ${this.calculateMatchScore(filtered[0], assumedQueryTitle, assumedAuthor)})`,
     );
     return filtered[0];
+  }
+
+  /**
+   * Weights the relevance of an API result against the user's intent
+   */
+  private calculateMatchScore(item: any, titleQuery: string, authorQuery: string): number {
+    let score = 0;
+    const info = item.volumeInfo || {};
+
+    // 1. Title Match (Exact vs Partial Containment text)
+    const itemTitle = (info.title || '').toLowerCase().trim();
+    if (itemTitle === titleQuery) {
+      score += 100; // Perfect exact title
+    } else if (itemTitle.includes(titleQuery) || titleQuery.includes(itemTitle)) {
+      score += 40; // Partial match, like "Series No. 1: TITLE"
+    }
+
+    // 2. Author Match
+    if (authorQuery && info.authors?.length) {
+      const itemAuthors = info.authors.map((a: string) => a.toLowerCase());
+      const hasAuthorMatch = itemAuthors.some((a: string) =>
+        a.includes(authorQuery) || authorQuery.includes(a)
+      );
+      if (hasAuthorMatch) {
+        score += 80; // High confidence if author was explicitly searched
+      }
+    }
+
+    // 3. Genre/Category Match (Spicebound focuses on Romance/Fantasy logic)
+    const targetGenres = ['romance', 'fantasy', 'fiction', 'young adult', 'new adult', 'erotica', 'paranormal'];
+    if (info.categories?.length) {
+      const itemCats = info.categories.map((c: string) => c.toLowerCase());
+      const matchesGenre = itemCats.some((cat: string) =>
+        targetGenres.some(tg => cat.includes(tg))
+      );
+      if (matchesGenre) {
+        score += 20; // Genre affinity boost for ambiguous names (e.g. "Darkfever")
+      }
+    }
+
+    return score;
   }
 
   private mapVolumeToExternalData(volume: any): ExternalBookData {

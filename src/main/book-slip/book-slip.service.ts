@@ -86,16 +86,34 @@ export class BookSlipService {
     if (inputType === InputType.AMAZON_URL) {
       asin = extractAsin(input) ?? undefined;
       this.logger.log(`🔹 Extracted ASIN from Amazon URL: ${asin}`);
-      // If we have ASIN but no explicit search query, try to extract from URL
-      if (!asin) {
-        const url = new URL(input);
-        searchQuery = url.searchParams.get('k') || input;
+
+      try {
+        const urlObj = new URL(input);
+        const pathParts = urlObj.pathname.split('/').filter(Boolean);
+        const dpIndex = pathParts.indexOf('dp');
+        const gpIndex = pathParts.indexOf('product');
+
+        if (dpIndex > 0) {
+          searchQuery = decodeURIComponent(pathParts[dpIndex - 1].replace(/-/g, ' '));
+          this.logger.log(`🔹 Extracted search query from Amazon URL: ${searchQuery}`);
+        } else if (gpIndex > 1) { // /gp/product/
+          searchQuery = decodeURIComponent(pathParts[gpIndex - 2].replace(/-/g, ' '));
+        } else if (!asin) {
+          // No slug and no ASIN, fallback to search query param
+          searchQuery = urlObj.searchParams.get('k') || input;
+        } else {
+          // If we have an ASIN but absolutely no slug (e.g. amazon.com/dp/B00UZH95RA)
+          // Google Books won't find the ASIN. We'll leave it as input, and if DB fails, it'll pass to API.
+          // Note: If the DB has the ASIN, this won't matter.
+        }
+      } catch (e) {
+        // Fallback
       }
     } else if (inputType === InputType.GOODREADS_URL) {
       // For Goodreads, extract search query
-      const match = input.match(/goodreads\.com\/book\/show\/\d+(?:\.([^?]*?))?/);
+      const match = input.match(/goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/);
       if (match && match[1]) {
-        searchQuery = decodeURIComponent(match[1].replace(/-/g, ' '));
+        searchQuery = decodeURIComponent(match[1].replace(/[-_]/g, ' '));
         this.logger.log(`🔹 Extracted search query from Goodreads: ${searchQuery}`);
       }
     } else if (inputType === InputType.GOOGLE_BOOKS_URL) {
@@ -495,7 +513,7 @@ export class BookSlipService {
     }
   }
 
-  private async buildSlip(
+  public async buildSlip(
     book: any,
     created: boolean,
     asin?: string,

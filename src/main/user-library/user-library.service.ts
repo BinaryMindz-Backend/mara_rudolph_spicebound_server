@@ -14,10 +14,23 @@ import { UpdateBookStatusDto } from './dto/update-book-status.dto.js';
 import { ReorderBooksDto } from './dto/reorder-books.dto.js';
 import { ReadingStatus } from '../../../prisma/generated/prisma-client/enums.js';
 import { BookAliasType } from '../../../prisma/generated/prisma-client/enums.js';
+import { BookSlipService } from '../book-slip/book-slip.service.js';
+import { BookSlipResponse } from '../book-slip/dto/book-slip.response.js';
+
+export interface UserLibraryResponse extends BookSlipResponse {
+  userLibrary: {
+    status: ReadingStatus;
+    orderIndex: number;
+    createdAt: Date;
+  };
+}
 
 @Injectable()
 export class UserLibraryService {
-  constructor(private prisma: PrismaService) { }
+  constructor(
+    private prisma: PrismaService,
+    private bookSlipService: BookSlipService,
+  ) { }
 
   /**
    * Add book to user's library
@@ -131,7 +144,15 @@ export class UserLibraryService {
       }
     }
 
-    return userBook;
+    const slip = await this.bookSlipService.buildSlip(userBook.book, false);
+    return {
+      ...slip,
+      userLibrary: {
+        status: userBook.status as ReadingStatus,
+        orderIndex: userBook.orderIndex,
+        createdAt: userBook.createdAt,
+      },
+    } as UserLibraryResponse;
   }
 
   /**
@@ -196,14 +217,27 @@ export class UserLibraryService {
 
     // Prioritize READING status for the TBR view
     if (status === ReadingStatus.TBR) {
-      return books.sort((a, b) => {
+      books.sort((a, b) => {
         if (a.status === ReadingStatus.READING && b.status !== ReadingStatus.READING) return -1;
         if (a.status !== ReadingStatus.READING && b.status === ReadingStatus.READING) return 1;
         return a.orderIndex - b.orderIndex;
       });
     }
 
-    return books;
+    // Map all books into standard BookSlipResponse format
+    return await Promise.all(
+      books.map(async (userBook) => {
+        const slip = await this.bookSlipService.buildSlip(userBook.book, false);
+        return {
+          ...slip,
+          userLibrary: {
+            status: userBook.status as ReadingStatus,
+            orderIndex: userBook.orderIndex,
+            createdAt: userBook.createdAt,
+          },
+        } as UserLibraryResponse;
+      }),
+    );
   }
 
   /**
@@ -243,14 +277,25 @@ export class UserLibraryService {
       });
 
       // Update to 0
-      return await this.prisma.userBook.update({
+      // Update to 0
+      const updatedUserBook = await this.prisma.userBook.update({
         where: { userId_bookId: { userId, bookId } },
         data: { status: dto.status as ReadingStatus, orderIndex: 0 },
         include: { book: true },
       });
+
+      const slip = await this.bookSlipService.buildSlip(updatedUserBook.book, false);
+      return {
+        ...slip,
+        userLibrary: {
+          status: updatedUserBook.status as ReadingStatus,
+          orderIndex: updatedUserBook.orderIndex,
+          createdAt: updatedUserBook.createdAt,
+        },
+      } as UserLibraryResponse;
     }
 
-    const updated = await this.prisma.userBook.update({
+    const updatedUserBook = await this.prisma.userBook.update({
       where: {
         userId_bookId: {
           userId,
@@ -265,7 +310,15 @@ export class UserLibraryService {
       },
     });
 
-    return updated;
+    const slip = await this.bookSlipService.buildSlip(updatedUserBook.book, false);
+    return {
+      ...slip,
+      userLibrary: {
+        status: updatedUserBook.status as ReadingStatus,
+        orderIndex: updatedUserBook.orderIndex,
+        createdAt: updatedUserBook.createdAt,
+      },
+    } as UserLibraryResponse;
   }
 
   /**
