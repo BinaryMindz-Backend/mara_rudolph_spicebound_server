@@ -12,6 +12,7 @@ export interface EnrichedBookData {
   tropes?: string[];
   creatures?: string[];
   subgenres?: string[];
+  description?: string;
   series?: {
     name?: string;
     index?: number;
@@ -63,7 +64,7 @@ export class AiEnrichmentService {
           },
         ],
         temperature: 0.3, // Low temperature for consistent, factual responses
-        max_tokens: 500,
+        max_tokens: 800,
       };
 
       // Log the request for debugging
@@ -189,6 +190,17 @@ CREATURES: Dragons, Fae, Vampires, Shifters, etc. (max 3, [] if none)
 SUBGENRES: Romance, Fantasy, Horror, etc. (max 3, [] if none)
 SERIES: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null
 
+DESCRIPTION (CRITICAL RULES):
+Create a reader-friendly description with TWO parts:
+1. Part 1 - Core Description (FIRST): Write 3-5 sentences that capture the essential plot hook, main characters, and romantic/fantasy premise.
+2. Part 2 - Additional Info (AFTER, separated by two newlines): Place any Awards, Bestseller status, Author accolades, Blurbs, or "First in series" notes at the END.
+
+Rules:
+- Do NOT start with bestseller info, awards, or author quotes.
+- Focus on STORY first, credentials second.
+- Keep total description under 400 words.
+- If the source description is cluttered, extract and reorganize—don't just copy it.
+
 JSON ONLY - validate and return:
 {
   "ageLevel": "UNKNOWN|CHILDREN|YA|NA|ADULT|EROTICA",
@@ -196,12 +208,15 @@ JSON ONLY - validate and return:
   "tropes": ["approved", "tropes"],
   "creatures": ["type"],
   "subgenres": ["genre"],
+  "description": "The formatted description following the rules above.",
   "series": {"name": null, "index": null, "total": null, "status": "UNKNOWN"} | null
 }`;
   }
 
   private sanitizeEnrichedData(data: any): EnrichedBookData {
-    const sanitized: EnrichedBookData = {};
+    const sanitized: EnrichedBookData = {
+      description: typeof data.description === 'string' ? data.description.trim() : undefined,
+    };
 
     // Validate ageLevel
     const validAgeLevels = ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'];

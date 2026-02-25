@@ -37,6 +37,14 @@ function normalizeText(value: string): string {
 }
 
 /**
+ * Format chip strings for display (Title Case)
+ */
+function toTitleCase(str: string): string {
+  if (!str) return str;
+  return str.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/**
  * Format age level for display (Title Case, spell out NA)
  */
 function formatAgeLevel(level?: string): string | undefined {
@@ -44,7 +52,7 @@ function formatAgeLevel(level?: string): string | undefined {
 
   const ageMap: Record<string, string> = {
     CHILDREN: "Children's",
-    YA: 'Young Adult',
+    YA: 'YA',
     NA: 'New Adult',
     ADULT: 'Adult',
     EROTICA: 'Erotica',
@@ -252,7 +260,7 @@ export class BookSlipService {
         normalizedTitle,
         primaryAuthor: merged.author,
         normalizedAuthor,
-        shortDescription: merged.description ?? null,
+        shortDescription: enriched.description || merged.description || null,
         firstPublishedYear: merged.publishedYear ?? null,
 
         // External ratings
@@ -598,9 +606,9 @@ export class BookSlipService {
       ageLevel: formatAgeLevel(book.ageLevel),
       spiceRating: book.spiceRating ?? 0,
 
-      tropes: book.tropes ?? [],
-      creatures: book.creatures ?? [],
-      subgenres: book.subgenres ?? [],
+      tropes: (book.tropes ?? []).map(toTitleCase),
+      creatures: (book.creatures ?? []).map(toTitleCase),
+      subgenres: (book.subgenres ?? []).map(toTitleCase),
 
       series,
 
