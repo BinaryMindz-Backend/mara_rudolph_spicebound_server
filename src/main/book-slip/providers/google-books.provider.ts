@@ -133,6 +133,10 @@ export class GoogleBooksProvider {
       (id: any) => id.type === 'ISBN_13',
     )?.identifier;
 
+    const isbn10 = info.industryIdentifiers?.find(
+      (id: any) => id.type === 'ISBN_10',
+    )?.identifier;
+
     // Attempt to extract series information if present
     const seriesName =
       info.series?.[0] ?? info?.seriesInfo?.volumeSeries?.title ?? undefined;
@@ -153,6 +157,7 @@ export class GoogleBooksProvider {
         : undefined,
 
       isbn13,
+      asin: isbn10,
       googleVolumeId: volume.id,
 
       externalAvgRating: info.averageRating,

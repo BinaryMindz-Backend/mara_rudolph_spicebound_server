@@ -34,6 +34,7 @@ export interface BookSlipResponse {
   links?: {
     amazon?: string;
     bookshop?: string;
+    goodreads?: string;
   };
 
   created: boolean;

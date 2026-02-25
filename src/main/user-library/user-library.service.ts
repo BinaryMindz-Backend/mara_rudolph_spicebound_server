@@ -97,16 +97,20 @@ export class UserLibraryService {
         if (alias.type === BookAliasType.ISBN_13) isbn13 = alias.value;
       }
 
+      const titleAuthQuery = encodeURIComponent(`${userBook.book.title} ${userBook.book.primaryAuthor || ''}`.trim());
+
       const amazonUrl =
         userBook.book.amazonUrl ||
         (asin
           ? `https://amazon.com/dp/${asin}`
           : isbn13
-            ? `https://amazon.com/s?k=${isbn13}`
-            : null);
+            ? `https://www.amazon.com/s?k=${isbn13}`
+            : `https://www.amazon.com/s?k=${titleAuthQuery}`);
       const bookshopUrl =
         userBook.book.bookshopUrl ||
-        (isbn13 ? `https://bookshop.org/search?q=${isbn13}` : null);
+        (isbn13
+          ? `https://bookshop.org/a/0/${isbn13}`
+          : `https://bookshop.org/search?q=${titleAuthQuery}`);
 
       // Update book with generated links if they were null
       if (

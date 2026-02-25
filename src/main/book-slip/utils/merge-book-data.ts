@@ -13,6 +13,7 @@ export function mergeExternalData(
     isbn13: google?.isbn13 ?? openLibrary?.isbn13,
     googleVolumeId: google?.googleVolumeId,
     openLibraryId: openLibrary?.openLibraryId,
+    asin: google?.asin ?? openLibrary?.asin,
 
     externalAvgRating: google?.externalAvgRating,
     externalRatingCount: google?.externalRatingCount,

@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service.js';
 
 import { GoogleBooksProvider } from './providers/google-books.provider.js';
 import { OpenLibraryProvider } from './providers/open-library.provider.js';
+import { GoodreadsProvider } from './providers/goodreads.provider.js';
 import { AiEnrichmentService } from './ai/ai-enrichment.service.js';
 
 import { BookSlipResponse } from './dto/book-slip.response.js';
@@ -15,7 +16,7 @@ import {
 } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
 import { calculateCombinedRating } from '../../common/utils/rating-utils.js';
-import { generateLinks } from './utils/link-generator.js';
+import { generateLinks, generateAmazonLink, generateBookshopLink } from './utils/link-generator.js';
 
 import { ExternalBookData, InputType } from './types/book-source.types.js';
 import {
@@ -61,8 +62,9 @@ export class BookSlipService {
     private readonly prisma: PrismaService,
     private readonly googleBooks: GoogleBooksProvider,
     private readonly openLibrary: OpenLibraryProvider,
+    private readonly goodreads: GoodreadsProvider,
     private readonly aiEnrichment: AiEnrichmentService,
-  ) {}
+  ) { }
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
@@ -108,7 +110,7 @@ export class BookSlipService {
      * 2️⃣ Check DB for existing book using extracted IDs (before any API calls!)
      */
     let existingBook = await this.checkBookByExternalIds(asin, googleVolumeId, openLibraryId, isbn13);
-    
+
     if (existingBook) {
       this.logger.log(
         `✅ Found existing book by external ID: ${existingBook.id} (no API calls needed)`,
@@ -157,6 +159,19 @@ export class BookSlipService {
     const normalizedAuthor = normalizeText(merged.author);
 
     /**
+     * 4b️⃣ Supplement terrible API ratings with scraped Goodreads ratings if needed
+     */
+    if ((merged.externalRatingCount || 0) < 50) {
+      this.logger.log(`🔹 External rating count is low (${merged.externalRatingCount}). Scraping Goodreads for realistic ratings...`);
+      const goodreadsRatings = await this.goodreads.getRatings(merged.title, merged.author);
+      if (goodreadsRatings && goodreadsRatings.averageRating && goodreadsRatings.ratingsCount) {
+        merged.externalAvgRating = goodreadsRatings.averageRating;
+        merged.externalRatingCount = goodreadsRatings.ratingsCount;
+        this.logger.log(`✅ Replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`);
+      }
+    }
+
+    /**
      * 5️⃣ Check existing book by normalized title + author (fallback check)
      */
     existingBook = await this.prisma.book.findFirst({
@@ -188,7 +203,7 @@ export class BookSlipService {
      * 6️⃣ No existing record found - Do AI Enrichment for the first time
      */
     this.logger.log(`🔹 Book not in DB, performing AI enrichment (this will be cached)`);
-    
+
     const enriched = await this.aiEnrichment.enrichBook({
       title: merged.title,
       author: merged.author,
@@ -200,14 +215,17 @@ export class BookSlipService {
     /**
      * 7️⃣ Create Book with ALL enriched data in single transaction
      */
-    const amazonUrl = asin
-      ? `https://www.amazon.com/dp/${asin}`
-      : merged.isbn13
-        ? `https://www.amazon.com/s?k=${merged.isbn13}`
-        : null;
-    const bookshopUrl = merged.isbn13
-      ? `https://bookshop.org/search?q=${merged.isbn13}`
-      : null;
+    const amazonUrl = generateAmazonLink(
+      merged.title,
+      merged.author || 'Unknown Author',
+      asin || merged.asin,
+      merged.isbn13,
+    );
+    const bookshopUrl = generateBookshopLink(
+      merged.title,
+      merged.author || 'Unknown Author',
+      merged.isbn13,
+    );
 
     const book = await this.prisma.book.create({
       data: {
@@ -502,8 +520,10 @@ export class BookSlipService {
       }
     }
 
-    // Generate links
+    // Generate links using ISBN for direct routing, falling back to Title+Author if none
     const links = generateLinks(
+      book.title,
+      book.primaryAuthor || 'Unknown Author',
       finalAsin,
       finalIsbn13,
       book.amazonUrl,
@@ -511,29 +531,32 @@ export class BookSlipService {
     );
 
     // Calculate platform user ratings (Spicebound ratings)
-    // Only display if we have at least 10 ratings to be statistically meaningful
     const platformRatings = await this.prisma.rating.aggregate({
       where: { bookId: book.id },
       _avg: { value: true },
       _count: true,
     });
 
-    let ratings: { average?: number; count?: number } | undefined;
-    if (platformRatings._count >= 10) {
-      ratings = {
-        average: platformRatings._avg.value ?? undefined,
-        count: platformRatings._count,
-      };
-    }
+    const combinedRatings = calculateCombinedRating(
+      book.externalAvgRating,
+      book.externalRatingCount,
+      platformRatings._avg.value,
+      platformRatings._count
+    );
+
+    const ratingsInfo = {
+      ...combinedRatings,
+      count: (book.externalRatingCount || 0) + platformRatings._count,
+    };
 
     // Format series info with user-friendly display
     let series:
       | {
-          name: string;
-          index: number | null;
-          total: number | null;
-          status: any;
-        }
+        name: string;
+        index: number | null;
+        total: number | null;
+        status: any;
+      }
       | undefined;
 
     if (book.seriesName) {
@@ -563,7 +586,7 @@ export class BookSlipService {
 
       series,
 
-      ratings,
+      ratings: ratingsInfo,
 
       links,
 

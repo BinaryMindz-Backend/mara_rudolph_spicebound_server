@@ -4,6 +4,7 @@ import { BookSlipController } from './book-slip.controller.js';
 import { BookSlipService } from './book-slip.service.js';
 import { GoogleBooksProvider } from './providers/google-books.provider.js';
 import { OpenLibraryProvider } from './providers/open-library.provider.js';
+import { GoodreadsProvider } from './providers/goodreads.provider.js';
 import { AiEnrichmentService } from './ai/ai-enrichment.service.js';
 import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.service.js';
 
@@ -14,6 +15,7 @@ import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.ser
     BookSlipService,
     GoogleBooksProvider,
     OpenLibraryProvider,
+    GoodreadsProvider,
     AiEnrichmentService,
     BookMetadataEnrichmentService,
   ],
@@ -23,4 +25,4 @@ import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.ser
     BookMetadataEnrichmentService,
   ],
 })
-export class BookSlipModule {}
+export class BookSlipModule { }

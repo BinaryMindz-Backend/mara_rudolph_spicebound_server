@@ -4,45 +4,61 @@
 export interface BookLinks {
   amazon?: string;
   bookshop?: string;
+  goodreads?: string;
 }
 
 /**
- * Generate Amazon link from ASIN or ISBN
+ * Generate Amazon link using ASIN or ISBN or Title+Author fallback
  */
 export function generateAmazonLink(
+  title: string,
+  author: string,
   asin?: string,
   isbn13?: string,
 ): string | undefined {
+  // Amazon ONLY accepts direct routing for ASINs/ISBN-10s.
   if (asin) {
-    return `https://amazon.com/dp/${asin}`;
+    return `https://www.amazon.com/dp/${asin}`;
   }
-  if (isbn13) {
-    return `https://amazon.com/s?k=${isbn13}`;
-  }
-  return undefined;
+  // Amazon 404s on 13-digit ISBN dp strings. Route to isolated ISBN search page.
+  const searchKey = isbn13 || encodeURIComponent(`${title} ${author}`);
+  return `https://www.amazon.com/s?k=${searchKey}`;
 }
 
 /**
- * Generate Bookshop link from ISBN
+ * Generate Bookshop link using ISBN or Title+Author fallback
  */
-export function generateBookshopLink(isbn13?: string): string | undefined {
+export function generateBookshopLink(title: string, author: string, isbn13?: string): string | undefined {
   if (isbn13) {
-    return `https://bookshop.org/search?q=${isbn13}`;
+    return `https://bookshop.org/a/0/${isbn13}`;
   }
-  return undefined;
+  return `https://bookshop.org/search?q=${encodeURIComponent(`${title} ${author}`)}`;
 }
 
 /**
- * Generate all available purchase links
+ * Generate Goodreads link using ISBN or Title+Author fallback
+ */
+export function generateGoodreadsLink(title: string, author: string, isbn13?: string): string | undefined {
+  if (isbn13) {
+    return `https://www.goodreads.com/book/isbn/${isbn13}`;
+  }
+  return `https://www.goodreads.com/search?q=${encodeURIComponent(`${title} ${author}`)}`;
+}
+
+/**
+ * Generate all available purchase/reference links
  */
 export function generateLinks(
+  title: string,
+  author: string,
   asin?: string,
   isbn13?: string,
   existingAmazonUrl?: string,
   existingBookshopUrl?: string,
 ): BookLinks {
   return {
-    amazon: existingAmazonUrl || generateAmazonLink(asin, isbn13),
-    bookshop: existingBookshopUrl || generateBookshopLink(isbn13),
+    amazon: existingAmazonUrl || generateAmazonLink(title, author, asin, isbn13),
+    bookshop: existingBookshopUrl || generateBookshopLink(title, author, isbn13),
+    goodreads: generateGoodreadsLink(title, author, isbn13),
   };
 }
