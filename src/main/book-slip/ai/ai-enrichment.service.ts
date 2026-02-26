@@ -204,7 +204,7 @@ Create a reader-friendly description with EXACTLY TWO parts:
 Write 3-5 sentences that capture the essential plot hook, main characters, and romantic/fantasy premise. This MUST be the very first thing in the description.
 
 **Part 2 - Additional Info (AFTER, separated by two newlines):**
-Place any of the following at the END, only after two line breaks:
+Place any of the following at the END, ONLY after two line breaks (\n\n) to create a clear visible paragraph break:
 - Award mentions
 - Bestseller status
 - Author accolades
@@ -215,6 +215,7 @@ Place any of the following at the END, only after two line breaks:
 CRITICAL RULES:
 - NEVER start with bestseller info, awards, or author quotes. (Example of what NOT to do: "The first book of the blockbuster Fever series...")
 - Focus on STORY and PLOT first, credentials second.
+- MANDATORY: Use exactly two newlines (\n\n) between Part 1 and Part 2 to ensure a visible paragraph break. do NOT use a single newline.
 - Keep total description under 400 words.
 - If the source description is cluttered, extract and reorganize—do NOT just copy it.
 - STAY TRUE to the source description but follow the structure above strictly.
