@@ -296,6 +296,19 @@ export class BookSlipService {
           (enriched.series?.status as SeriesStatus) ??
           (merged.seriesStatus as SeriesStatus) ??
           SeriesStatus.UNKNOWN,
+
+        // Arc information
+        arcName: enriched.arc?.name ?? null,
+        arcIndex:
+          (enriched.arc && 'index' in enriched.arc
+            ? (enriched.arc.index as number)
+            : undefined) ?? null,
+        arcTotal:
+          (enriched.arc && 'total' in enriched.arc
+            ? (enriched.arc.total as number)
+            : undefined) ?? null,
+        arcStatus:
+          (enriched.arc?.status as SeriesStatus) ?? SeriesStatus.UNKNOWN,
       },
     });
 
@@ -575,22 +588,51 @@ export class BookSlipService {
       count: (book.externalRatingCount || 0) + platformRatings._count,
     };
 
-    // Format series info with user-friendly display
+    // Format series info with user-friendly display rules:
+    // 1. For a series - Should read "Series, Complete (1/11)"
+    // 2. For a standalone - Should read "Standalone, Complete"
+    // 3. For a multi-arc series should read - "Series, Incomplete (2/6)", "Arc 1, Complete (2/2)"
     let series:
       | {
-        name: string;
+        name: string | null;
         index: number | null;
         total: number | null;
-        status: any;
+        status: SeriesStatus;
       }
       | undefined;
 
     if (book.seriesName) {
       series = {
-        name: book.seriesName,
+        name: 'Series', // User requirement: label should say "Series" not the actual name
         index: book.seriesIndex ?? null,
         total: book.seriesTotal ?? null,
         status: book.seriesStatus,
+      };
+    } else {
+      // Standalone case
+      series = {
+        name: 'Standalone',
+        index: null,
+        total: null,
+        status: SeriesStatus.COMPLETE, // Standalones are effectively complete
+      };
+    }
+
+    let arc:
+      | {
+        name: string | null;
+        index: number | null;
+        total: number | null;
+        status: SeriesStatus | null;
+      }
+      | undefined;
+
+    if (book.arcName || book.arcIndex) {
+      arc = {
+        name: book.arcName || null,
+        index: book.arcIndex ?? null,
+        total: book.arcTotal ?? null,
+        status: book.arcStatus as SeriesStatus,
       };
     }
 
@@ -611,6 +653,7 @@ export class BookSlipService {
       subgenres: (book.subgenres ?? []).map(toTitleCase),
 
       series,
+      arc,
 
       ratings: ratingsInfo,
 

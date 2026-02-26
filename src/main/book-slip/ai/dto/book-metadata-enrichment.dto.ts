@@ -7,6 +7,13 @@ export class SeriesInfo {
   status: 'COMPLETE' | 'INCOMPLETE' | 'UNKNOWN';
 }
 
+export class ArcInfo {
+  name: string | null;
+  position: number | null;
+  totalBooks: number | null;
+  status: 'COMPLETE' | 'INCOMPLETE' | 'UNKNOWN';
+}
+
 export class ConfidenceLevel {
   spiceRating: 'HIGH' | 'MEDIUM' | 'LOW';
   ageLevel?: 'HIGH' | 'MEDIUM' | 'LOW';
@@ -24,6 +31,7 @@ export class BookMetadataEnrichmentResponse {
   creatures: string[];
   subgenres: string[];
   series: SeriesInfo;
+  arc?: ArcInfo | null;
   description: string;
   confidence: ConfidenceLevel;
 }

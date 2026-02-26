@@ -17,6 +17,23 @@ export class SeriesInfo {
   status: string;
 }
 
+export class ArcInfo {
+  @ApiProperty({ example: 'Arc 1' })
+  name: string | null;
+
+  @ApiProperty({ example: 2 })
+  position: number;
+
+  @ApiProperty({ example: 2 })
+  totalBooks: number | null;
+
+  @ApiProperty({
+    example: 'COMPLETE',
+    enum: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'],
+  })
+  status: string;
+}
+
 export class ConfidenceLevel {
   @ApiProperty({ example: 'HIGH', enum: ['HIGH', 'MEDIUM', 'LOW'] })
   spiceRating: string;
@@ -137,6 +154,13 @@ export class EnrichedBookSlipResponse {
     type: SeriesInfo,
   })
   series: SeriesInfo;
+
+  @ApiProperty({
+    description: 'Multi-arc information within a series',
+    type: ArcInfo,
+    required: false,
+  })
+  arc?: ArcInfo;
 
   @ApiProperty({
     description: 'External links (Amazon, Goodreads, etc)',

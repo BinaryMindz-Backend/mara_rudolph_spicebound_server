@@ -19,6 +19,12 @@ export interface EnrichedBookData {
     total?: number;
     status?: string;
   };
+  arc?: {
+    name?: string;
+    index?: number;
+    total?: number;
+    status?: string;
+  };
 }
 
 @Injectable()
@@ -189,6 +195,7 @@ ${APPROVED_TROPES.join(', ')}
 CREATURES: Dragons, Fae, Vampires, Shifters, etc. (max 3, [] if none)
 SUBGENRES: Romance, Fantasy, Horror, etc. (max 3, [] if none)
 SERIES: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null
+ARC: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null (Only if the series is divided into distinct arcs/cycles)
 
 DESCRIPTION (MANDATORY FORMATTING RULES):
 Create a reader-friendly description with EXACTLY TWO parts:
@@ -220,8 +227,10 @@ JSON ONLY - validate and return:
   "creatures": ["type"],
   "subgenres": ["genre"],
   "description": "The formatted description following the rules above.",
-  "series": {"name": null, "index": null, "total": null, "status": "UNKNOWN"} | null
-}`;
+  "series": {"name": "Series Name", "index": 1, "total": 5, "status": "INCOMPLETE"} | null,
+  "arc": {"name": "Arc Name", "index": 1, "total": 2, "status": "COMPLETE"} | null
+}
+`;
   }
 
   private sanitizeEnrichedData(data: any): EnrichedBookData {
@@ -319,6 +328,21 @@ JSON ONLY - validate and return:
           data.series.status &&
             ['COMPLETE', 'INCOMPLETE'].includes(data.series.status)
             ? data.series.status
+            : 'UNKNOWN',
+      };
+    }
+
+    // Preserve arc info and validate
+    if (data.arc && typeof data.arc === 'object') {
+      sanitized.arc = {
+        name: data.arc.name || null,
+        index:
+          typeof data.arc.index === 'number' ? data.arc.index : null,
+        total: typeof data.arc.total === 'number' ? data.arc.total : null,
+        status:
+          data.arc.status &&
+            ['COMPLETE', 'INCOMPLETE'].includes(data.arc.status)
+            ? data.arc.status
             : 'UNKNOWN',
       };
     }

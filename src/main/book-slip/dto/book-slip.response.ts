@@ -20,10 +20,17 @@ export interface BookSlipResponse {
   subgenres: string[];
 
   series?: {
-    name: string;
+    name: string | null;
     index?: number | null;
     total?: number | null;
     status: SeriesStatus;
+  };
+
+  arc?: {
+    name: string | null;
+    index?: number | null;
+    total?: number | null;
+    status: SeriesStatus | null;
   };
 
   ratings?: {
