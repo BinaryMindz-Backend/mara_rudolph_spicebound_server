@@ -230,11 +230,20 @@ export class BookSlipService {
      */
     this.logger.log(`🔹 Book not in DB, performing AI enrichment (this will be cached)`);
 
-    const enriched = await this.aiEnrichment.enrichBook({
-      title: merged.title,
-      author: merged.author,
-      description: merged.description,
-    });
+    let enriched: any;
+    try {
+      enriched = await this.aiEnrichment.enrichBook({
+        title: merged.title,
+        author: merged.author,
+        description: merged.description,
+      });
+    } catch (error: any) {
+      if (error.message === 'NON_BOOK_CONTENT') {
+        this.logger.warn(`Rejecting search result as non-book content: ${merged.title}`);
+        throw new Error('That looks like a quiz or study guide, not a book! Try searching for the full title.');
+      }
+      throw error;
+    }
 
     this.logger.log('🔹 AI Enrichment result:', enriched);
 

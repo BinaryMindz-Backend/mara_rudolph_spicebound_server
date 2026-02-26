@@ -8,13 +8,49 @@ export class GoogleBooksProvider {
 
   private readonly EDITION_EXCLUSION_KEYWORDS = [
     'box set',
+    'boxed set',
     'collection',
     'special edition',
     'illustrated edition',
     'complete series',
     'omnibus',
     'anniversary edition',
+    'collector\'s edition',
+    'deluxe edition',
   ];
+
+  private readonly CONTENT_EXCLUSION_KEYWORDS = [
+    'quiz',
+    'trivia',
+    'study guide',
+    'summary',
+    'analysis',
+    'workbook',
+    'notebook',
+    'coloring book',
+    'journal',
+    'companion',
+    'key takeaways',
+    'review of',
+    'synopsis',
+    'cliff notes',
+  ];
+
+  private readonly ABBREVIATIONS: Record<string, string> = {
+    'acotar': 'a court of thorns and roses',
+    'tog': 'throne of glass',
+    'cc': 'crescent city',
+    'fbaa': 'from blood and ash',
+    'asotte': 'a soul of ash and blood',
+    'hosab': 'house of sky and breath',
+    'hoscas': 'house of sky and breath', // common typo
+    'hoeab': 'house of earth and blood',
+    'hofas': 'house of flame and shadow',
+    'acomaf': 'a court of mist and fury',
+    'acowar': 'a court of wings and ruin',
+    'acofas': 'a court of frost and starlight',
+    'acosf': 'a court of silver flames',
+  };
 
   async search(query: string): Promise<ExternalBookData | undefined> {
     try {
@@ -72,17 +108,28 @@ export class GoogleBooksProvider {
    * Prefers exact matches, accurate authors, and Romance/Fantasy books
    */
   private filterAndRankResults(items: any[], query: string): any | undefined {
-    // Filter out special editions and box sets
     const filtered = items.filter((item) => {
       const title = (item.volumeInfo?.title || '').toLowerCase();
-      return !this.EDITION_EXCLUSION_KEYWORDS.some((keyword) =>
+      const description = (item.volumeInfo?.description || '').toLowerCase();
+
+      // Check for edition exclusions
+      const isSpecialEdition = this.EDITION_EXCLUSION_KEYWORDS.some((keyword) =>
         title.includes(keyword),
       );
+      if (isSpecialEdition) return false;
+
+      // Check for content exclusions (quizzes, guides, etc.)
+      const isJunkContent = this.CONTENT_EXCLUSION_KEYWORDS.some((keyword) =>
+        title.includes(keyword) || (title.length < 50 && description.includes(keyword)),
+      );
+      if (isJunkContent) return false;
+
+      return true;
     });
 
     if (!filtered.length) {
-      this.logger.warn('All results filtered as special editions');
-      return items[0]; // Fall back to first result
+      this.logger.warn('All results filtered as special editions or non-book content');
+      return undefined; // Do NOT fall back to junk
     }
 
     const normalizedQuery = query.toLowerCase().trim();
@@ -125,20 +172,30 @@ export class GoogleBooksProvider {
 
     // 1. Title Match (Exact vs Partial Containment text)
     const itemTitle = (info.title || '').toLowerCase().trim();
-    if (itemTitle === titleQuery) {
-      score += 100; // Perfect exact title
-    } else if (itemTitle.includes(titleQuery) || titleQuery.includes(itemTitle)) {
-      score += 40; // Partial match, like "Series No. 1: TITLE"
+    const cleanTitleQuery = titleQuery.toLowerCase().trim();
+
+    // Handle Abbreviations
+    const expandedQuery = this.ABBREVIATIONS[cleanTitleQuery] || cleanTitleQuery;
+
+    if (itemTitle === expandedQuery) {
+      score += 100; // Perfect exact title match
+    } else if (itemTitle.includes(expandedQuery) || expandedQuery.includes(itemTitle)) {
+      score += 40; // Partial match
+    }
+
+    // Boost if the original query was an abbreviation and matches exactly
+    if (this.ABBREVIATIONS[cleanTitleQuery] && itemTitle === this.ABBREVIATIONS[cleanTitleQuery]) {
+      score += 50; // Extra certainty for "acotar" -> "A Court of Thorns and Roses"
     }
 
     // 2. Author Match
     if (authorQuery && info.authors?.length) {
       const itemAuthors = info.authors.map((a: string) => a.toLowerCase());
       const hasAuthorMatch = itemAuthors.some((a: string) =>
-        a.includes(authorQuery) || authorQuery.includes(a)
+        a.includes(authorQuery.toLowerCase()) || authorQuery.toLowerCase().includes(a)
       );
       if (hasAuthorMatch) {
-        score += 80; // High confidence if author was explicitly searched
+        score += 80;
       }
     }
 

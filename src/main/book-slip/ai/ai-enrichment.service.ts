@@ -165,7 +165,13 @@ export class AiEnrichmentService {
   }
 
   private buildSystemPrompt(): string {
-    return `You are an expert romance book metadata enrichment engine with deep knowledge of popular literature, BookTok, and romance tropes.
+    return `You are a specialist book metadata librarian. Your goal is to identify and enrich data for REAL NARRATIVE BOOKS (novels, memoirs, etc.).
+
+SANITY CHECK:
+- If the provided title/data refers to a QUIZ, TRIVIA, STUDY GUIDE, SUMMARY, WORKBOOK, or NON-BOOK product, you MUST return the string "NON_BOOK_CONTENT" for the title and null for all other fields.
+- We only want real books, not companion guides or fan-made quizzes.
+
+You are also an expert romance book metadata enrichment engine with deep knowledge of popular literature, BookTok, and romance tropes.
 Your role is to classify books according to the Spicebound taxonomy.
 
 CRITICAL RULES:
@@ -235,6 +241,14 @@ JSON ONLY - validate and return:
   }
 
   private sanitizeEnrichedData(data: any): EnrichedBookData {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid AI response format');
+    }
+
+    if (data.title === 'NON_BOOK_CONTENT') {
+      throw new Error('NON_BOOK_CONTENT');
+    }
+
     const sanitized: EnrichedBookData = {
       description: typeof data.description === 'string' ? data.description.trim() : undefined,
     };

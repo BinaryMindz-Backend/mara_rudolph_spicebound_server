@@ -5,6 +5,30 @@ import { ExternalBookData } from '../types/book-source.types.js';
 export class OpenLibraryProvider {
   private readonly logger = new Logger(OpenLibraryProvider.name);
   private readonly baseUrl = 'https://openlibrary.org/search.json';
+
+  private readonly EDITION_EXCLUSION_KEYWORDS = [
+    'box set',
+    'boxed set',
+    'collection',
+    'special edition',
+    'illustrated edition',
+    'complete series',
+    'omnibus',
+    'anniversary edition',
+  ];
+
+  private readonly CONTENT_EXCLUSION_KEYWORDS = [
+    'quiz',
+    'trivia',
+    'study guide',
+    'summary',
+    'analysis',
+    'workbook',
+    'notebook',
+    'coloring book',
+    'journal',
+    'companion',
+  ];
   /**
    * Search Open Library by title/author
    */
@@ -14,7 +38,7 @@ export class OpenLibraryProvider {
 
       const url = `https://openlibrary.org/search.json?q=${encodeURIComponent(
         query,
-      )}&limit=1`;
+      )}&limit=10`;
 
       const res = await fetch(url);
 
@@ -32,7 +56,32 @@ export class OpenLibraryProvider {
         return null;
       }
 
-      const doc = data.docs[0];
+      // Filter and rank results
+      const items = data.docs;
+      const filtered = items.filter((item: any) => {
+        const title = (item.title || '').toLowerCase();
+        return !this.EDITION_EXCLUSION_KEYWORDS.some((keyword) =>
+          title.includes(keyword),
+        ) && !this.CONTENT_EXCLUSION_KEYWORDS.some((keyword) =>
+          title.includes(keyword),
+        );
+      });
+
+      if (!filtered.length) {
+        this.logger.warn('All results filtered from OpenLibrary');
+        return null;
+      }
+
+      // Simple ranking: exact title match first, then by edition count (proxy for popularity)
+      filtered.sort((a: any, b: any) => {
+        const scoreA = this.calculateScore(a, query);
+        const scoreB = this.calculateScore(b, query);
+
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return (b.edition_count || 0) - (a.edition_count || 0);
+      });
+
+      const doc = filtered[0];
       const workId = doc.key?.replace('/works/', '');
 
       const mapped: ExternalBookData = {
@@ -63,6 +112,17 @@ export class OpenLibraryProvider {
       this.logger.error('❌ OpenLibrary search error', error);
       return null;
     }
+  }
+
+  private calculateScore(item: any, query: string): number {
+    let score = 0;
+    const title = (item.title || '').toLowerCase().trim();
+    const q = query.toLowerCase().trim();
+
+    if (title === q) score += 100;
+    else if (title.includes(q)) score += 40;
+
+    return score;
   }
 
   /**
