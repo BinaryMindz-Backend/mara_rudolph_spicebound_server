@@ -190,16 +190,27 @@ CREATURES: Dragons, Fae, Vampires, Shifters, etc. (max 3, [] if none)
 SUBGENRES: Romance, Fantasy, Horror, etc. (max 3, [] if none)
 SERIES: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null
 
-DESCRIPTION (CRITICAL RULES):
-Create a reader-friendly description with TWO parts:
-1. Part 1 - Core Description (FIRST): Write 3-5 sentences that capture the essential plot hook, main characters, and romantic/fantasy premise.
-2. Part 2 - Additional Info (AFTER, separated by two newlines): Place any Awards, Bestseller status, Author accolades, Blurbs, or "First in series" notes at the END.
+DESCRIPTION (MANDATORY FORMATTING RULES):
+Create a reader-friendly description with EXACTLY TWO parts:
 
-Rules:
-- Do NOT start with bestseller info, awards, or author quotes.
-- Focus on STORY first, credentials second.
+**Part 1 - Core Description (FIRST):**
+Write 3-5 sentences that capture the essential plot hook, main characters, and romantic/fantasy premise. This MUST be the very first thing in the description.
+
+**Part 2 - Additional Info (AFTER, separated by two newlines):**
+Place any of the following at the END, only after two line breaks:
+- Award mentions
+- Bestseller status
+- Author accolades
+- Blurbs from other authors
+- "First in series" notes
+- Comparison titles ("For fans of...")
+
+CRITICAL RULES:
+- NEVER start with bestseller info, awards, or author quotes. (Example of what NOT to do: "The first book of the blockbuster Fever series...")
+- Focus on STORY and PLOT first, credentials second.
 - Keep total description under 400 words.
-- If the source description is cluttered, extract and reorganize—don't just copy it.
+- If the source description is cluttered, extract and reorganize—do NOT just copy it.
+- STAY TRUE to the source description but follow the structure above strictly.
 
 JSON ONLY - validate and return:
 {
