@@ -109,6 +109,7 @@ export const BookScalarFieldEnum = {
   seriesIndex: 'seriesIndex',
   seriesTotal: 'seriesTotal',
   seriesStatus: 'seriesStatus',
+  isMultiArc: 'isMultiArc',
   arcName: 'arcName',
   arcIndex: 'arcIndex',
   arcTotal: 'arcTotal',

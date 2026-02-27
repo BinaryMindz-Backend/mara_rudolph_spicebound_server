@@ -926,6 +926,7 @@ export const BookScalarFieldEnum = {
   seriesIndex: 'seriesIndex',
   seriesTotal: 'seriesTotal',
   seriesStatus: 'seriesStatus',
+  isMultiArc: 'isMultiArc',
   arcName: 'arcName',
   arcIndex: 'arcIndex',
   arcTotal: 'arcTotal',
@@ -1100,6 +1101,13 @@ export type EnumSeriesStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$Pri
  * Reference to a field of type 'SeriesStatus[]'
  */
 export type ListEnumSeriesStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'SeriesStatus[]'>
+    
+
+
+/**
+ * Reference to a field of type 'Boolean'
+ */
+export type BooleanFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Boolean'>
     
 
 

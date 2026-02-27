@@ -60,10 +60,11 @@ model Book {
   seriesStatus SeriesStatus @default(UNKNOWN)
 
   // Multi-arc info
-  arcName   String?
-  arcIndex  Int?
-  arcTotal  Int?
-  arcStatus SeriesStatus? @default(UNKNOWN)
+  isMultiArc Boolean?      @default(false)
+  arcName    String?
+  arcIndex   Int?
+  arcTotal   Int?
+  arcStatus  SeriesStatus? @default(UNKNOWN)
 
   // Ratings (from external sources like Google Books)
   externalAvgRating   Float?

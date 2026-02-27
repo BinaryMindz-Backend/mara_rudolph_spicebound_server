@@ -156,6 +156,13 @@ export class EnrichedBookSlipResponse {
   series: SeriesInfo;
 
   @ApiProperty({
+    description: 'If this is a multi-arc series',
+    example: true,
+    required: false,
+  })
+  isMultiArc?: boolean;
+
+  @ApiProperty({
     description: 'Multi-arc information within a series',
     type: ArcInfo,
     required: false,

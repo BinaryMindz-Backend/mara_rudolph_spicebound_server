@@ -26,6 +26,8 @@ export interface BookSlipResponse {
     status: SeriesStatus;
   };
 
+  isMultiArc?: boolean;
+
   arc?: {
     name: string | null;
     index?: number | null;

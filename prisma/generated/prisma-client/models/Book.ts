@@ -62,6 +62,7 @@ export type BookMinAggregateOutputType = {
   seriesIndex: number | null
   seriesTotal: number | null
   seriesStatus: $Enums.SeriesStatus | null
+  isMultiArc: boolean | null
   arcName: string | null
   arcIndex: number | null
   arcTotal: number | null
@@ -88,6 +89,7 @@ export type BookMaxAggregateOutputType = {
   seriesIndex: number | null
   seriesTotal: number | null
   seriesStatus: $Enums.SeriesStatus | null
+  isMultiArc: boolean | null
   arcName: string | null
   arcIndex: number | null
   arcTotal: number | null
@@ -117,6 +119,7 @@ export type BookCountAggregateOutputType = {
   seriesIndex: number
   seriesTotal: number
   seriesStatus: number
+  isMultiArc: number
   arcName: number
   arcIndex: number
   arcTotal: number
@@ -167,6 +170,7 @@ export type BookMinAggregateInputType = {
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
+  isMultiArc?: true
   arcName?: true
   arcIndex?: true
   arcTotal?: true
@@ -193,6 +197,7 @@ export type BookMaxAggregateInputType = {
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
+  isMultiArc?: true
   arcName?: true
   arcIndex?: true
   arcTotal?: true
@@ -222,6 +227,7 @@ export type BookCountAggregateInputType = {
   seriesIndex?: true
   seriesTotal?: true
   seriesStatus?: true
+  isMultiArc?: true
   arcName?: true
   arcIndex?: true
   arcTotal?: true
@@ -338,6 +344,7 @@ export type BookGroupByOutputType = {
   seriesIndex: number | null
   seriesTotal: number | null
   seriesStatus: $Enums.SeriesStatus
+  isMultiArc: boolean | null
   arcName: string | null
   arcIndex: number | null
   arcTotal: number | null
@@ -390,6 +397,7 @@ export type BookWhereInput = {
   seriesIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFilter<"Book"> | $Enums.SeriesStatus
+  isMultiArc?: Prisma.BoolNullableFilter<"Book"> | boolean | null
   arcName?: Prisma.StringNullableFilter<"Book"> | string | null
   arcIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   arcTotal?: Prisma.IntNullableFilter<"Book"> | number | null
@@ -422,6 +430,7 @@ export type BookOrderByWithRelationInput = {
   seriesIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesTotal?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
+  isMultiArc?: Prisma.SortOrderInput | Prisma.SortOrder
   arcName?: Prisma.SortOrderInput | Prisma.SortOrder
   arcIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   arcTotal?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -457,6 +466,7 @@ export type BookWhereUniqueInput = Prisma.AtLeast<{
   seriesIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableFilter<"Book"> | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFilter<"Book"> | $Enums.SeriesStatus
+  isMultiArc?: Prisma.BoolNullableFilter<"Book"> | boolean | null
   arcName?: Prisma.StringNullableFilter<"Book"> | string | null
   arcIndex?: Prisma.IntNullableFilter<"Book"> | number | null
   arcTotal?: Prisma.IntNullableFilter<"Book"> | number | null
@@ -489,6 +499,7 @@ export type BookOrderByWithAggregationInput = {
   seriesIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesTotal?: Prisma.SortOrderInput | Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
+  isMultiArc?: Prisma.SortOrderInput | Prisma.SortOrder
   arcName?: Prisma.SortOrderInput | Prisma.SortOrder
   arcIndex?: Prisma.SortOrderInput | Prisma.SortOrder
   arcTotal?: Prisma.SortOrderInput | Prisma.SortOrder
@@ -526,6 +537,7 @@ export type BookScalarWhereWithAggregatesInput = {
   seriesIndex?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
   seriesTotal?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
   seriesStatus?: Prisma.EnumSeriesStatusWithAggregatesFilter<"Book"> | $Enums.SeriesStatus
+  isMultiArc?: Prisma.BoolNullableWithAggregatesFilter<"Book"> | boolean | null
   arcName?: Prisma.StringNullableWithAggregatesFilter<"Book"> | string | null
   arcIndex?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
   arcTotal?: Prisma.IntNullableWithAggregatesFilter<"Book"> | number | null
@@ -555,6 +567,7 @@ export type BookCreateInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -587,6 +600,7 @@ export type BookUncheckedCreateInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -619,6 +633,7 @@ export type BookUpdateInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -651,6 +666,7 @@ export type BookUncheckedUpdateInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -683,6 +699,7 @@ export type BookCreateManyInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -712,6 +729,7 @@ export type BookUpdateManyMutationInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -741,6 +759,7 @@ export type BookUncheckedUpdateManyInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -778,6 +797,7 @@ export type BookCountOrderByAggregateInput = {
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
+  isMultiArc?: Prisma.SortOrder
   arcName?: Prisma.SortOrder
   arcIndex?: Prisma.SortOrder
   arcTotal?: Prisma.SortOrder
@@ -815,6 +835,7 @@ export type BookMaxOrderByAggregateInput = {
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
+  isMultiArc?: Prisma.SortOrder
   arcName?: Prisma.SortOrder
   arcIndex?: Prisma.SortOrder
   arcTotal?: Prisma.SortOrder
@@ -841,6 +862,7 @@ export type BookMinOrderByAggregateInput = {
   seriesIndex?: Prisma.SortOrder
   seriesTotal?: Prisma.SortOrder
   seriesStatus?: Prisma.SortOrder
+  isMultiArc?: Prisma.SortOrder
   arcName?: Prisma.SortOrder
   arcIndex?: Prisma.SortOrder
   arcTotal?: Prisma.SortOrder
@@ -910,6 +932,10 @@ export type BookUpdatesubgenresInput = {
 
 export type EnumSeriesStatusFieldUpdateOperationsInput = {
   set?: $Enums.SeriesStatus
+}
+
+export type NullableBoolFieldUpdateOperationsInput = {
+  set?: boolean | null
 }
 
 export type NullableEnumSeriesStatusFieldUpdateOperationsInput = {
@@ -983,6 +1009,7 @@ export type BookCreateWithoutAliasesInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1014,6 +1041,7 @@ export type BookUncheckedCreateWithoutAliasesInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1061,6 +1089,7 @@ export type BookUpdateWithoutAliasesInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1092,6 +1121,7 @@ export type BookUncheckedUpdateWithoutAliasesInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1123,6 +1153,7 @@ export type BookCreateWithoutUsersInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1154,6 +1185,7 @@ export type BookUncheckedCreateWithoutUsersInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1201,6 +1233,7 @@ export type BookUpdateWithoutUsersInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1232,6 +1265,7 @@ export type BookUncheckedUpdateWithoutUsersInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1263,6 +1297,7 @@ export type BookCreateWithoutRatingsInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1294,6 +1329,7 @@ export type BookUncheckedCreateWithoutRatingsInput = {
   seriesIndex?: number | null
   seriesTotal?: number | null
   seriesStatus?: $Enums.SeriesStatus
+  isMultiArc?: boolean | null
   arcName?: string | null
   arcIndex?: number | null
   arcTotal?: number | null
@@ -1341,6 +1377,7 @@ export type BookUpdateWithoutRatingsInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1372,6 +1409,7 @@ export type BookUncheckedUpdateWithoutRatingsInput = {
   seriesIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   seriesStatus?: Prisma.EnumSeriesStatusFieldUpdateOperationsInput | $Enums.SeriesStatus
+  isMultiArc?: Prisma.NullableBoolFieldUpdateOperationsInput | boolean | null
   arcName?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   arcIndex?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
   arcTotal?: Prisma.NullableIntFieldUpdateOperationsInput | number | null
@@ -1452,6 +1490,7 @@ export type BookSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = r
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
+  isMultiArc?: boolean
   arcName?: boolean
   arcIndex?: boolean
   arcTotal?: boolean
@@ -1485,6 +1524,7 @@ export type BookSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
+  isMultiArc?: boolean
   arcName?: boolean
   arcIndex?: boolean
   arcTotal?: boolean
@@ -1514,6 +1554,7 @@ export type BookSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensio
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
+  isMultiArc?: boolean
   arcName?: boolean
   arcIndex?: boolean
   arcTotal?: boolean
@@ -1543,6 +1584,7 @@ export type BookSelectScalar = {
   seriesIndex?: boolean
   seriesTotal?: boolean
   seriesStatus?: boolean
+  isMultiArc?: boolean
   arcName?: boolean
   arcIndex?: boolean
   arcTotal?: boolean
@@ -1555,7 +1597,7 @@ export type BookSelectScalar = {
   updatedAt?: boolean
 }
 
-export type BookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "normalizedTitle" | "primaryAuthor" | "normalizedAuthor" | "firstPublishedYear" | "ageLevel" | "spiceRating" | "tropes" | "creatures" | "subgenres" | "shortDescription" | "seriesName" | "seriesIndex" | "seriesTotal" | "seriesStatus" | "arcName" | "arcIndex" | "arcTotal" | "arcStatus" | "externalAvgRating" | "externalRatingCount" | "amazonUrl" | "bookshopUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["book"]>
+export type BookOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "title" | "normalizedTitle" | "primaryAuthor" | "normalizedAuthor" | "firstPublishedYear" | "ageLevel" | "spiceRating" | "tropes" | "creatures" | "subgenres" | "shortDescription" | "seriesName" | "seriesIndex" | "seriesTotal" | "seriesStatus" | "isMultiArc" | "arcName" | "arcIndex" | "arcTotal" | "arcStatus" | "externalAvgRating" | "externalRatingCount" | "amazonUrl" | "bookshopUrl" | "createdAt" | "updatedAt", ExtArgs["result"]["book"]>
 export type BookInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   aliases?: boolean | Prisma.Book$aliasesArgs<ExtArgs>
   users?: boolean | Prisma.Book$usersArgs<ExtArgs>
@@ -1589,6 +1631,7 @@ export type $BookPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs =
     seriesIndex: number | null
     seriesTotal: number | null
     seriesStatus: $Enums.SeriesStatus
+    isMultiArc: boolean | null
     arcName: string | null
     arcIndex: number | null
     arcTotal: number | null
@@ -2041,6 +2084,7 @@ export interface BookFieldRefs {
   readonly seriesIndex: Prisma.FieldRef<"Book", 'Int'>
   readonly seriesTotal: Prisma.FieldRef<"Book", 'Int'>
   readonly seriesStatus: Prisma.FieldRef<"Book", 'SeriesStatus'>
+  readonly isMultiArc: Prisma.FieldRef<"Book", 'Boolean'>
   readonly arcName: Prisma.FieldRef<"Book", 'String'>
   readonly arcIndex: Prisma.FieldRef<"Book", 'Int'>
   readonly arcTotal: Prisma.FieldRef<"Book", 'Int'>

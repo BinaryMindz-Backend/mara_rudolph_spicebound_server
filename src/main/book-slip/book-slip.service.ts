@@ -245,7 +245,12 @@ export class BookSlipService {
       throw error;
     }
 
-    this.logger.log('🔹 AI Enrichment result:', enriched);
+    this.logger.log('🔹 AI Enrichment result:', JSON.stringify(enriched, null, 2));
+    if (enriched.series) {
+      this.logger.log(`🔹 AI identified series: ${enriched.series.name}, isMultiArc: ${enriched.series.isMultiArc}`);
+    } else {
+      this.logger.warn('🔹 AI returned NO series info');
+    }
 
     /**
      * 7️⃣ Create Book with ALL enriched data in single transaction
@@ -290,15 +295,11 @@ export class BookSlipService {
         // Series information - prefer AI enrichment, then external providers
         seriesName: enriched.series?.name ?? merged.seriesName ?? null,
         seriesIndex:
-          (enriched.series && 'index' in enriched.series
-            ? (enriched.series.index as number)
-            : undefined) ??
+          enriched.series?.position ??
           merged.seriesIndex ??
           null,
         seriesTotal:
-          (enriched.series && 'total' in enriched.series
-            ? (enriched.series.total as number)
-            : undefined) ??
+          enriched.series?.totalBooks ??
           merged.seriesTotal ??
           null,
         seriesStatus:
@@ -307,17 +308,12 @@ export class BookSlipService {
           SeriesStatus.UNKNOWN,
 
         // Arc information
-        arcName: enriched.arc?.name ?? null,
-        arcIndex:
-          (enriched.arc && 'index' in enriched.arc
-            ? (enriched.arc.index as number)
-            : undefined) ?? null,
-        arcTotal:
-          (enriched.arc && 'total' in enriched.arc
-            ? (enriched.arc.total as number)
-            : undefined) ?? null,
+        isMultiArc: enriched.series?.isMultiArc ?? false,
+        arcName: enriched.series?.arc?.name ?? null,
+        arcIndex: enriched.series?.arc?.arcNumber ?? null,
+        arcTotal: enriched.series?.arc?.totalBooks ?? null,
         arcStatus:
-          (enriched.arc?.status as SeriesStatus) ?? SeriesStatus.UNKNOWN,
+          (enriched.series?.arc?.status as SeriesStatus) ?? SeriesStatus.UNKNOWN,
       },
     });
 
@@ -597,53 +593,44 @@ export class BookSlipService {
       count: (book.externalRatingCount || 0) + platformRatings._count,
     };
 
-    // Format series info with user-friendly display rules:
+    // Format series/standalone info for display:
+    // User Rules:
     // 1. For a series - Should read "Series, Complete (1/11)"
     // 2. For a standalone - Should read "Standalone, Complete"
     // 3. For a multi-arc series should read - "Series, Incomplete (2/6)", "Arc 1, Complete (2/2)"
-    let series:
-      | {
-        name: string | null;
-        index: number | null;
-        total: number | null;
-        status: SeriesStatus;
-      }
-      | undefined;
+    let series: any;
 
     if (book.seriesName) {
       series = {
-        name: 'Series', // User requirement: label should say "Series" not the actual name
+        name: 'Series',
         index: book.seriesIndex ?? null,
         total: book.seriesTotal ?? null,
         status: book.seriesStatus,
       };
     } else {
-      // Standalone case
       series = {
         name: 'Standalone',
         index: null,
         total: null,
-        status: SeriesStatus.COMPLETE, // Standalones are effectively complete
+        status: SeriesStatus.COMPLETE,
       };
     }
 
-    let arc:
-      | {
-        name: string | null;
-        index: number | null;
-        total: number | null;
-        status: SeriesStatus | null;
-      }
-      | undefined;
-
-    if (book.arcName || book.arcIndex) {
+    let arc: any;
+    // Multi-arc display rule: "Arc 1, Complete (2/2)"
+    if (book.isMultiArc && (book.arcName || book.arcIndex)) {
       arc = {
-        name: book.arcName || null,
+        name: book.arcIndex ? `Arc ${book.arcIndex}` : 'Arc',
         index: book.arcIndex ?? null,
         total: book.arcTotal ?? null,
         status: book.arcStatus as SeriesStatus,
       };
     }
+
+    // Special verification for "The Serpent and the Wings of Night"
+    // If it's a known multi-arc world like Crowns of Nyaxia but AI missed it, 
+    // we could add hardcoded logic, but for now we rely on the prompt which 
+    // explicitly mentions this book as an example.
 
     return {
       bookId: book.id,

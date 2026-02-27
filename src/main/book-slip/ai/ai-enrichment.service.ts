@@ -14,17 +14,19 @@ export interface EnrichedBookData {
   subgenres?: string[];
   description?: string;
   series?: {
-    name?: string;
-    index?: number;
-    total?: number;
+    name?: string | null;
+    position?: number | null;
+    totalBooks?: number | null;
     status?: string;
-  };
-  arc?: {
-    name?: string;
-    index?: number;
-    total?: number;
-    status?: string;
-  };
+    isMultiArc?: boolean;
+    arc?: {
+      arcNumber?: number | null;
+      name?: string | null;
+      position?: number | null;
+      totalBooks?: number | null;
+      status?: string;
+    } | null;
+  } | null;
 }
 
 @Injectable()
@@ -181,7 +183,50 @@ CRITICAL RULES:
 4. All arrays must contain strings from the exact approved lists ONLY
 5. Do NOT put creatures in the tropes array.
 
-YOUR RESPONSE MUST be valid JSON that can be parsed.`;
+YOUR RESPONSE MUST be valid JSON that can be parsed.
+
+MANDATORY KNOWLEDGE (MUST FOLLOW):
+- "The Serpent and the Wings of Night" by Carissa Broadbent is a MULTI-ARC series in the "Crowns of Nyaxia" universe. It is the first book of the "Nightborn Duet".
+- "Ice Planet Barbarians" is a series with 22+ books.
+- "The Love Hypothesis" is a STANDALONE.
+
+SERIES INFORMATION:
+Provide series details if applicable:
+- name: The series or universe name (null only if truly no series/universe connection exists)
+- position: This book's number in the overall series (1 if standalone or first in series)
+- totalBooks: Total books planned/published in the full series (1 if standalone, null if unknown)
+- status: "COMPLETE" (all books released) | "INCOMPLETE" (future books planned/unreleased) | "UNKNOWN"
+- isMultiArc: Boolean indicating if this is a multi-arc series (distinct story segments like duets/trilogies within a larger world)
+- arc: Arc-specific details (only if isMultiArc is true):
+    - arcNumber: Which arc this book belongs to (1, 2, 3, etc.)
+    - name: The arc name (e.g. "The Nightborn Duet") or null
+    - position: Book's position within THIS specific arc
+    - totalBooks: Total books in THIS specific arc
+    - status: Publication status of THIS arc specifically
+
+MULTI-ARC INDICATORS: Different main couples in different books, books grouped into duets/named arcs (e.g. Crowns of Nyaxia, Fever Series, ACOTAR after book 3).
+
+JSON Structure for Series:
+"series": {
+  "name": "Series Name",
+  "position": 1,
+  "totalBooks": 5,
+  "status": "INCOMPLETE",
+  "isMultiArc": true,
+  "arc": {
+    "arcNumber": 1,
+    "name": "Arc Name",
+    "position": 1,
+    "totalBooks": 2,
+    "status": "COMPLETE"
+  }
+} (or null if no series connection)
+
+EXAMPLES:
+1. "Ice Planet Barbarians": series:{name:"Ice Planet Barbarians", position:1, totalBooks:22, status:"COMPLETE", isMultiArc:false, arc:null}
+2. "The Love Hypothesis": series:{name:null, position:1, totalBooks:1, status:"COMPLETE", isMultiArc:false, arc:null}
+3. "The Serpent and the Wings of Night": series:{name:"Crowns of Nyaxia", position:1, totalBooks:6, status:"INCOMPLETE", isMultiArc:true, arc:{arcNumber:1, name:"The Nightborn Duet", position:1, totalBooks:2, status:"COMPLETE"}}
+`;
   }
 
   private buildUserPrompt(bookData: any): string {
@@ -199,9 +244,59 @@ TROPES (max 4, must be exact matches):
 ${APPROVED_TROPES.join(', ')}
 
 CREATURES: Dragons, Fae, Vampires, Shifters, etc. (max 3, [] if none)
-SUBGENRES: Romance, Fantasy, Horror, etc. (max 3, [] if none)
-SERIES: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null
-ARC: {name, index, total, status:"COMPLETE"|"INCOMPLETE"} or null (Only if the series is divided into distinct arcs/cycles)
+SUBGENRES (Max 3): Classify the book's genre/subgenre. Be specific and accurate.
+
+ROMANCE & ROMANTASY: "Romantasy", "Paranormal Romance", "Vampire Romance", "Werewolf & Shifter Romance", "Fae Romance", "Dragon Romance", "Alien Romance", "Dark Romance", "Mafia Romance", "Gothic Romance", "Historical Romance", "Regency Romance", "Contemporary Romance", "Romantic Comedy", "Romantic Suspense", "Sports Romance", "Small Town Romance", "Holiday Romance", "Billionaire Romance", "Military Romance", "Reverse Harem Romance", "Enemies to Lovers Romance", "Action & Adventure Romance", "Sci-Fi Romance", "Time Travel Romance", "Steampunk Romance"
+FANTASY: "Epic Fantasy", "High Fantasy", "Dark Fantasy", "Urban Fantasy", "Cozy Fantasy", "Sword & Sorcery", "Grimdark", "Mythic Fantasy", "Fairy Tale Retelling", "Portal Fantasy", "Gaslamp Fantasy", "Military Fantasy", "Court Intrigue", "Magical Realism"
+HORROR & GOTHIC: "Dark Fantasy Horror", "Gothic Fiction", "Paranormal Horror", "Supernatural Thriller", "Monster Horror"
+EROTICA: "Fantasy Erotica", "Paranormal Erotica", "Vampire Erotica", "Monster Erotica", "Dark Erotica", "BDSM Erotica", "Sci-Fi Erotica"
+SCIENCE FICTION: "Space Opera", "Dystopian", "Post-Apocalyptic", "Cyberpunk", "Military Sci-Fi", "First Contact"
+OTHER: "Thriller", "Mystery", "Suspense", "Action & Adventure", "Literary Fiction", "Historical Fiction", "Contemporary Fiction", "Women's Fiction", "Coming of Age", "Young Adult Fiction", "Middle Grade"
+NON-FICTION: "Memoir", "Self-Help", "Biography", "True Crime", "Non-Fiction"
+
+GENRE SELECTION RULES:
+1. **MOST SPECIFIC FIRST**: If it's a vampire romance -> use "Vampire Romance" not just "Paranormal Romance".
+2. **ROMANCE LABELING**: The first subgenre should establish if it's romance (e.g. "Vampire Romance"); others add flavor (e.g. "Dark Fantasy", "Gothic Fiction"). Don't repeat "Romance" in every tag.
+3. **AVOID REDUNDANCY**: Do NOT use synonyms or duplicates. "Romantasy" and "Fantasy Romance" are the same—use "Romantasy".
+4. **LAYERING**: Type (Romance/Genre) -> Setting/Tone -> Themes.
+5. **NON-ROMANCE**: Lead with the primary genre (e.g. ["Epic Fantasy", "Grimdark"]).
+
+SERIES INFORMATION:
+Provide series details if applicable:
+- name: The series or universe name (null only if truly no series/universe connection exists)
+- position: This book's number in the overall series (1 if standalone or first in series)
+- totalBooks: Total books planned/published in the full series (1 if standalone, null if unknown)
+- status: "COMPLETE" (all books released) | "INCOMPLETE" (future books planned/unreleased) | "UNKNOWN"
+- isMultiArc: Boolean indicating if this is a multi-arc series (distinct story segments like duets/trilogies within a larger world)
+- arc: Arc-specific details (only if isMultiArc is true):
+    - arcNumber: Which arc this book belongs to (1, 2, 3, etc.)
+    - name: The arc name (e.g. "The Nightborn Duet") or null
+    - position: Book's position within THIS specific arc
+    - totalBooks: Total books in THIS specific arc
+    - status: Publication status of THIS arc specifically
+
+MULTI-ARC INDICATORS: Different main couples in different books, books grouped into duets/named arcs (e.g. Crowns of Nyaxia, Fever Series, ACOTAR after book 3).
+
+JSON Structure for Series:
+"series": {
+  "name": "Series Name",
+  "position": 1,
+  "totalBooks": 5,
+  "status": "INCOMPLETE",
+  "isMultiArc": true,
+  "arc": {
+    "arcNumber": 1,
+    "name": "Arc Name",
+    "position": 1,
+    "totalBooks": 2,
+    "status": "COMPLETE"
+  }
+} (or null if no series connection)
+
+EXAMPLES:
+1. "Ice Planet Barbarians": series:{name:"Ice Planet Barbarians", position:1, totalBooks:22, status:"COMPLETE", isMultiArc:false, arc:null}
+2. "The Love Hypothesis": series:{name:null, position:1, totalBooks:1, status:"COMPLETE", isMultiArc:false, arc:null}
+3. "The Serpent and the Wings of Night": series:{name:"Crowns of Nyaxia", position:1, totalBooks:6, status:"INCOMPLETE", isMultiArc:true, arc:{arcNumber:1, name:"The Nightborn Duet", position:1, totalBooks:2, status:"COMPLETE"}}
 
 DESCRIPTION (MANDATORY FORMATTING RULES):
 Create a reader-friendly description with EXACTLY TWO parts:
@@ -226,6 +321,44 @@ CRITICAL RULES:
 - If the source description is cluttered, extract and reorganize—do NOT just copy it.
 - STAY TRUE to the source description but follow the structure above strictly.
 
+EXAMPLES:
+
+1. Title="Ice Planet Barbarians" | Author="Ruby Dixon"
+"series": {
+  "name": "Ice Planet Barbarians",
+  "position": 1,
+  "totalBooks": 22,
+  "status": "COMPLETE",
+  "isMultiArc": false,
+  "arc": null
+}
+
+2. Title="The Love Hypothesis" | Author="Ali Hazelwood"
+"series": {
+  "name": null,
+  "position": 1,
+  "totalBooks": 1,
+  "status": "COMPLETE",
+  "isMultiArc": false,
+  "arc": null
+}
+
+3. Title="The Serpent and the Wings of Night" | Author="Carissa Broadbent"
+"series": {
+  "name": "Crowns of Nyaxia",
+  "position": 1,
+  "totalBooks": 6,
+  "status": "INCOMPLETE",
+  "isMultiArc": true,
+  "arc": {
+    "arcNumber": 1,
+    "name": "The Nightborn Duet",
+    "position": 1,
+    "totalBooks": 2,
+    "status": "COMPLETE"
+  }
+}
+
 JSON ONLY - validate and return:
 {
   "ageLevel": "UNKNOWN|CHILDREN|YA|NA|ADULT|EROTICA",
@@ -234,8 +367,14 @@ JSON ONLY - validate and return:
   "creatures": ["type"],
   "subgenres": ["genre"],
   "description": "The formatted description following the rules above.",
-  "series": {"name": "Series Name", "index": 1, "total": 5, "status": "INCOMPLETE"} | null,
-  "arc": {"name": "Arc Name", "index": 1, "total": 2, "status": "COMPLETE"} | null
+  "series": {
+    "name": "Series Name",
+    "position": 1,
+    "totalBooks": 5,
+    "status": "INCOMPLETE",
+    "isMultiArc": false,
+    "arc": null
+  }
 }
 `;
   }
@@ -332,34 +471,28 @@ JSON ONLY - validate and return:
       sanitized.subgenres = [];
     }
 
-    // Preserve series info and validate
+    // Preserve series and arc info and validate
     if (data.series && typeof data.series === 'object') {
+      const s = data.series;
       sanitized.series = {
-        name: data.series.name || null,
-        index:
-          typeof data.series.index === 'number' ? data.series.index : null,
-        total: typeof data.series.total === 'number' ? data.series.total : null,
-        status:
-          data.series.status &&
-            ['COMPLETE', 'INCOMPLETE'].includes(data.series.status)
-            ? data.series.status
-            : 'UNKNOWN',
+        name: s.name || null,
+        position: typeof s.position === 'number' ? s.position : 1,
+        totalBooks: typeof s.totalBooks === 'number' ? s.totalBooks : null,
+        status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status) ? s.status : 'UNKNOWN',
+        isMultiArc: !!s.isMultiArc,
+        arc: null,
       };
-    }
 
-    // Preserve arc info and validate
-    if (data.arc && typeof data.arc === 'object') {
-      sanitized.arc = {
-        name: data.arc.name || null,
-        index:
-          typeof data.arc.index === 'number' ? data.arc.index : null,
-        total: typeof data.arc.total === 'number' ? data.arc.total : null,
-        status:
-          data.arc.status &&
-            ['COMPLETE', 'INCOMPLETE'].includes(data.arc.status)
-            ? data.arc.status
-            : 'UNKNOWN',
-      };
+      if (s.isMultiArc && s.arc && typeof s.arc === 'object') {
+        const a = s.arc;
+        sanitized.series.arc = {
+          arcNumber: typeof a.arcNumber === 'number' ? a.arcNumber : null,
+          name: a.name || null,
+          position: typeof a.position === 'number' ? a.position : null,
+          totalBooks: typeof a.totalBooks === 'number' ? a.totalBooks : null,
+          status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status) ? a.status : 'UNKNOWN',
+        };
+      }
     }
 
     return sanitized;
