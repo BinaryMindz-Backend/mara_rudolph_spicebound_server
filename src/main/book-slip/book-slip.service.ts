@@ -5,6 +5,7 @@ import { GoogleBooksProvider } from './providers/google-books.provider.js';
 import { OpenLibraryProvider } from './providers/open-library.provider.js';
 import { GoodreadsProvider } from './providers/goodreads.provider.js';
 import { AiEnrichmentService } from './ai/ai-enrichment.service.js';
+import { normalizeText } from './utils/text-utils.js';
 
 import { BookSlipResponse } from './dto/book-slip.response.js';
 import { detectInputType } from './utils/input-detector.js';
@@ -25,16 +26,6 @@ import {
   SeriesStatus,
 } from '../../../prisma/generated/prisma-client/enums.js';
 
-/**
- * Normalize strings for canonical matching
- */
-function normalizeText(value: string): string {
-  return value
-    .toLowerCase()
-    .trim()
-    .replace(/[^\w\s]/g, '')
-    .replace(/\s+/g, ' ');
-}
 
 /**
  * Format chip strings for display (Title Case)
@@ -524,6 +515,17 @@ export class BookSlipService {
         bookId,
         type: BookAliasType.OPEN_LIBRARY_ID,
         value: merged.openLibraryId,
+      });
+    }
+
+    if (
+      merged.asin &&
+      !existingValues.has(`${BookAliasType.ASIN}:${merged.asin}`)
+    ) {
+      newAliases.push({
+        bookId,
+        type: BookAliasType.ASIN,
+        value: merged.asin,
       });
     }
 

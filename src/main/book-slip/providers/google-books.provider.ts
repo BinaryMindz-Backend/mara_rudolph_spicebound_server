@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ExternalBookData } from '../types/book-source.types.js';
+import { normalizeText } from '../utils/text-utils.js';
 
 @Injectable()
 export class GoogleBooksProvider {
@@ -7,16 +8,18 @@ export class GoogleBooksProvider {
   private readonly baseUrl = 'https://www.googleapis.com/books/v1/volumes';
 
   private readonly EDITION_EXCLUSION_KEYWORDS = [
-    'box set',
-    'boxed set',
-    'collection',
-    'special edition',
-    'illustrated edition',
-    'complete series',
-    'omnibus',
     'anniversary edition',
     'collector\'s edition',
     'deluxe edition',
+    'illustrated edition',
+    'special edition',
+    'box set',
+    'boxed set',
+    'complete collection',
+    'collection of',
+    'entire series',
+    'set of',
+    'omnibus',
   ];
 
   private readonly CONTENT_EXCLUSION_KEYWORDS = [
@@ -34,6 +37,10 @@ export class GoogleBooksProvider {
     'review of',
     'synopsis',
     'cliff notes',
+    'how well do you know',
+    'test your knowledge',
+    'trivia challenge',
+    'unofficial guide',
   ];
 
   private readonly ABBREVIATIONS: Record<string, string> = {
@@ -54,8 +61,11 @@ export class GoogleBooksProvider {
 
   async search(query: string): Promise<ExternalBookData | undefined> {
     try {
-      // Request multiple results to allow filtering
-      const url = `${this.baseUrl}?q=${encodeURIComponent(query)}&maxResults=10&key=${process.env.GOOGLE_BOOKS_KEY}`;
+      // Pre-search: Expand popular abbreviations to ensure better API results
+      const normalizedQuery = query.toLowerCase().trim();
+      const expandedQuery = this.ABBREVIATIONS[normalizedQuery] || query;
+
+      const url = `${this.baseUrl}?q=${encodeURIComponent(expandedQuery)}&maxResults=10&key=${process.env.GOOGLE_BOOKS_KEY}`;
       this.logger.log(`🔹 Google Books search URL: ${url}`);
 
       const res = await fetch(url);
@@ -73,7 +83,7 @@ export class GoogleBooksProvider {
       }
 
       // Filter and rank results
-      const filtered = this.filterAndRankResults(data.items, query);
+      const filtered = this.filterAndRankResults(data.items, expandedQuery);
       if (!filtered) {
         this.logger.warn('No valid results after filtering');
         return undefined;
@@ -183,6 +193,15 @@ export class GoogleBooksProvider {
       score += 40; // Partial match
     }
 
+    // Penalize quiz-like title patterns even if they contain the keyword
+    // e.g. "How well do you know A Court of Thorns and Roses (ACOTAR)?"
+    if (itemTitle.includes('(') && itemTitle.includes(')')) {
+      const abbreviationInParens = normalizeText(itemTitle.substring(itemTitle.indexOf('(') + 1, itemTitle.indexOf(')')));
+      if (this.ABBREVIATIONS[abbreviationInParens]) {
+        score -= 60; // Significant penalty for titles like "Trivia for ACOTAR"
+      }
+    }
+
     // Boost if the original query was an abbreviation and matches exactly
     if (this.ABBREVIATIONS[cleanTitleQuery] && itemTitle === this.ABBREVIATIONS[cleanTitleQuery]) {
       score += 50; // Extra certainty for "acotar" -> "A Court of Thorns and Roses"
@@ -207,8 +226,19 @@ export class GoogleBooksProvider {
         targetGenres.some(tg => cat.includes(tg))
       );
       if (matchesGenre) {
-        score += 20; // Genre affinity boost for ambiguous names (e.g. "Darkfever")
+        score += 20; // Genre affinity boost
       }
+    }
+
+    // 4. Series Search Prioritization (Prefer Book 1 over Box Sets)
+    const lowerTitle = itemTitle.toLowerCase();
+    const isBoxSet = lowerTitle.includes('box set') || lowerTitle.includes('collection');
+    const isBookOne = lowerTitle.includes('book 1') || lowerTitle.includes('#1') || lowerTitle.includes('book one') || lowerTitle.includes('part 1');
+
+    if (isBoxSet) {
+      score -= 100; // Heavy penalty for composite products
+    } else if (isBookOne) {
+      score += 70; // Strong boost for first book in series
     }
 
     return score;

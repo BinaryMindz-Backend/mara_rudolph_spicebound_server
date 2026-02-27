@@ -5,37 +5,46 @@
 export const APPROVED_TROPES = [
   // Core Relationship Dynamics
   'Enemies to Lovers',
+  'Hate to Love',
   'Friends to Lovers',
   'Forbidden Love',
   'Slow Burn',
   'Instalove',
+  'Second-Chance Romance',
 
-  // Proximity, Situational & Plot-Driven
+  // Proximity & Situational
   'Forced Proximity',
   'Fake Relationship',
   'Marriage of Convenience',
   'Arranged Marriage',
   'Captive/Captor',
+  'Bodyguard/Protector',
   'Trials',
 
-  // Emotional & Interpersonal Tension
+  // Emotional & Interpersonal
   'Grumpy x Sunshine',
   'Morally Grey',
+  'Morally Black',
   'Touch Her and Die',
   'Mutual Pining',
   'Angst with a Happy Ending',
   'Alphahole',
+  'Bully Romance',
+  'Redemption Arc',
 
-  // Fate, Power & Fantasy-Specific
+  // Fate, Power & Fantasy
   'Fated Mates',
   'Chosen One',
   'Magic-Bonded Pair',
   'Soulmates',
   'Power Imbalance',
-  'Hidden Identity/Secret Royalty',
+  'Hidden Identity',
+  'Secret Royalty',
   'Villain Gets the Girl',
   'Dark Savior',
   'Reincarnation',
+  'Hidden Memories',
+  'Curse/Curse Breaking',
 
   // Found Family & Community
   'Found Family',
@@ -44,9 +53,10 @@ export const APPROVED_TROPES = [
   // Identity & Relationship Structure
   'LGBTQ+',
   'Love Triangle',
-  'Reverse Harem/Why Choose',
+  'Why Choose',
+  'Dual POV',
 
-  // Power Dynamics & Age
+  // Power Dynamics
   'Age Gap',
   'Teacher x Student',
 ];

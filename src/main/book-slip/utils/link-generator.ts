@@ -8,6 +8,25 @@ export interface BookLinks {
 }
 
 /**
+ * Converts ISBN-13 to ISBN-10 for Amazon routing
+ */
+function isbn13To10(isbn13: string): string | undefined {
+  const clean = isbn13.replace(/[-\s]/g, '');
+  if (clean.length !== 13 || !clean.startsWith('978')) return undefined;
+
+  const core = clean.substring(3, 12);
+  let sum = 0;
+  for (let i = 0; i < 9; i++) {
+    sum += (10 - i) * parseInt(core.charAt(i), 10);
+  }
+
+  const check = (11 - (sum % 11)) % 11;
+  const checkDigit = check === 10 ? 'X' : check.toString();
+
+  return core + checkDigit;
+}
+
+/**
  * Generate Amazon link using ASIN or ISBN or Title+Author fallback
  */
 export function generateAmazonLink(
@@ -16,13 +35,25 @@ export function generateAmazonLink(
   asin?: string,
   isbn13?: string,
 ): string | undefined {
-  // Amazon ONLY accepts direct routing for ASINs/ISBN-10s.
+  // Amazon prefers direct routing for ASINs/ISBN-10s.
   if (asin) {
     return `https://www.amazon.com/dp/${asin}`;
   }
-  // Amazon 404s on 13-digit ISBN dp strings. Route to isolated ISBN search page.
-  const searchKey = isbn13 || encodeURIComponent(`${title} ${author}`);
-  return `https://www.amazon.com/s?k=${searchKey}`;
+
+  // Fallback to converting ISBN-13 to 10 for direct routing
+  if (isbn13) {
+    const isbn10 = isbn13To10(isbn13);
+    if (isbn10) {
+      return `https://www.amazon.com/dp/${isbn10}`;
+    }
+  }
+
+  // If no direct ID, use a precise search query
+  const searchTerms = isbn13
+    ? `${isbn13} ${title}`
+    : `${title} ${author}`;
+
+  return `https://www.amazon.com/s?k=${encodeURIComponent(searchTerms)}`;
 }
 
 /**
