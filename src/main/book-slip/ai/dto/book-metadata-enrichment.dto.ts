@@ -34,6 +34,7 @@ export class BookMetadataEnrichmentResponse {
   arc?: ArcInfo | null;
   description: string;
   confidence: ConfidenceLevel;
+  amazonAsin?: string;
 }
 
 export class EnrichBookRequest {

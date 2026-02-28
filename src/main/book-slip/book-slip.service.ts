@@ -249,7 +249,7 @@ export class BookSlipService {
     const amazonUrl = generateAmazonLink(
       merged.title,
       merged.author || 'Unknown Author',
-      asin || merged.asin,
+      enriched.amazonAsin || asin || merged.asin,
       merged.isbn13,
     );
     const bookshopUrl = generateBookshopLink(

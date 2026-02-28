@@ -27,6 +27,7 @@ export interface EnrichedBookData {
       status?: string;
     } | null;
   } | null;
+  amazonAsin?: string;
 }
 
 @Injectable()
@@ -183,6 +184,7 @@ CRITICAL RULES:
 3. All numerical ratings must be integers (0-6 for spice)
 4. All arrays must contain strings from the exact approved lists ONLY
 5. Do NOT put creatures in the tropes array.
+6. **AMAZON ASIN**: Use your knowledge to provide the **Amazon ASIN** (e.g., B09B7XVLJG) for the primary paperback or Kindle edition of the book. This is CRITICAL for direct routing.
 
 YOUR RESPONSE MUST be valid JSON that can be parsed.
 
@@ -335,7 +337,8 @@ JSON ONLY - validate and return:
   "creatures": ["type"],
   "subgenres": ["genre"],
   "description": "The formatted description...",
-  "series": { ... }
+  "series": { ... },
+  "amazonAsin": "B09B7XVLJG"
 }
 `;
   }
@@ -350,7 +353,8 @@ JSON ONLY - validate and return:
     }
 
     const sanitized: EnrichedBookData = {
-      description: typeof data.description === 'string' ? data.description.trim() : undefined,
+      description: data.description || '',
+      amazonAsin: data.amazonAsin || undefined,
     };
 
     // Validate ageLevel
