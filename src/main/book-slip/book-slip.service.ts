@@ -595,14 +595,29 @@ export class BookSlipService {
       count: (book.externalRatingCount || 0) + platformRatings._count,
     };
 
-    // Format series/standalone info for display:
-    // User Rules:
-    // 1. For a series - Should read "Series, Complete (1/11)"
-    // 2. For a standalone - Should read "Standalone, Complete"
-    // 3. For a multi-arc series should read - "Series, Incomplete (2/6)", "Arc 1, Complete (2/2)"
+    // Format series/standalone info for display using AI enrichment semantics:
+    // 1. For a standard or multi-book series - "Series, Complete (1/11)"
+    // 2. For a standalone (including connected-universe standalones) - "Standalone, Complete"
+    // 3. For a multi-arc series - "Series, Incomplete (2/6)", "Arc 1, Complete (2/2)"
     let series: any;
 
-    if (book.seriesName) {
+    const isStandaloneBook =
+      // Standalone per enrichment rules: totalBooks === 1 and position === 1 (or missing),
+      // and not marked as multi-arc.
+      book.seriesTotal === 1 &&
+      (book.seriesIndex == null || book.seriesIndex === 1) &&
+      !book.isMultiArc;
+
+    if (isStandaloneBook) {
+      // Treat as standalone even if seriesName is present (connected universe / standalone series)
+      series = {
+        name: 'Standalone',
+        index: null,
+        total: null,
+        status: book.seriesStatus ?? SeriesStatus.COMPLETE,
+      };
+    } else if (book.seriesName) {
+      // Any multi-book or ongoing series with a real series/universe name
       series = {
         name: 'Series',
         index: book.seriesIndex ?? null,
@@ -610,6 +625,7 @@ export class BookSlipService {
         status: book.seriesStatus,
       };
     } else {
+      // No series metadata at all – default to standalone
       series = {
         name: 'Standalone',
         index: null,
@@ -651,6 +667,7 @@ export class BookSlipService {
       subgenres: (book.subgenres ?? []).map(toTitleCase),
 
       series,
+      isMultiArc: !!book.isMultiArc,
       arc,
 
       ratings: ratingsInfo,
