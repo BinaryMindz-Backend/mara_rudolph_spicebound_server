@@ -44,36 +44,36 @@ JSON ONLY - validate and return:
 }`;
 
 async function main() {
-    console.log('Sending request to OpenAI...');
-    const requestBody = {
-        model: 'gpt-4o-mini',
-        messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.3,
-        max_tokens: 500,
-    };
+  console.log('Sending request to OpenAI...');
+  const requestBody = {
+    model: 'gpt-4o-mini',
+    messages: [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ],
+    temperature: 0.3,
+    max_tokens: 500,
+  };
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify(requestBody),
-    });
+  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify(requestBody),
+  });
 
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error('API Error:', JSON.stringify(errorData, null, 2));
-        return;
-    }
+  if (!response.ok) {
+    const errorData = await response.json();
+    console.error('API Error:', JSON.stringify(errorData, null, 2));
+    return;
+  }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    console.log('Raw API Response Content:');
-    console.log(content);
+  const data = await response.json();
+  const content = data.choices?.[0]?.message?.content;
+  console.log('Raw API Response Content:');
+  console.log(content);
 }
 
 main().catch(console.error);

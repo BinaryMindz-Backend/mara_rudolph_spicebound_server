@@ -37,6 +37,7 @@ export class SubscriptionService {
   async createCheckoutSession(
     userId: string,
     plan: 'monthly' | 'yearly',
+    returnUrl?: string,
   ): Promise<{ url: string | null }> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
@@ -55,13 +56,22 @@ export class SubscriptionService {
       throw new BadRequestException('Stripe price not configured');
     }
 
+    const frontendBase = this.configService.get('FRONTEND_URL');
+    const baseUrl = `${frontendBase}/subscription`;
+
+    const redirectTarget = returnUrl || '/';
+    const encodedRedirect = encodeURIComponent(redirectTarget);
+
+    const urlHasQuery = baseUrl.includes('?');
+    const separator = urlHasQuery ? '&' : '?';
+
     const session = await this.stripe.checkout.sessions.create({
       mode: 'subscription',
       payment_method_types: ['card'],
       customer_email: user.email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${this.configService.get('FRONTEND_URL')}/subscription?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${this.configService.get('FRONTEND_URL')}/subscription?canceled=true`,
+      success_url: `${baseUrl}${separator}success=true&session_id={CHECKOUT_SESSION_ID}&redirect=${encodedRedirect}`,
+      cancel_url: `${baseUrl}${separator}canceled=true&redirect=${encodedRedirect}`,
       metadata: { userId },
     });
 
@@ -306,11 +316,14 @@ export class SubscriptionService {
     // Subscription ID: Stripe types use parent.subscription_details.subscription;
     // some webhook payloads also expose top-level subscription (use as fallback).
     const subFromParent = invoice.parent?.subscription_details?.subscription;
-    const subFromTop = (invoice as { subscription?: string | Stripe.Subscription })
-      .subscription;
+    const subFromTop = (
+      invoice as { subscription?: string | Stripe.Subscription }
+    ).subscription;
     const sub = subFromParent ?? subFromTop;
     const subscriptionId =
-      typeof sub === 'string' ? sub : (sub as Stripe.Subscription)?.id ?? undefined;
+      typeof sub === 'string'
+        ? sub
+        : ((sub as Stripe.Subscription)?.id ?? undefined);
 
     this.logger.log(`[INVOICE] SubscriptionId: ${subscriptionId}`);
 
@@ -425,7 +438,9 @@ export class SubscriptionService {
    * Sync subscription from Stripe when user has stripeCustomerId.
    * Call this before reading from DB so we pick up payments even if webhooks never arrived.
    */
-  private async syncSubscriptionFromStripeByCustomer(userId: string): Promise<void> {
+  private async syncSubscriptionFromStripeByCustomer(
+    userId: string,
+  ): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
       select: { stripeCustomerId: true },
@@ -467,9 +482,13 @@ export class SubscriptionService {
         where: { id: userId },
         data: { plan: SubscriptionPlan.PREMIUM },
       });
-      this.logger.log(`🔄 Synced subscription from Stripe for user ${userId} → PREMIUM`);
+      this.logger.log(
+        `🔄 Synced subscription from Stripe for user ${userId} → PREMIUM`,
+      );
     } catch (err) {
-      this.logger.warn(`Sync from Stripe by customer failed for user ${userId}: ${err.message}`);
+      this.logger.warn(
+        `Sync from Stripe by customer failed for user ${userId}: ${err.message}`,
+      );
     }
   }
 
@@ -482,7 +501,9 @@ export class SubscriptionService {
     });
     const metaUserId = session.metadata?.userId;
     if (metaUserId !== userId) {
-      this.logger.warn(`syncFromCheckoutSession: session ${sessionId} userId mismatch`);
+      this.logger.warn(
+        `syncFromCheckoutSession: session ${sessionId} userId mismatch`,
+      );
       throw new BadRequestException('Session does not belong to this user');
     }
     const customerId = session.customer as string;
@@ -492,7 +513,9 @@ export class SubscriptionService {
         : session.subscription?.id;
 
     if (!customerId) {
-      this.logger.warn(`syncFromCheckoutSession: no customer on session ${sessionId}`);
+      this.logger.warn(
+        `syncFromCheckoutSession: no customer on session ${sessionId}`,
+      );
       return this.getUserSubscription(userId);
     }
 
@@ -531,7 +554,9 @@ export class SubscriptionService {
         where: { id: userId },
         data: { plan: SubscriptionPlan.PREMIUM },
       });
-      this.logger.log(`🔄 Synced from checkout session ${sessionId} → user ${userId} PREMIUM`);
+      this.logger.log(
+        `🔄 Synced from checkout session ${sessionId} → user ${userId} PREMIUM`,
+      );
     }
 
     return this.getUserSubscription(userId);

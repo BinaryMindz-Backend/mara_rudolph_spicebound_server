@@ -5,7 +5,7 @@ async function run() {
   const res = await fetch(url);
   const data = await res.json();
   const info = data.items[0].volumeInfo;
-  console.log("Title:", info.title);
-  console.log("Identifiers:", info.industryIdentifiers);
+  console.log('Title:', info.title);
+  console.log('Identifiers:', info.industryIdentifiers);
 }
 run();

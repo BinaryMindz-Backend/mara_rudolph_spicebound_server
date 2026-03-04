@@ -25,4 +25,4 @@ import { BookMetadataEnrichmentService } from './ai/book-metadata-enrichment.ser
     BookMetadataEnrichmentService,
   ],
 })
-export class BookSlipModule { }
+export class BookSlipModule {}

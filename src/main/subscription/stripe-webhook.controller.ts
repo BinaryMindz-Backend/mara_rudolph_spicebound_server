@@ -7,11 +7,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import {
-  ApiOperation,
-  ApiResponse,
-  ApiTags,
-} from '@nestjs/swagger';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { SubscriptionService } from './subscription.service.js';
 
@@ -44,7 +40,8 @@ export class StripeWebhookController {
       'https://api.readspicebound.com';
     const webhookUrl = `${base.replace(/\/$/, '')}/stripe/webhook`;
     return {
-      message: 'Stripe webhooks must use POST. This URL is for endpoint verification.',
+      message:
+        'Stripe webhooks must use POST. This URL is for endpoint verification.',
       webhookUrl,
       stripeDashboard: 'https://dashboard.stripe.com/webhooks',
     };
@@ -57,7 +54,10 @@ export class StripeWebhookController {
       'Called by Stripe when events occur (payment succeeded, subscription created, etc.). Do not call this from your app or Swagger. Requires Stripe-Signature header. Used to update user subscription plan after payment.',
   })
   @ApiResponse({ status: 200, description: 'Webhook event processed' })
-  @ApiResponse({ status: 400, description: 'Missing signature or invalid payload' })
+  @ApiResponse({
+    status: 400,
+    description: 'Missing signature or invalid payload',
+  })
   async handleWebhook(@Req() req: Request) {
     this.logger.log('[WEBHOOK] POST /stripe/webhook received');
 

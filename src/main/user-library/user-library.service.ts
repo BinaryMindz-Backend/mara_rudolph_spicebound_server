@@ -31,7 +31,7 @@ export class UserLibraryService {
   constructor(
     private prisma: PrismaService,
     private bookSlipService: BookSlipService,
-  ) { }
+  ) {}
 
   /**
    * Add book to user's library
@@ -73,7 +73,10 @@ export class UserLibraryService {
     });
 
     if (exists) {
-      if (exists.status === ReadingStatus.READ || exists.status === ReadingStatus.DNF) {
+      if (
+        exists.status === ReadingStatus.READ ||
+        exists.status === ReadingStatus.DNF
+      ) {
         throw new ConflictException({
           message: `Book is already in your ${exists.status} archive`,
           code: 'BOOK_IN_ARCHIVE',
@@ -118,7 +121,9 @@ export class UserLibraryService {
         if (alias.type === BookAliasType.ISBN_13) isbn13 = alias.value;
       }
 
-      const titleAuthQuery = encodeURIComponent(`${userBook.book.title} ${userBook.book.primaryAuthor || ''}`.trim());
+      const titleAuthQuery = encodeURIComponent(
+        `${userBook.book.title} ${userBook.book.primaryAuthor || ''}`.trim(),
+      );
 
       const amazonUrl =
         userBook.book.amazonUrl ||
@@ -199,9 +204,9 @@ export class UserLibraryService {
   async getUserLibrary(userId: string, status?: string): Promise<any[]> {
     // If status is TBR, we want to fetch both TBR and READING books
     const statusFilter = status
-      ? (status === ReadingStatus.TBR
+      ? status === ReadingStatus.TBR
         ? { status: { in: [ReadingStatus.TBR, ReadingStatus.READING] } }
-        : { status: status as ReadingStatus })
+        : { status: status as ReadingStatus }
       : {};
 
     const books = await this.prisma.userBook.findMany({
@@ -226,8 +231,16 @@ export class UserLibraryService {
     // Prioritize READING status for the TBR view
     if (status === ReadingStatus.TBR) {
       books.sort((a, b) => {
-        if (a.status === ReadingStatus.READING && b.status !== ReadingStatus.READING) return -1;
-        if (a.status !== ReadingStatus.READING && b.status === ReadingStatus.READING) return 1;
+        if (
+          a.status === ReadingStatus.READING &&
+          b.status !== ReadingStatus.READING
+        )
+          return -1;
+        if (
+          a.status !== ReadingStatus.READING &&
+          b.status === ReadingStatus.READING
+        )
+          return 1;
         return a.orderIndex - b.orderIndex;
       });
     }
@@ -269,19 +282,22 @@ export class UserLibraryService {
       throw new NotFoundException('Book not in your library');
     }
 
-    // If setting to reading, and it isn't already reading, bump it to the top 
+    // If setting to reading, and it isn't already reading, bump it to the top
     // by pushing everything else down 1 slot
-    if (dto.status === ReadingStatus.READING && userBook.status !== ReadingStatus.READING) {
+    if (
+      dto.status === ReadingStatus.READING &&
+      userBook.status !== ReadingStatus.READING
+    ) {
       // Shift all books in TBR/READING down
       await this.prisma.userBook.updateMany({
         where: {
           userId,
           status: { in: [ReadingStatus.TBR, ReadingStatus.READING] },
-          orderIndex: { lt: userBook.orderIndex }
+          orderIndex: { lt: userBook.orderIndex },
         },
         data: {
-          orderIndex: { increment: 1 }
-        }
+          orderIndex: { increment: 1 },
+        },
       });
 
       // Update to 0
@@ -292,7 +308,10 @@ export class UserLibraryService {
         include: { book: true },
       });
 
-      const slip = await this.bookSlipService.buildSlip(updatedUserBook.book, false);
+      const slip = await this.bookSlipService.buildSlip(
+        updatedUserBook.book,
+        false,
+      );
       return {
         ...slip,
         userLibrary: {
@@ -318,7 +337,10 @@ export class UserLibraryService {
       },
     });
 
-    const slip = await this.bookSlipService.buildSlip(updatedUserBook.book, false);
+    const slip = await this.bookSlipService.buildSlip(
+      updatedUserBook.book,
+      false,
+    );
     return {
       ...slip,
       userLibrary: {

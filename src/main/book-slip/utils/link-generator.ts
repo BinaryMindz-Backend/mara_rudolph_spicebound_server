@@ -49,9 +49,7 @@ export function generateAmazonLink(
   }
 
   // If no direct ID, use a precise search query
-  const searchTerms = isbn13
-    ? `${isbn13} ${title}`
-    : `${title} ${author}`;
+  const searchTerms = isbn13 ? `${isbn13} ${title}` : `${title} ${author}`;
 
   return `https://www.amazon.com/s?k=${encodeURIComponent(searchTerms)}`;
 }
@@ -59,7 +57,11 @@ export function generateAmazonLink(
 /**
  * Generate Bookshop link using ISBN or Title+Author fallback
  */
-export function generateBookshopLink(title: string, author: string, isbn13?: string): string | undefined {
+export function generateBookshopLink(
+  title: string,
+  author: string,
+  isbn13?: string,
+): string | undefined {
   if (isbn13) {
     return `https://bookshop.org/a/0/${isbn13}`;
   }
@@ -69,7 +71,11 @@ export function generateBookshopLink(title: string, author: string, isbn13?: str
 /**
  * Generate Goodreads link using ISBN or Title+Author fallback
  */
-export function generateGoodreadsLink(title: string, author: string, isbn13?: string): string | undefined {
+export function generateGoodreadsLink(
+  title: string,
+  author: string,
+  isbn13?: string,
+): string | undefined {
   if (isbn13) {
     return `https://www.goodreads.com/book/isbn/${isbn13}`;
   }
@@ -88,8 +94,10 @@ export function generateLinks(
   existingBookshopUrl?: string,
 ): BookLinks {
   return {
-    amazon: existingAmazonUrl || generateAmazonLink(title, author, asin, isbn13),
-    bookshop: existingBookshopUrl || generateBookshopLink(title, author, isbn13),
+    amazon:
+      existingAmazonUrl || generateAmazonLink(title, author, asin, isbn13),
+    bookshop:
+      existingBookshopUrl || generateBookshopLink(title, author, isbn13),
     goodreads: generateGoodreadsLink(title, author, isbn13),
   };
 }

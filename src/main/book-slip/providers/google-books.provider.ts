@@ -9,7 +9,7 @@ export class GoogleBooksProvider {
 
   private readonly EDITION_EXCLUSION_KEYWORDS = [
     'anniversary edition',
-    'collector\'s edition',
+    "collector's edition",
     'deluxe edition',
     'illustrated edition',
     'special edition',
@@ -44,19 +44,19 @@ export class GoogleBooksProvider {
   ];
 
   private readonly ABBREVIATIONS: Record<string, string> = {
-    'acotar': 'a court of thorns and roses',
-    'tog': 'throne of glass',
-    'cc': 'crescent city',
-    'fbaa': 'from blood and ash',
-    'asotte': 'a soul of ash and blood',
-    'hosab': 'house of sky and breath',
-    'hoscas': 'house of sky and breath', // common typo
-    'hoeab': 'house of earth and blood',
-    'hofas': 'house of flame and shadow',
-    'acomaf': 'a court of mist and fury',
-    'acowar': 'a court of wings and ruin',
-    'acofas': 'a court of frost and starlight',
-    'acosf': 'a court of silver flames',
+    acotar: 'a court of thorns and roses',
+    tog: 'throne of glass',
+    cc: 'crescent city',
+    fbaa: 'from blood and ash',
+    asotte: 'a soul of ash and blood',
+    hosab: 'house of sky and breath',
+    hoscas: 'house of sky and breath', // common typo
+    hoeab: 'house of earth and blood',
+    hofas: 'house of flame and shadow',
+    acomaf: 'a court of mist and fury',
+    acowar: 'a court of wings and ruin',
+    acofas: 'a court of frost and starlight',
+    acosf: 'a court of silver flames',
   };
 
   async search(query: string): Promise<ExternalBookData | undefined> {
@@ -129,8 +129,10 @@ export class GoogleBooksProvider {
       if (isSpecialEdition) return false;
 
       // Check for content exclusions (quizzes, guides, etc.)
-      const isJunkContent = this.CONTENT_EXCLUSION_KEYWORDS.some((keyword) =>
-        title.includes(keyword) || (title.length < 50 && description.includes(keyword)),
+      const isJunkContent = this.CONTENT_EXCLUSION_KEYWORDS.some(
+        (keyword) =>
+          title.includes(keyword) ||
+          (title.length < 50 && description.includes(keyword)),
       );
       if (isJunkContent) return false;
 
@@ -138,7 +140,9 @@ export class GoogleBooksProvider {
     });
 
     if (!filtered.length) {
-      this.logger.warn('All results filtered as special editions or non-book content');
+      this.logger.warn(
+        'All results filtered as special editions or non-book content',
+      );
       return undefined; // Do NOT fall back to junk
     }
 
@@ -154,8 +158,16 @@ export class GoogleBooksProvider {
 
     // Rank by scoring algorithm to find the absolute closest match
     filtered.sort((a, b) => {
-      const scoreA = this.calculateMatchScore(a, assumedQueryTitle, assumedAuthor);
-      const scoreB = this.calculateMatchScore(b, assumedQueryTitle, assumedAuthor);
+      const scoreA = this.calculateMatchScore(
+        a,
+        assumedQueryTitle,
+        assumedAuthor,
+      );
+      const scoreB = this.calculateMatchScore(
+        b,
+        assumedQueryTitle,
+        assumedAuthor,
+      );
 
       if (scoreA !== scoreB) {
         return scoreB - scoreA; // Descending order
@@ -176,7 +188,11 @@ export class GoogleBooksProvider {
   /**
    * Weights the relevance of an API result against the user's intent
    */
-  private calculateMatchScore(item: any, titleQuery: string, authorQuery: string): number {
+  private calculateMatchScore(
+    item: any,
+    titleQuery: string,
+    authorQuery: string,
+  ): number {
     let score = 0;
     const info = item.volumeInfo || {};
 
@@ -185,33 +201,44 @@ export class GoogleBooksProvider {
     const cleanTitleQuery = titleQuery.toLowerCase().trim();
 
     // Handle Abbreviations
-    const expandedQuery = this.ABBREVIATIONS[cleanTitleQuery] || cleanTitleQuery;
+    const expandedQuery =
+      this.ABBREVIATIONS[cleanTitleQuery] || cleanTitleQuery;
 
     if (itemTitle === expandedQuery) {
       score += 100; // Perfect exact title match
-    } else if (itemTitle.includes(expandedQuery) || expandedQuery.includes(itemTitle)) {
+    } else if (
+      itemTitle.includes(expandedQuery) ||
+      expandedQuery.includes(itemTitle)
+    ) {
       score += 40; // Partial match
     }
 
     // Penalize quiz-like title patterns even if they contain the keyword
     // e.g. "How well do you know A Court of Thorns and Roses (ACOTAR)?"
     if (itemTitle.includes('(') && itemTitle.includes(')')) {
-      const abbreviationInParens = normalizeText(itemTitle.substring(itemTitle.indexOf('(') + 1, itemTitle.indexOf(')')));
+      const abbreviationInParens = normalizeText(
+        itemTitle.substring(itemTitle.indexOf('(') + 1, itemTitle.indexOf(')')),
+      );
       if (this.ABBREVIATIONS[abbreviationInParens]) {
         score -= 60; // Significant penalty for titles like "Trivia for ACOTAR"
       }
     }
 
     // Boost if the original query was an abbreviation and matches exactly
-    if (this.ABBREVIATIONS[cleanTitleQuery] && itemTitle === this.ABBREVIATIONS[cleanTitleQuery]) {
+    if (
+      this.ABBREVIATIONS[cleanTitleQuery] &&
+      itemTitle === this.ABBREVIATIONS[cleanTitleQuery]
+    ) {
       score += 50; // Extra certainty for "acotar" -> "A Court of Thorns and Roses"
     }
 
     // 2. Author Match
     if (authorQuery && info.authors?.length) {
       const itemAuthors = info.authors.map((a: string) => a.toLowerCase());
-      const hasAuthorMatch = itemAuthors.some((a: string) =>
-        a.includes(authorQuery.toLowerCase()) || authorQuery.toLowerCase().includes(a)
+      const hasAuthorMatch = itemAuthors.some(
+        (a: string) =>
+          a.includes(authorQuery.toLowerCase()) ||
+          authorQuery.toLowerCase().includes(a),
       );
       if (hasAuthorMatch) {
         score += 80;
@@ -219,11 +246,19 @@ export class GoogleBooksProvider {
     }
 
     // 3. Genre/Category Match (Spicebound focuses on Romance/Fantasy logic)
-    const targetGenres = ['romance', 'fantasy', 'fiction', 'young adult', 'new adult', 'erotica', 'paranormal'];
+    const targetGenres = [
+      'romance',
+      'fantasy',
+      'fiction',
+      'young adult',
+      'new adult',
+      'erotica',
+      'paranormal',
+    ];
     if (info.categories?.length) {
       const itemCats = info.categories.map((c: string) => c.toLowerCase());
       const matchesGenre = itemCats.some((cat: string) =>
-        targetGenres.some(tg => cat.includes(tg))
+        targetGenres.some((tg) => cat.includes(tg)),
       );
       if (matchesGenre) {
         score += 20; // Genre affinity boost
@@ -232,8 +267,13 @@ export class GoogleBooksProvider {
 
     // 4. Series Search Prioritization (Prefer Book 1 over Box Sets)
     const lowerTitle = itemTitle.toLowerCase();
-    const isBoxSet = lowerTitle.includes('box set') || lowerTitle.includes('collection');
-    const isBookOne = lowerTitle.includes('book 1') || lowerTitle.includes('#1') || lowerTitle.includes('book one') || lowerTitle.includes('part 1');
+    const isBoxSet =
+      lowerTitle.includes('box set') || lowerTitle.includes('collection');
+    const isBookOne =
+      lowerTitle.includes('book 1') ||
+      lowerTitle.includes('#1') ||
+      lowerTitle.includes('book one') ||
+      lowerTitle.includes('part 1');
 
     if (isBoxSet) {
       score -= 100; // Heavy penalty for composite products

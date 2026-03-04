@@ -9,4 +9,4 @@ import { BookSlipModule } from '../book-slip/book-slip.module.js';
   controllers: [UserLibraryController],
   exports: [UserLibraryService],
 })
-export class UserLibraryModule { }
+export class UserLibraryModule {}

@@ -9,7 +9,7 @@ export class OpenLibraryProvider {
 
   private readonly EDITION_EXCLUSION_KEYWORDS = [
     'anniversary edition',
-    'collector\'s edition',
+    "collector's edition",
     'deluxe edition',
     'illustrated edition',
     'special edition',
@@ -44,19 +44,19 @@ export class OpenLibraryProvider {
   ];
 
   private readonly ABBREVIATIONS: Record<string, string> = {
-    'acotar': 'a court of thorns and roses',
-    'tog': 'throne of glass',
-    'cc': 'crescent city',
-    'fbaa': 'from blood and ash',
-    'asotte': 'a soul of ash and blood',
-    'hosab': 'house of sky and breath',
-    'hoscas': 'house of sky and breath',
-    'hoeab': 'house of earth and blood',
-    'hofas': 'house of flame and shadow',
-    'acomaf': 'a court of mist and fury',
-    'acowar': 'a court of wings and ruin',
-    'acofas': 'a court of frost and starlight',
-    'acosf': 'a court of silver flames',
+    acotar: 'a court of thorns and roses',
+    tog: 'throne of glass',
+    cc: 'crescent city',
+    fbaa: 'from blood and ash',
+    asotte: 'a soul of ash and blood',
+    hosab: 'house of sky and breath',
+    hoscas: 'house of sky and breath',
+    hoeab: 'house of earth and blood',
+    hofas: 'house of flame and shadow',
+    acomaf: 'a court of mist and fury',
+    acowar: 'a court of wings and ruin',
+    acofas: 'a court of frost and starlight',
+    acosf: 'a court of silver flames',
   };
 
   /**
@@ -94,10 +94,13 @@ export class OpenLibraryProvider {
       const items = data.docs;
       const filtered = items.filter((item: any) => {
         const title = (item.title || '').toLowerCase();
-        return !this.EDITION_EXCLUSION_KEYWORDS.some((keyword) =>
-          title.includes(keyword),
-        ) && !this.CONTENT_EXCLUSION_KEYWORDS.some((keyword) =>
-          title.includes(keyword),
+        return (
+          !this.EDITION_EXCLUSION_KEYWORDS.some((keyword) =>
+            title.includes(keyword),
+          ) &&
+          !this.CONTENT_EXCLUSION_KEYWORDS.some((keyword) =>
+            title.includes(keyword),
+          )
         );
       });
 
@@ -157,21 +160,31 @@ export class OpenLibraryProvider {
     // Handle Abbreviations (expanded query is passed in, so we check against it)
     if (itemTitle === cleanTitleQuery) {
       score += 100;
-    } else if (itemTitle.includes(cleanTitleQuery) || cleanTitleQuery.includes(itemTitle)) {
+    } else if (
+      itemTitle.includes(cleanTitleQuery) ||
+      cleanTitleQuery.includes(itemTitle)
+    ) {
       score += 40;
     }
 
     // Penalize quiz-like titles
     if (itemTitle.includes('(') && itemTitle.includes(')')) {
-      const abbreviationInParens = normalizeText(itemTitle.substring(itemTitle.indexOf('(') + 1, itemTitle.indexOf(')')));
+      const abbreviationInParens = normalizeText(
+        itemTitle.substring(itemTitle.indexOf('(') + 1, itemTitle.indexOf(')')),
+      );
       if (this.ABBREVIATIONS[abbreviationInParens]) {
         score -= 60;
       }
     }
 
     // Series Search Prioritization (Prefer Book 1 over Box Sets)
-    const isBoxSet = itemTitle.includes('box set') || itemTitle.includes('collection');
-    const isBookOne = itemTitle.includes('book 1') || itemTitle.includes('#1') || itemTitle.includes('book one') || itemTitle.includes('part 1');
+    const isBoxSet =
+      itemTitle.includes('box set') || itemTitle.includes('collection');
+    const isBookOne =
+      itemTitle.includes('book 1') ||
+      itemTitle.includes('#1') ||
+      itemTitle.includes('book one') ||
+      itemTitle.includes('part 1');
 
     if (isBoxSet) {
       score -= 100; // Heavy penalty for composite products

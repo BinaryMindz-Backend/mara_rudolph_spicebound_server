@@ -34,7 +34,7 @@ export interface EnrichedBookData {
 export class AiEnrichmentService {
   private readonly logger = new Logger(AiEnrichmentService.name);
 
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   async enrichBook(bookData: any): Promise<EnrichedBookData> {
     try {
@@ -129,13 +129,21 @@ export class AiEnrichmentService {
         // Strip out any markdown formatting that the LLM might have added
         let cleanContent = content.trim();
         if (cleanContent.startsWith('```json')) {
-          cleanContent = cleanContent.replace(/^```json/, '').replace(/```$/, '').trim();
+          cleanContent = cleanContent
+            .replace(/^```json/, '')
+            .replace(/```$/, '')
+            .trim();
         } else if (cleanContent.startsWith('```')) {
-          cleanContent = cleanContent.replace(/^```/, '').replace(/```$/, '').trim();
+          cleanContent = cleanContent
+            .replace(/^```/, '')
+            .replace(/```$/, '')
+            .trim();
         }
 
         enriched = JSON.parse(cleanContent);
-        this.logger.log(`✅ AI Enrichment parsed successfully: ${JSON.stringify(enriched)}`);
+        this.logger.log(
+          `✅ AI Enrichment parsed successfully: ${JSON.stringify(enriched)}`,
+        );
       } catch (parseError) {
         this.logger.error(
           `❌ Failed to parse AI response as JSON. Response was: ${content.substring(0, 200)}...`,
@@ -359,10 +367,7 @@ JSON ONLY - validate and return:
 
     // Validate ageLevel
     const validAgeLevels = ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'];
-    if (
-      data.ageLevel &&
-      validAgeLevels.includes(data.ageLevel.toUpperCase())
-    ) {
+    if (data.ageLevel && validAgeLevels.includes(data.ageLevel.toUpperCase())) {
       sanitized.ageLevel = data.ageLevel.toUpperCase();
     } else {
       sanitized.ageLevel = 'UNKNOWN';
@@ -443,7 +448,9 @@ JSON ONLY - validate and return:
         name: s.name || null,
         position: typeof s.position === 'number' ? s.position : 1,
         totalBooks: typeof s.totalBooks === 'number' ? s.totalBooks : null,
-        status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status) ? s.status : 'UNKNOWN',
+        status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status)
+          ? s.status
+          : 'UNKNOWN',
         isMultiArc: !!s.isMultiArc,
         arc: null,
       };
@@ -455,7 +462,9 @@ JSON ONLY - validate and return:
           name: a.name || null,
           position: typeof a.position === 'number' ? a.position : null,
           totalBooks: typeof a.totalBooks === 'number' ? a.totalBooks : null,
-          status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status) ? a.status : 'UNKNOWN',
+          status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status)
+            ? a.status
+            : 'UNKNOWN',
         };
       }
     }

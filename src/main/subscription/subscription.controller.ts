@@ -7,7 +7,12 @@ import {
   UseGuards,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { SubscriptionService } from './subscription.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { CurrentUser } from '../../common/decorators/user.decorators.js';
@@ -25,7 +30,11 @@ export class SubscriptionController {
     @CurrentUser() userId: string,
     @Body() dto: CreateCheckoutDto,
   ) {
-    return this.subscriptionService.createCheckoutSession(userId, dto.plan);
+    return this.subscriptionService.createCheckoutSession(
+      userId,
+      dto.plan,
+      dto.returnUrl,
+    );
   }
 
   /**
@@ -41,7 +50,11 @@ export class SubscriptionController {
     description:
       'Call after redirect from Stripe checkout (URL has session_id). Updates user plan from Stripe so it works without webhooks. Frontend: when /subscription?success=true&session_id=cs_xxx, call GET /subscriptions/sync?session_id=cs_xxx with Bearer token.',
   })
-  @ApiQuery({ name: 'session_id', required: true, description: 'Stripe checkout session ID (cs_...)' })
+  @ApiQuery({
+    name: 'session_id',
+    required: true,
+    description: 'Stripe checkout session ID (cs_...)',
+  })
   async syncSubscription(
     @CurrentUser() userId: string,
     @Query('session_id') sessionId: string,

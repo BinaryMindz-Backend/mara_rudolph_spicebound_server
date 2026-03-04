@@ -17,7 +17,11 @@ import {
 } from './utils/url-normalizer.js';
 import { mergeExternalData } from './utils/merge-book-data.js';
 import { calculateCombinedRating } from '../../common/utils/rating-utils.js';
-import { generateLinks, generateAmazonLink, generateBookshopLink } from './utils/link-generator.js';
+import {
+  generateLinks,
+  generateAmazonLink,
+  generateBookshopLink,
+} from './utils/link-generator.js';
 
 import { ExternalBookData, InputType } from './types/book-source.types.js';
 import {
@@ -25,7 +29,6 @@ import {
   AgeLevel,
   SeriesStatus,
 } from '../../../prisma/generated/prisma-client/enums.js';
-
 
 /**
  * Format chip strings for display (Title Case)
@@ -63,7 +66,7 @@ export class BookSlipService {
     private readonly openLibrary: OpenLibraryProvider,
     private readonly goodreads: GoodreadsProvider,
     private readonly aiEnrichment: AiEnrichmentService,
-  ) { }
+  ) {}
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
@@ -93,10 +96,17 @@ export class BookSlipService {
         const gpIndex = pathParts.indexOf('product');
 
         if (dpIndex > 0) {
-          searchQuery = decodeURIComponent(pathParts[dpIndex - 1].replace(/-/g, ' '));
-          this.logger.log(`🔹 Extracted search query from Amazon URL: ${searchQuery}`);
-        } else if (gpIndex > 1) { // /gp/product/
-          searchQuery = decodeURIComponent(pathParts[gpIndex - 2].replace(/-/g, ' '));
+          searchQuery = decodeURIComponent(
+            pathParts[dpIndex - 1].replace(/-/g, ' '),
+          );
+          this.logger.log(
+            `🔹 Extracted search query from Amazon URL: ${searchQuery}`,
+          );
+        } else if (gpIndex > 1) {
+          // /gp/product/
+          searchQuery = decodeURIComponent(
+            pathParts[gpIndex - 2].replace(/-/g, ' '),
+          );
         } else if (!asin) {
           // No slug and no ASIN, fallback to search query param
           searchQuery = urlObj.searchParams.get('k') || input;
@@ -110,23 +120,36 @@ export class BookSlipService {
       }
     } else if (inputType === InputType.GOODREADS_URL) {
       // For Goodreads, extract search query
-      const match = input.match(/goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/);
+      const match = input.match(
+        /goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/,
+      );
       if (match && match[1]) {
         searchQuery = decodeURIComponent(match[1].replace(/[-_]/g, ' '));
-        this.logger.log(`🔹 Extracted search query from Goodreads: ${searchQuery}`);
+        this.logger.log(
+          `🔹 Extracted search query from Goodreads: ${searchQuery}`,
+        );
       }
     } else if (inputType === InputType.GOOGLE_BOOKS_URL) {
       googleVolumeId = extractGoogleBooksVolumeId(input) ?? undefined;
-      this.logger.log(`🔹 Extracted Google Volume ID from URL: ${googleVolumeId}`);
+      this.logger.log(
+        `🔹 Extracted Google Volume ID from URL: ${googleVolumeId}`,
+      );
     } else if (inputType === InputType.OPEN_LIBRARY_URL) {
       openLibraryId = extractOpenLibraryId(input) ?? undefined;
-      this.logger.log(`🔹 Extracted Open Library ID from URL: ${openLibraryId}`);
+      this.logger.log(
+        `🔹 Extracted Open Library ID from URL: ${openLibraryId}`,
+      );
     }
 
     /**
      * 2️⃣ Check DB for existing book using extracted IDs (before any API calls!)
      */
-    let existingBook = await this.checkBookByExternalIds(asin, googleVolumeId, openLibraryId, isbn13);
+    let existingBook = await this.checkBookByExternalIds(
+      asin,
+      googleVolumeId,
+      openLibraryId,
+      isbn13,
+    );
 
     if (existingBook) {
       this.logger.log(
@@ -136,7 +159,9 @@ export class BookSlipService {
       return slip;
     }
 
-    this.logger.log(`🔹 No book found by external IDs, proceeding with API calls`);
+    this.logger.log(
+      `🔹 No book found by external IDs, proceeding with API calls`,
+    );
 
     /**
      * 3️⃣ Fetch external metadata from APIs
@@ -145,7 +170,8 @@ export class BookSlipService {
       googleData = await this.googleBooks.fetchByVolumeId(googleVolumeId);
       this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId:', googleData);
     } else if (openLibraryId) {
-      openLibraryData = (await this.openLibrary.fetchById(openLibraryId)) ?? undefined;
+      openLibraryData =
+        (await this.openLibrary.fetchById(openLibraryId)) ?? undefined;
       this.logger.log('🔹 OpenLibraryProvider.fetchById:', openLibraryData);
     } else {
       // Parallelize API calls for better performance
@@ -179,12 +205,23 @@ export class BookSlipService {
      * 4b️⃣ Supplement terrible API ratings with scraped Goodreads ratings if needed
      */
     if ((merged.externalRatingCount || 0) < 50) {
-      this.logger.log(`🔹 External rating count is low (${merged.externalRatingCount}). Scraping Goodreads for realistic ratings...`);
-      const goodreadsRatings = await this.goodreads.getRatings(merged.title, merged.author);
-      if (goodreadsRatings && goodreadsRatings.averageRating && goodreadsRatings.ratingsCount) {
+      this.logger.log(
+        `🔹 External rating count is low (${merged.externalRatingCount}). Scraping Goodreads for realistic ratings...`,
+      );
+      const goodreadsRatings = await this.goodreads.getRatings(
+        merged.title,
+        merged.author,
+      );
+      if (
+        goodreadsRatings &&
+        goodreadsRatings.averageRating &&
+        goodreadsRatings.ratingsCount
+      ) {
         merged.externalAvgRating = goodreadsRatings.averageRating;
         merged.externalRatingCount = goodreadsRatings.ratingsCount;
-        this.logger.log(`✅ Replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`);
+        this.logger.log(
+          `✅ Replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`,
+        );
       }
     }
 
@@ -209,7 +246,9 @@ export class BookSlipService {
     }
 
     if (existingBook) {
-      this.logger.log(`✅ Found existing book by title/author: ${existingBook.id} (no AI call)`);
+      this.logger.log(
+        `✅ Found existing book by title/author: ${existingBook.id} (no AI call)`,
+      );
       // Update aliases if we discovered new IDs
       await this.updateAliasesIfNeeded(existingBook.id, merged);
       const slip = await this.buildSlip(existingBook, false);
@@ -219,7 +258,9 @@ export class BookSlipService {
     /**
      * 6️⃣ No existing record found - Do AI Enrichment for the first time
      */
-    this.logger.log(`🔹 Book not in DB, performing AI enrichment (this will be cached)`);
+    this.logger.log(
+      `🔹 Book not in DB, performing AI enrichment (this will be cached)`,
+    );
 
     let enriched: any;
     try {
@@ -230,15 +271,24 @@ export class BookSlipService {
       });
     } catch (error: any) {
       if (error.message === 'NON_BOOK_CONTENT') {
-        this.logger.warn(`Rejecting search result as non-book content: ${merged.title}`);
-        throw new Error('That looks like a quiz or study guide, not a book! Try searching for the full title.');
+        this.logger.warn(
+          `Rejecting search result as non-book content: ${merged.title}`,
+        );
+        throw new Error(
+          'That looks like a quiz or study guide, not a book! Try searching for the full title.',
+        );
       }
       throw error;
     }
 
-    this.logger.log('🔹 AI Enrichment result:', JSON.stringify(enriched, null, 2));
+    this.logger.log(
+      '🔹 AI Enrichment result:',
+      JSON.stringify(enriched, null, 2),
+    );
     if (enriched.series) {
-      this.logger.log(`🔹 AI identified series: ${enriched.series.name}, isMultiArc: ${enriched.series.isMultiArc}`);
+      this.logger.log(
+        `🔹 AI identified series: ${enriched.series.name}, isMultiArc: ${enriched.series.isMultiArc}`,
+      );
     } else {
       this.logger.warn('🔹 AI returned NO series info');
     }
@@ -285,14 +335,8 @@ export class BookSlipService {
 
         // Series information - prefer AI enrichment, then external providers
         seriesName: enriched.series?.name ?? merged.seriesName ?? null,
-        seriesIndex:
-          enriched.series?.position ??
-          merged.seriesIndex ??
-          null,
-        seriesTotal:
-          enriched.series?.totalBooks ??
-          merged.seriesTotal ??
-          null,
+        seriesIndex: enriched.series?.position ?? merged.seriesIndex ?? null,
+        seriesTotal: enriched.series?.totalBooks ?? merged.seriesTotal ?? null,
         seriesStatus:
           (enriched.series?.status as SeriesStatus) ??
           (merged.seriesStatus as SeriesStatus) ??
@@ -304,7 +348,8 @@ export class BookSlipService {
         arcIndex: enriched.series?.arc?.arcNumber ?? null,
         arcTotal: enriched.series?.arc?.totalBooks ?? null,
         arcStatus:
-          (enriched.series?.arc?.status as SeriesStatus) ?? SeriesStatus.UNKNOWN,
+          (enriched.series?.arc?.status as SeriesStatus) ??
+          SeriesStatus.UNKNOWN,
       },
     });
 
@@ -380,7 +425,9 @@ export class BookSlipService {
       });
 
       if (byGoogleId) {
-        this.logger.log(`✅ Found book by Google Volume ID: ${byGoogleId.bookId}`);
+        this.logger.log(
+          `✅ Found book by Google Volume ID: ${byGoogleId.bookId}`,
+        );
         return byGoogleId.book;
       }
     }
@@ -398,7 +445,9 @@ export class BookSlipService {
       });
 
       if (byOpenLibId) {
-        this.logger.log(`✅ Found book by Open Library ID: ${byOpenLibId.bookId}`);
+        this.logger.log(
+          `✅ Found book by Open Library ID: ${byOpenLibId.bookId}`,
+        );
         return byOpenLibId.book;
       }
     }
@@ -458,7 +507,9 @@ export class BookSlipService {
         skipDuplicates: true,
       });
 
-      this.logger.log(`🔹 Created ${aliases.length} aliases for book ${bookId}`);
+      this.logger.log(
+        `🔹 Created ${aliases.length} aliases for book ${bookId}`,
+      );
     }
   }
 
@@ -509,7 +560,9 @@ export class BookSlipService {
 
     if (
       merged.openLibraryId &&
-      !existingValues.has(`${BookAliasType.OPEN_LIBRARY_ID}:${merged.openLibraryId}`)
+      !existingValues.has(
+        `${BookAliasType.OPEN_LIBRARY_ID}:${merged.openLibraryId}`,
+      )
     ) {
       newAliases.push({
         bookId,
@@ -587,7 +640,7 @@ export class BookSlipService {
       book.externalAvgRating,
       book.externalRatingCount,
       platformRatings._avg.value,
-      platformRatings._count
+      platformRatings._count,
     );
 
     const ratingsInfo = {
@@ -646,8 +699,8 @@ export class BookSlipService {
     }
 
     // Special verification for "The Serpent and the Wings of Night"
-    // If it's a known multi-arc world like Crowns of Nyaxia but AI missed it, 
-    // we could add hardcoded logic, but for now we rely on the prompt which 
+    // If it's a known multi-arc world like Crowns of Nyaxia but AI missed it,
+    // we could add hardcoded logic, but for now we rely on the prompt which
     // explicitly mentions this book as an example.
 
     return {
