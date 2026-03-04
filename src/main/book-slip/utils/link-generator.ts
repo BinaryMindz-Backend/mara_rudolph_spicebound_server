@@ -27,7 +27,7 @@ function isbn13To10(isbn13: string): string | undefined {
 }
 
 /**
- * Generate Amazon link using ASIN or ISBN or Title+Author fallback
+ * Generate Amazon link. Direct /dp/ when we have ASIN or ISBN-10; otherwise search.
  */
 export function generateAmazonLink(
   title: string,
@@ -35,27 +35,19 @@ export function generateAmazonLink(
   asin?: string,
   isbn13?: string,
 ): string | undefined {
-  // Amazon prefers direct routing for ASINs/ISBN-10s.
-  if (asin) {
-    return `https://www.amazon.com/dp/${asin}`;
+  if (asin && asin.trim().length >= 10) {
+    return `https://www.amazon.com/dp/${asin.trim()}`;
   }
-
-  // Fallback to converting ISBN-13 to 10 for direct routing
-  if (isbn13) {
-    const isbn10 = isbn13To10(isbn13);
-    if (isbn10) {
-      return `https://www.amazon.com/dp/${isbn10}`;
-    }
+  const isbn10 = isbn13 ? isbn13To10(isbn13) : undefined;
+  if (isbn10) {
+    return `https://www.amazon.com/dp/${isbn10}`;
   }
-
-  // If no direct ID, use a precise search query
-  const searchTerms = isbn13 ? `${isbn13} ${title}` : `${title} ${author}`;
-
+  const searchTerms = isbn13 ? `${isbn13.replace(/[-\s]/g, '')} ${title}` : `${title} ${author}`;
   return `https://www.amazon.com/s?k=${encodeURIComponent(searchTerms)}`;
 }
 
 /**
- * Generate Bookshop link using ISBN or Title+Author fallback
+ * Generate Bookshop link. /a/0/ISBN is unreliable; use search by ISBN or title+author so the link opens a working page.
  */
 export function generateBookshopLink(
   title: string,
@@ -63,27 +55,30 @@ export function generateBookshopLink(
   isbn13?: string,
 ): string | undefined {
   if (isbn13) {
-    return `https://bookshop.org/a/0/${isbn13}`;
+    return `https://bookshop.org/search?q=${encodeURIComponent(isbn13)}`;
   }
   return `https://bookshop.org/search?q=${encodeURIComponent(`${title} ${author}`)}`;
 }
 
 /**
- * Generate Goodreads link using ISBN or Title+Author fallback
+ * Generate Goodreads link. Only /book/show/ID goes to the book page; /book/isbn/ returns 404.
+ * Use direct show URL when we have Goodreads book ID, otherwise search.
  */
 export function generateGoodreadsLink(
   title: string,
   author: string,
   isbn13?: string,
+  goodreadsBookId?: string,
 ): string | undefined {
-  if (isbn13) {
-    return `https://www.goodreads.com/book/isbn/${isbn13}`;
+  if (goodreadsBookId) {
+    return `https://www.goodreads.com/book/show/${goodreadsBookId}`;
   }
   return `https://www.goodreads.com/search?q=${encodeURIComponent(`${title} ${author}`)}`;
 }
 
 /**
- * Generate all available purchase/reference links
+ * Generate all available purchase/reference links (direct to book when IDs available)
+ * Prefers direct /dp/ASIN and /book/show/ID so links always open the exact book page.
  */
 export function generateLinks(
   title: string,
@@ -92,12 +87,11 @@ export function generateLinks(
   isbn13?: string,
   existingAmazonUrl?: string,
   existingBookshopUrl?: string,
+  goodreadsBookId?: string,
 ): BookLinks {
   return {
-    amazon:
-      existingAmazonUrl || generateAmazonLink(title, author, asin, isbn13),
-    bookshop:
-      existingBookshopUrl || generateBookshopLink(title, author, isbn13),
-    goodreads: generateGoodreadsLink(title, author, isbn13),
+    amazon: generateAmazonLink(title, author, asin, isbn13) || existingAmazonUrl,
+    bookshop: existingBookshopUrl || generateBookshopLink(title, author, isbn13),
+    goodreads: generateGoodreadsLink(title, author, isbn13, goodreadsBookId),
   };
 }

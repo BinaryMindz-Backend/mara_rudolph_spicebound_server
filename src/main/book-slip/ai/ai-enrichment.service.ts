@@ -7,6 +7,8 @@ import {
 import { isValidSpiceRating } from '../../../common/constants/spice-rating.js';
 
 export interface EnrichedBookData {
+  title?: string;
+  author?: string;
   ageLevel?: string;
   spiceRating?: number;
   tropes?: string[];
@@ -230,8 +232,20 @@ SERIES CLASSIFICATION RULES:
   }
 
   private buildUserPrompt(bookData: any): string {
-    return `Analyze this book using both the provided metadata AND your pre-trained knowledge of the book. Return ONLY valid JSON.
+    const hasAmazonContext = bookData.amazonAsin && bookData.titleFromUrl;
+    const amazonBlock = hasAmazonContext
+      ? `
+**AMAZON LINK CONTEXT (PRIORITY):** The user looked up this book by pasting an Amazon product URL.
+- Amazon ASIN: ${bookData.amazonAsin}
+- Title/slug from the URL: "${bookData.titleFromUrl}"
 
+The Title/Author/Description below may be from a DIFFERENT book (e.g. a collection, box set, or wrong search result). You MUST identify and return metadata for the **exact book at this Amazon ASIN**—the one the user's link points to. Include "title" and "author" in your JSON with the correct book's title and author.
+
+`
+      : '';
+
+    return `Analyze this book using both the provided metadata AND your pre-trained knowledge of the book. Return ONLY valid JSON.
+${amazonBlock}
 BOOK: Title="${bookData.title || 'unknown'}" | Author="${bookData.author || 'unknown'}" | Description="${bookData.description || 'none'}"
 
 SPICE RATING (0-6):
@@ -339,6 +353,8 @@ JSON Structure & Examples:
 
 JSON ONLY - validate and return:
 {
+  "title": "Exact book title (REQUIRED when Amazon ASIN/titleFromUrl were provided above)",
+  "author": "Primary author (REQUIRED when Amazon ASIN/titleFromUrl were provided above)",
   "ageLevel": "UNKNOWN|CHILDREN|YA|NA|ADULT|EROTICA",
   "spiceRating": 0-6,
   "tropes": ["approved", "tropes"],
@@ -364,6 +380,13 @@ JSON ONLY - validate and return:
       description: data.description || '',
       amazonAsin: data.amazonAsin || undefined,
     };
+
+    if (typeof data.title === 'string' && data.title.trim()) {
+      sanitized.title = data.title.trim();
+    }
+    if (typeof data.author === 'string' && data.author.trim()) {
+      sanitized.author = data.author.trim();
+    }
 
     // Validate ageLevel
     const validAgeLevels = ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'];

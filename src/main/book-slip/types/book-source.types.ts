@@ -17,6 +17,7 @@ export interface ExternalBookData {
   googleVolumeId?: string;
   openLibraryId?: string;
   asin?: string;
+  goodreadsId?: string;
 
   externalAvgRating?: number;
   externalRatingCount?: number;

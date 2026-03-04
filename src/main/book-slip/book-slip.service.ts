@@ -76,10 +76,12 @@ export class BookSlipService {
 
     let googleData: ExternalBookData | undefined;
     let openLibraryData: ExternalBookData | undefined;
+    let goodreadsData: ExternalBookData | undefined;
     let asin: string | undefined;
     let isbn13: string | undefined;
     let googleVolumeId: string | undefined;
     let openLibraryId: string | undefined;
+    let goodreadsId: string | undefined;
     let searchQuery = input;
 
     /**
@@ -108,15 +110,15 @@ export class BookSlipService {
             pathParts[gpIndex - 2].replace(/-/g, ' '),
           );
         } else if (!asin) {
-          // No slug and no ASIN, fallback to search query param
           searchQuery = urlObj.searchParams.get('k') || input;
         } else {
-          // If we have an ASIN but absolutely no slug (e.g. amazon.com/dp/B00UZH95RA)
-          // Google Books won't find the ASIN. We'll leave it as input, and if DB fails, it'll pass to API.
-          // Note: If the DB has the ASIN, this won't matter.
+          // ASIN but no slug (e.g. amazon.com/dp/B00UZH95RA): use ASIN as search query so APIs can match
+          searchQuery = asin;
+          this.logger.log(`🔹 Using ASIN as search query: ${searchQuery}`);
         }
       } catch (e) {
-        // Fallback
+        // Fallback: if we have ASIN, use it so we don't search with raw URL
+        if (asin) searchQuery = asin;
       }
     } else if (inputType === InputType.GOODREADS_URL) {
       // For Goodreads, extract search query
@@ -128,7 +130,14 @@ export class BookSlipService {
         this.logger.log(
           `🔹 Extracted search query from Goodreads: ${searchQuery}`,
         );
+      goodreadsId = extractGoodreadsId(input) ?? undefined;
+      this.logger.log(`🔹 Extracted Goodreads book ID: ${goodreadsId}`);
+      const slugMatch = input.match(/goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/);
+      if (slugMatch && slugMatch[1]) {
+        searchQuery = decodeURIComponent(slugMatch[1].replace(/[-_]/g, ' '));
+        this.logger.log(`🔹 Extracted search query from Goodreads URL slug: ${searchQuery}`);
       }
+      // If no slug (e.g. /book/show/9144), searchQuery stays as full URL; we'll fetch by ID below
     } else if (inputType === InputType.GOOGLE_BOOKS_URL) {
       googleVolumeId = extractGoogleBooksVolumeId(input) ?? undefined;
       this.logger.log(
@@ -144,12 +153,22 @@ export class BookSlipService {
     /**
      * 2️⃣ Check DB for existing book using extracted IDs (before any API calls!)
      */
-    let existingBook = await this.checkBookByExternalIds(
-      asin,
-      googleVolumeId,
-      openLibraryId,
-      isbn13,
-    );
+    let existingBook = await this.checkBookByExternalIds(asin, googleVolumeId, openLibraryId, isbn13, goodreadsId);
+
+    // When we found by ASIN from an Amazon URL, the cached book might be wrong (search had returned a different book).
+    // If the URL slug doesn't match the stored title, re-enrich with Amazon context to get the correct book.
+    if (existingBook && inputType === InputType.AMAZON_URL && asin && searchQuery !== asin) {
+      const slugNorm = normalizeText(searchQuery);
+      const titleNorm = normalizeText(existingBook.title ?? '');
+      const slugWords = slugNorm.split(/\s+/).filter(Boolean).slice(0, 4);
+      const titleContainsSlug = slugWords.length > 0 && slugWords.every((w) => titleNorm.includes(w));
+      if (!titleContainsSlug) {
+        this.logger.log(
+          `🔹 Cached book title "${existingBook.title}" doesn't match Amazon URL slug "${searchQuery}" – re-enriching with Amazon context`,
+        );
+        existingBook = null;
+      }
+    }
 
     if (existingBook) {
       this.logger.log(
@@ -166,6 +185,21 @@ export class BookSlipService {
     /**
      * 3️⃣ Fetch external metadata from APIs
      */
+    // When user pasted Goodreads URL with no slug, fetch book by ID to get title/author for search
+    if (goodreadsId && (inputType === InputType.GOODREADS_URL) && !existingBook) {
+      const grBook = await this.goodreads.fetchByBookId(goodreadsId);
+      if (grBook?.title || grBook?.author) {
+        goodreadsData = {
+          title: grBook.title,
+          author: grBook.author,
+          description: grBook.description,
+          goodreadsId,
+        };
+        searchQuery = [grBook.title, grBook.author].filter(Boolean).join(' ');
+        this.logger.log(`🔹 Using Goodreads-resolved search query: ${searchQuery}`);
+      }
+    }
+
     if (googleVolumeId) {
       googleData = await this.googleBooks.fetchByVolumeId(googleVolumeId);
       this.logger.log('🔹 GoogleBooksProvider.fetchByVolumeId:', googleData);
@@ -174,23 +208,24 @@ export class BookSlipService {
         (await this.openLibrary.fetchById(openLibraryId)) ?? undefined;
       this.logger.log('🔹 OpenLibraryProvider.fetchById:', openLibraryData);
     } else {
-      // Parallelize API calls for better performance
-      const [googleResult, openLibraryResult] = await Promise.all([
-        this.googleBooks.search(searchQuery).catch(() => undefined),
-        this.openLibrary.search(searchQuery).catch(() => undefined),
-      ]);
-
-      googleData = googleResult || undefined;
-      openLibraryData = openLibraryResult || undefined;
-
-      this.logger.log('🔹 GoogleBooksProvider.search:', googleData);
-      this.logger.log('🔹 OpenLibraryProvider.search:', openLibraryData);
+      // Parallelize API calls for better performance (skip if searchQuery is still a URL)
+      const isLikelyUrl = searchQuery.startsWith('http://') || searchQuery.startsWith('https://');
+      if (!isLikelyUrl) {
+        const [googleResult, openLibraryResult] = await Promise.all([
+          this.googleBooks.search(searchQuery).catch(() => undefined),
+          this.openLibrary.search(searchQuery).catch(() => undefined),
+        ]);
+        googleData = googleResult || undefined;
+        openLibraryData = openLibraryResult || undefined;
+        this.logger.log('🔹 GoogleBooksProvider.search:', googleData);
+        this.logger.log('🔹 OpenLibraryProvider.search:', openLibraryData);
+      }
     }
 
     /**
-     * 4️⃣ Merge sources
+     * 4️⃣ Merge sources (Goodreads data from URL takes precedence for title/author)
      */
-    const merged = mergeExternalData(googleData, openLibraryData);
+    const merged = mergeExternalData(googleData, openLibraryData, goodreadsData);
     this.logger.log('🔹 Merged data:', merged);
 
     if (!merged.title || !merged.author) {
@@ -246,11 +281,9 @@ export class BookSlipService {
     }
 
     if (existingBook) {
-      this.logger.log(
-        `✅ Found existing book by title/author: ${existingBook.id} (no AI call)`,
-      );
-      // Update aliases if we discovered new IDs
-      await this.updateAliasesIfNeeded(existingBook.id, merged);
+      this.logger.log(`✅ Found existing book by title/author: ${existingBook.id} (no AI call)`);
+      // Update aliases if we discovered new IDs (e.g. from pasted Goodreads/Amazon URL)
+      await this.updateAliasesIfNeeded(existingBook.id, merged, goodreadsId);
       const slip = await this.buildSlip(existingBook, false);
       return slip;
     }
@@ -264,11 +297,17 @@ export class BookSlipService {
 
     let enriched: any;
     try {
-      enriched = await this.aiEnrichment.enrichBook({
+      const enrichPayload: Record<string, unknown> = {
         title: merged.title,
         author: merged.author,
         description: merged.description,
-      });
+      };
+      // When user pasted an Amazon URL, pass ASIN + slug so AI returns the correct book (search may have returned a different one)
+      if (inputType === InputType.AMAZON_URL && asin) {
+        enrichPayload.amazonAsin = asin;
+        enrichPayload.titleFromUrl = searchQuery;
+      }
+      enriched = await this.aiEnrichment.enrichBook(enrichPayload);
     } catch (error: any) {
       if (error.message === 'NON_BOOK_CONTENT') {
         this.logger.warn(
@@ -294,27 +333,85 @@ export class BookSlipService {
     }
 
     /**
-     * 7️⃣ Create Book with ALL enriched data in single transaction
+     * 7️⃣ Create or update book with enriched data
+     * When we had an Amazon URL, prefer AI-returned title/author (they match the link; search may have been wrong)
      */
+    const resolvedTitle = enriched.title ?? merged.title;
+    const resolvedAuthor = enriched.author ?? merged.author;
+    const resolvedNormalizedTitle = normalizeText(resolvedTitle);
+    const resolvedNormalizedAuthor = normalizeText(resolvedAuthor);
+
+    // If we had an Amazon URL and previously found a book by ASIN but rejected it (title mismatch),
+    // that book still exists. Update it with corrected title/author instead of creating a duplicate.
+    if (inputType === InputType.AMAZON_URL && asin) {
+      const existingByAsin = await this.prisma.bookAlias.findUnique({
+        where: {
+          type_value: { type: BookAliasType.ASIN, value: asin },
+        },
+        include: { book: true },
+      });
+      if (existingByAsin) {
+        this.logger.log(`🔹 Updating existing book ${existingByAsin.bookId} with corrected title/author from Amazon URL`);
+        const amazonUrl = generateAmazonLink(
+          resolvedTitle,
+          resolvedAuthor || 'Unknown Author',
+          asin,
+          merged.isbn13,
+        );
+        const bookshopUrl = generateBookshopLink(resolvedTitle, resolvedAuthor || 'Unknown Author', merged.isbn13);
+        await this.prisma.book.update({
+          where: { id: existingByAsin.bookId },
+          data: {
+            title: resolvedTitle,
+            normalizedTitle: resolvedNormalizedTitle,
+            primaryAuthor: resolvedAuthor,
+            normalizedAuthor: resolvedNormalizedAuthor,
+            shortDescription: enriched.description || merged.description || undefined,
+            ageLevel: (enriched.ageLevel as AgeLevel) || undefined,
+            spiceRating: enriched.spiceRating ?? undefined,
+            tropes: enriched.tropes ?? undefined,
+            creatures: enriched.creatures ?? undefined,
+            subgenres: enriched.subgenres ?? undefined,
+            amazonUrl: amazonUrl ?? undefined,
+            bookshopUrl: bookshopUrl ?? undefined,
+            seriesName: enriched.series?.name ?? undefined,
+            seriesIndex: enriched.series?.position ?? undefined,
+            seriesTotal: enriched.series?.totalBooks ?? undefined,
+            seriesStatus: (enriched.series?.status as SeriesStatus) ?? undefined,
+            isMultiArc: enriched.series?.isMultiArc ?? undefined,
+            arcName: enriched.series?.arc?.name ?? undefined,
+            arcIndex: enriched.series?.arc?.arcNumber ?? undefined,
+            arcTotal: enriched.series?.arc?.totalBooks ?? undefined,
+            arcStatus: (enriched.series?.arc?.status as SeriesStatus) ?? undefined,
+          },
+        });
+        const updatedBook = await this.prisma.book.findUniqueOrThrow({
+          where: { id: existingByAsin.bookId },
+        });
+        const slip = await this.buildSlip(updatedBook, false, asin, merged.isbn13);
+        return slip;
+      }
+    }
+
     const amazonUrl = generateAmazonLink(
-      merged.title,
-      merged.author || 'Unknown Author',
+      resolvedTitle,
+      resolvedAuthor || 'Unknown Author',
       enriched.amazonAsin || asin || merged.asin,
       merged.isbn13,
     );
     const bookshopUrl = generateBookshopLink(
-      merged.title,
-      merged.author || 'Unknown Author',
+      resolvedTitle,
+      resolvedAuthor || 'Unknown Author',
       merged.isbn13,
     );
 
     const book = await this.prisma.book.create({
       data: {
-        // Basic info
-        title: merged.title,
-        normalizedTitle,
-        primaryAuthor: merged.author,
-        normalizedAuthor,
+        // Basic info (use AI-corrected title/author when from Amazon URL)
+        title: resolvedTitle,
+        normalizedTitle: resolvedNormalizedTitle,
+        primaryAuthor: resolvedAuthor,
+        normalizedAuthor: resolvedNormalizedAuthor,
         shortDescription: enriched.description || merged.description || null,
         firstPublishedYear: merged.publishedYear ?? null,
 
@@ -360,14 +457,14 @@ export class BookSlipService {
     /**
      * 8️⃣ Create aliases for external IDs (enable future lookups by any ID)
      */
-    await this.createAliases(book.id, merged, asin);
+    await this.createAliases(book.id, merged, asin, goodreadsId);
 
     const slip = await this.buildSlip(book, true, asin, merged.isbn13);
     return slip;
   }
 
   /**
-   * Check if book exists by any external ID (ISBN, Google Volume ID, Open Library ID, ASIN)
+   * Check if book exists by any external ID (ISBN, ASIN, Google Volume ID, Open Library ID, Goodreads ID)
    * This is the FIRST check - happens before API calls
    */
   private async checkBookByExternalIds(
@@ -375,6 +472,7 @@ export class BookSlipService {
     googleVolumeId: string | undefined,
     openLibraryId: string | undefined,
     isbn13: string | undefined,
+    goodreadsIdParam?: string,
   ): Promise<any | null> {
     // Priority 1: Check by ISBN-13 (most stable)
     if (isbn13) {
@@ -452,6 +550,24 @@ export class BookSlipService {
       }
     }
 
+    // Priority 5: Check by Goodreads book ID
+    if (goodreadsIdParam) {
+      const byGoodreadsId = await this.prisma.bookAlias.findUnique({
+        where: {
+          type_value: {
+            type: BookAliasType.GOODREADS_ID,
+            value: goodreadsIdParam,
+          },
+        },
+        include: { book: true },
+      });
+
+      if (byGoodreadsId) {
+        this.logger.log(`✅ Found book by Goodreads ID: ${byGoodreadsId.bookId}`);
+        return byGoodreadsId.book;
+      }
+    }
+
     return null;
   }
 
@@ -462,6 +578,7 @@ export class BookSlipService {
     bookId: string,
     merged: ExternalBookData,
     asin: string | undefined,
+    goodreadsIdAlias?: string,
   ): Promise<void> {
     const aliases: {
       bookId: string;
@@ -501,6 +618,15 @@ export class BookSlipService {
       });
     }
 
+    const grId = merged.goodreadsId ?? goodreadsIdAlias;
+    if (grId) {
+      aliases.push({
+        bookId,
+        type: BookAliasType.GOODREADS_ID,
+        value: grId,
+      });
+    }
+
     if (aliases.length > 0) {
       await this.prisma.bookAlias.createMany({
         data: aliases,
@@ -519,6 +645,7 @@ export class BookSlipService {
   private async updateAliasesIfNeeded(
     bookId: string,
     merged: ExternalBookData,
+    goodreadsIdParam?: string,
   ): Promise<void> {
     const existingAliases = await this.prisma.bookAlias.findMany({
       where: { bookId },
@@ -582,6 +709,18 @@ export class BookSlipService {
       });
     }
 
+    const grId = merged.goodreadsId ?? goodreadsIdParam;
+    if (
+      grId &&
+      !existingValues.has(`${BookAliasType.GOODREADS_ID}:${grId}`)
+    ) {
+      newAliases.push({
+        bookId,
+        type: BookAliasType.GOODREADS_ID,
+        value: grId,
+      });
+    }
+
     if (newAliases.length > 0) {
       await this.prisma.bookAlias.createMany({
         data: newAliases,
@@ -600,26 +739,28 @@ export class BookSlipService {
     asin?: string,
     isbn13?: string,
   ): Promise<BookSlipResponse> {
-    // Fetch ISBN and ASIN from aliases if not provided
+    // Fetch ISBN, ASIN, and Goodreads ID from aliases if not provided (for direct links)
     let finalAsin = asin;
     let finalIsbn13 = isbn13;
+    let finalGoodreadsId: string | undefined;
 
-    if (!finalAsin || !finalIsbn13) {
-      const aliases = await this.prisma.bookAlias.findMany({
-        where: { bookId: book.id },
-      });
+    const aliases = await this.prisma.bookAlias.findMany({
+      where: { bookId: book.id },
+    });
 
-      for (const alias of aliases) {
-        if (alias.type === BookAliasType.ASIN && !finalAsin) {
-          finalAsin = alias.value;
-        }
-        if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) {
-          finalIsbn13 = alias.value;
-        }
+    for (const alias of aliases) {
+      if (alias.type === BookAliasType.ASIN && !finalAsin) {
+        finalAsin = alias.value;
+      }
+      if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) {
+        finalIsbn13 = alias.value;
+      }
+      if (alias.type === BookAliasType.GOODREADS_ID) {
+        finalGoodreadsId = alias.value;
       }
     }
 
-    // Generate links using ISBN for direct routing, falling back to Title+Author if none
+    // Generate links: direct to book when we have ASIN (Amazon), Goodreads ID or ISBN (Goodreads)
     const links = generateLinks(
       book.title,
       book.primaryAuthor || 'Unknown Author',
@@ -627,6 +768,7 @@ export class BookSlipService {
       finalIsbn13,
       book.amazonUrl,
       book.bookshopUrl,
+      finalGoodreadsId,
     );
 
     // Calculate platform user ratings (Spicebound ratings)
