@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
   ForbiddenException,
@@ -72,6 +73,13 @@ export class UserLibraryService {
     });
 
     if (exists) {
+      if (exists.status === ReadingStatus.READ || exists.status === ReadingStatus.DNF) {
+        throw new ConflictException({
+          message: `Book is already in your ${exists.status} archive`,
+          code: 'BOOK_IN_ARCHIVE',
+          currentStatus: exists.status,
+        });
+      }
       throw new BadRequestException('Book already in library');
     }
 
