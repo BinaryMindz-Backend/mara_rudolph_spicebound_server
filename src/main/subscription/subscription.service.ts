@@ -72,7 +72,17 @@ export class SubscriptionService {
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${baseUrl}${separator}success=true&session_id={CHECKOUT_SESSION_ID}&redirect=${encodedRedirect}`,
       cancel_url: `${baseUrl}${separator}canceled=true&redirect=${encodedRedirect}`,
-      metadata: { userId },
+      metadata: {
+        userId,
+        planType: plan,
+        billingInterval: plan === 'yearly' ? 'year' : 'month',
+      },
+      subscription_data: {
+        metadata: {
+          planType: plan,
+          billingInterval: plan === 'yearly' ? 'year' : 'month',
+        },
+      },
     });
 
     this.logger.log(`✅ Checkout session created: ${session.id}`);
@@ -156,7 +166,46 @@ export class SubscriptionService {
   ): Promise<void> {
     const userId = session.metadata?.userId;
     const customerId = session.customer as string;
+    const subscriptionId = session.subscription as string;
 
+    let billingInterval: string | null = null;
+    let expiresAt: Date | null = null;
+    const metaInterval = session.metadata?.billingInterval;
+    if (metaInterval === 'month' || metaInterval === 'year') {
+      billingInterval = metaInterval;
+    }
+
+    if (!billingInterval && subscriptionId) {
+      try {
+        const stripeSub = (await this.stripe.subscriptions.retrieve(
+          subscriptionId,
+        )) as any;
+        const firstItem = stripeSub.items?.data?.[0];
+        const intervalFromPlan = firstItem?.plan?.interval;
+        const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
+          ?.recurring?.interval;
+        const subMetaInterval = stripeSub.metadata?.billingInterval;
+        billingInterval =
+          (subMetaInterval === 'month' || subMetaInterval === 'year'
+            ? subMetaInterval
+            : undefined) ??
+          intervalFromPlan ??
+          intervalFromPrice ??
+          null;
+
+        const unixEnd = stripeSub.current_period_end as
+          | number
+          | null
+          | undefined;
+        if (unixEnd) {
+          expiresAt = new Date(unixEnd * 1000);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve subscription ${subscriptionId} for billing interval: ${err.message}`,
+        );
+      }
+    }
     if (!userId || !customerId) {
       this.logger.warn('checkout.session.completed missing data');
       return;
@@ -171,10 +220,11 @@ export class SubscriptionService {
     this.logger.log(`🔗 Linked user ${userId} → customer ${customerId}`);
 
     // Also upgrade the plan right here — don't rely solely on later events
-    const subscriptionId = session.subscription as string;
-
     if (subscriptionId) {
       const plan = SubscriptionPlan.PREMIUM;
+      const normalizedInterval = billingInterval === 'year' ? 'year' : 'month';
+      const computedExpiresAt =
+        expiresAt ?? this.computeFallbackExpiry(normalizedInterval);
 
       const existing = await this.prisma.subscription.findFirst({
         where: { stripeSubscriptionId: subscriptionId },
@@ -183,7 +233,12 @@ export class SubscriptionService {
       if (existing) {
         await this.prisma.subscription.update({
           where: { id: existing.id },
-          data: { status: 'active', plan },
+          data: {
+            status: 'active',
+            plan,
+            billingInterval: normalizedInterval,
+            expiresAt: expiresAt ?? existing.expiresAt ?? computedExpiresAt,
+          },
         });
       } else {
         await this.prisma.subscription.create({
@@ -192,6 +247,8 @@ export class SubscriptionService {
             stripeCustomerId: customerId,
             status: 'active',
             plan,
+            billingInterval: normalizedInterval,
+            expiresAt: computedExpiresAt,
             userId,
           },
         });
@@ -216,6 +273,22 @@ export class SubscriptionService {
   ): Promise<void> {
     const customerId = subscription.customer as string;
     const subscriptionId = subscription.id;
+    const firstItem = subscription.items?.data?.[0];
+    const intervalFromPlan = firstItem?.plan?.interval;
+    const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
+      ?.recurring?.interval;
+    const metaInterval = subscription.metadata?.billingInterval;
+    const billingIntervalRaw =
+      metaInterval === 'month' || metaInterval === 'year'
+        ? metaInterval
+        : (intervalFromPlan ?? intervalFromPrice ?? null);
+    const billingInterval: 'month' | 'year' =
+      billingIntervalRaw === 'year' ? 'year' : 'month';
+    const unixEnd = (subscription as any).current_period_end as
+      | number
+      | null
+      | undefined;
+    const expiresAt: Date | null = unixEnd ? new Date(unixEnd * 1000) : null;
 
     this.logger.log(
       `[SUBSCRIPTION UPSERT] Subscription ID: ${subscriptionId}, Customer: ${customerId}, Status: ${subscription.status}`,
@@ -276,7 +349,15 @@ export class SubscriptionService {
       );
       await this.prisma.subscription.update({
         where: { id: existing.id },
-        data: { status: subscription.status, plan },
+        data: {
+          status: subscription.status,
+          plan,
+          billingInterval,
+          expiresAt:
+            expiresAt ??
+            existing.expiresAt ??
+            this.computeFallbackExpiry(billingInterval),
+        },
       });
     } else {
       this.logger.log(`[CREATE] Creating new subscription for user ${user.id}`);
@@ -286,6 +367,8 @@ export class SubscriptionService {
           stripeCustomerId: customerId,
           status: subscription.status,
           plan,
+          billingInterval,
+          expiresAt: expiresAt ?? this.computeFallbackExpiry(billingInterval),
           userId: user.id,
         },
       });
@@ -379,10 +462,61 @@ export class SubscriptionService {
       where: { stripeSubscriptionId: subscriptionId },
     });
 
+    const firstLine = invoice.lines?.data?.[0];
+    const firstLineAny = firstLine as any;
+    const intervalFromPrice = (firstLineAny?.price as Stripe.Price | undefined)
+      ?.recurring?.interval;
+    let billingIntervalRaw = intervalFromPrice ?? null;
+    let expiresAt: Date | null =
+      firstLineAny?.period?.end != null
+        ? new Date(firstLineAny.period.end * 1000)
+        : null;
+
+    if (!billingIntervalRaw && subscriptionId) {
+      try {
+        const stripeSub = (await this.stripe.subscriptions.retrieve(
+          subscriptionId,
+        )) as any;
+        const firstItem = stripeSub.items?.data?.[0];
+        const subIntervalFromPlan = firstItem?.plan?.interval;
+        const subIntervalFromPrice = (
+          firstItem?.price as Stripe.Price | undefined
+        )?.recurring?.interval;
+        const metaInterval = stripeSub.metadata?.billingInterval;
+        billingIntervalRaw =
+          metaInterval === 'month' || metaInterval === 'year'
+            ? metaInterval
+            : (subIntervalFromPlan ?? subIntervalFromPrice ?? null);
+
+        const unixEnd = stripeSub.current_period_end as
+          | number
+          | null
+          | undefined;
+        if (!expiresAt && unixEnd) {
+          expiresAt = new Date(unixEnd * 1000);
+        }
+      } catch (err) {
+        this.logger.warn(
+          `Could not retrieve subscription ${subscriptionId} for billing interval in invoice handler: ${err.message}`,
+        );
+      }
+    }
+
+    const billingInterval: 'month' | 'year' =
+      billingIntervalRaw === 'year' ? 'year' : 'month';
+
     if (existing) {
       await this.prisma.subscription.update({
         where: { id: existing.id },
-        data: { status: 'active', plan },
+        data: {
+          status: 'active',
+          plan,
+          billingInterval,
+          expiresAt:
+            expiresAt ??
+            existing.expiresAt ??
+            this.computeFallbackExpiry(billingInterval),
+        },
       });
     } else {
       await this.prisma.subscription.create({
@@ -391,6 +525,8 @@ export class SubscriptionService {
           stripeCustomerId: customerId,
           status: 'active',
           plan,
+          billingInterval,
+          expiresAt: expiresAt ?? this.computeFallbackExpiry(billingInterval),
           userId: user.id,
         },
       });
@@ -459,13 +595,38 @@ export class SubscriptionService {
       const subscriptionId = stripeSub.id;
       const customerId = stripeSub.customer as string;
 
+      const firstItem = stripeSub.items?.data?.[0];
+      const intervalFromPlan = firstItem?.plan?.interval;
+      const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
+        ?.recurring?.interval;
+      const metaInterval = stripeSub.metadata?.billingInterval;
+      const billingIntervalRaw =
+        metaInterval === 'month' || metaInterval === 'year'
+          ? metaInterval
+          : (intervalFromPlan ?? intervalFromPrice ?? null);
+      const billingInterval: 'month' | 'year' =
+        billingIntervalRaw === 'year' ? 'year' : 'month';
+      const unixEnd = (stripeSub as any).current_period_end as
+        | number
+        | null
+        | undefined;
+      const expiresAt: Date | null = unixEnd ? new Date(unixEnd * 1000) : null;
+
       const existing = await this.prisma.subscription.findFirst({
         where: { stripeSubscriptionId: subscriptionId },
       });
       if (existing) {
         await this.prisma.subscription.update({
           where: { id: existing.id },
-          data: { status: stripeSub.status, plan: SubscriptionPlan.PREMIUM },
+          data: {
+            status: stripeSub.status,
+            plan: SubscriptionPlan.PREMIUM,
+            billingInterval,
+            expiresAt:
+              expiresAt ??
+              existing.expiresAt ??
+              this.computeFallbackExpiry(billingInterval),
+          },
         });
       } else {
         await this.prisma.subscription.create({
@@ -474,6 +635,8 @@ export class SubscriptionService {
             stripeCustomerId: customerId,
             status: stripeSub.status,
             plan: SubscriptionPlan.PREMIUM,
+            billingInterval,
+            expiresAt: expiresAt ?? this.computeFallbackExpiry(billingInterval),
             userId,
           },
         });
@@ -530,13 +693,40 @@ export class SubscriptionService {
           ? session.subscription
           : await this.stripe.subscriptions.retrieve(subscriptionId);
       if (stripeSub) {
+        const firstItem = stripeSub.items?.data?.[0];
+        const intervalFromPlan = firstItem?.plan?.interval;
+        const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
+          ?.recurring?.interval;
+        const metaInterval = stripeSub.metadata?.billingInterval;
+        const billingIntervalRaw =
+          metaInterval === 'month' || metaInterval === 'year'
+            ? metaInterval
+            : (intervalFromPlan ?? intervalFromPrice ?? null);
+        const billingInterval: 'month' | 'year' =
+          billingIntervalRaw === 'year' ? 'year' : 'month';
+        const unixEnd = (stripeSub as any).current_period_end as
+          | number
+          | null
+          | undefined;
+        const expiresAt: Date | null = unixEnd
+          ? new Date(unixEnd * 1000)
+          : null;
+
         const existing = await this.prisma.subscription.findFirst({
           where: { stripeSubscriptionId: stripeSub.id },
         });
         if (existing) {
           await this.prisma.subscription.update({
             where: { id: existing.id },
-            data: { status: stripeSub.status, plan: SubscriptionPlan.PREMIUM },
+            data: {
+              status: stripeSub.status,
+              plan: SubscriptionPlan.PREMIUM,
+              billingInterval,
+              expiresAt:
+                expiresAt ??
+                existing.expiresAt ??
+                this.computeFallbackExpiry(billingInterval),
+            },
           });
         } else {
           await this.prisma.subscription.create({
@@ -545,6 +735,9 @@ export class SubscriptionService {
               stripeCustomerId: customerId,
               status: stripeSub.status,
               plan: SubscriptionPlan.PREMIUM,
+              billingInterval,
+              expiresAt:
+                expiresAt ?? this.computeFallbackExpiry(billingInterval),
               userId,
             },
           });
@@ -562,25 +755,123 @@ export class SubscriptionService {
     return this.getUserSubscription(userId);
   }
 
+  private computeFallbackExpiry(
+    billingInterval: 'month' | 'year',
+    from: Date = new Date(),
+  ): Date {
+    const d = new Date(from);
+    if (billingInterval === 'year') {
+      d.setFullYear(d.getFullYear() + 1);
+    } else {
+      d.setMonth(d.getMonth() + 1);
+    }
+    return d;
+  }
+
   /* -------------------------------------------------------------------------- */
   /*                               READ HELPERS                                 */
   /* -------------------------------------------------------------------------- */
+
+  /**
+   * Cancel the user's current subscription in Stripe and mark it as canceled locally.
+   * We always operate on the latest subscription record.
+   */
+  async cancelCurrentSubscription(userId: string) {
+    // Grab latest subscription for this user
+    const latest = await this.prisma.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latest) {
+      throw new BadRequestException('No active subscription to cancel');
+    }
+
+    if (!latest.stripeSubscriptionId) {
+      throw new BadRequestException('Subscription is missing Stripe ID');
+    }
+
+    this.logger.log(
+      `🛑 Cancel requested for subscription ${latest.stripeSubscriptionId} (user ${userId})`,
+    );
+
+    // Ask Stripe to cancel at period end, so user keeps access until expiry.
+    let stripeSub: any | null = null;
+    try {
+      stripeSub = (await this.stripe.subscriptions.update(
+        latest.stripeSubscriptionId,
+        { cancel_at_period_end: true },
+      )) as any;
+    } catch (err: any) {
+      this.logger.error(
+        `❌ Failed to cancel Stripe subscription ${latest.stripeSubscriptionId}: ${err.message}`,
+      );
+      throw new BadRequestException(
+        'Failed to cancel subscription with Stripe',
+      );
+    }
+
+    let billingInterval: 'month' | 'year' =
+      latest.billingInterval === 'year' ? 'year' : 'month';
+
+    const firstItem = stripeSub?.items?.data?.[0];
+    const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
+      ?.recurring?.interval;
+    if (intervalFromPrice === 'year' || intervalFromPrice === 'month') {
+      billingInterval = intervalFromPrice;
+    }
+
+    const unixEnd = stripeSub?.current_period_end as number | null | undefined;
+    const expiresAt: Date =
+      unixEnd && unixEnd > 0
+        ? new Date(unixEnd * 1000)
+        : this.computeFallbackExpiry(billingInterval);
+
+    const updated = await this.prisma.subscription.update({
+      where: { id: latest.id },
+      data: {
+        status: 'canceled',
+        billingInterval,
+        expiresAt,
+      },
+    });
+
+    this.logger.log(
+      `🛑 Subscription ${latest.stripeSubscriptionId} marked as canceled; access until ${expiresAt.toISOString()}`,
+    );
+
+    // Note: we keep user.plan as PREMIUM until Stripe actually ends the period
+    // and sends customer.subscription.deleted, which will downgrade to FREE.
+
+    return updated;
+  }
   async getUserSubscription(userId: string) {
     await this.syncSubscriptionFromStripeByCustomer(userId);
 
     const sub = await this.prisma.subscription.findFirst({
       where: { userId },
+      orderBy: { createdAt: 'desc' },
     });
 
     this.logger.log(
       `Retrieved subscription for user ${userId}: ${sub ? sub.plan : 'FREE'}`,
     );
 
-    return (
-      sub ?? {
+    if (!sub) {
+      return {
         plan: SubscriptionPlan.FREE,
         status: 'inactive',
-      }
-    );
+        billingInterval: 'month',
+        expiresAt: null,
+      };
+    }
+
+    const safeInterval: 'month' | 'year' =
+      sub.billingInterval === 'year' ? 'year' : 'month';
+
+    return {
+      ...sub,
+      billingInterval: safeInterval,
+    };
   }
 }

@@ -137,6 +137,8 @@ model Subscription {
   stripeSubscriptionId String
   plan                 SubscriptionPlan
   status               String
+  billingInterval      String?
+  expiresAt            DateTime?
   createdAt            DateTime         @default(now())
   updatedAt            DateTime         @updatedAt
 

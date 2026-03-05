@@ -71,4 +71,16 @@ export class SubscriptionController {
   async getSubscription(@CurrentUser() userId: string) {
     return this.subscriptionService.getUserSubscription(userId);
   }
+
+  @ApiBearerAuth('access-token')
+  @Post('cancel')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Cancel current subscription',
+    description:
+      'Cancels the user’s latest Stripe subscription at period end and marks it as canceled locally.',
+  })
+  async cancelSubscription(@CurrentUser() userId: string) {
+    return this.subscriptionService.cancelCurrentSubscription(userId);
+  }
 }
