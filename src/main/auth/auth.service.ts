@@ -19,6 +19,7 @@ import { ApiResponseUtil } from '../../common/utils/api-response.util.js';
 import { EmailService } from '../../common/services/email.service.js';
 import { UpdateNameDto } from './dto/update-name.dto.js';
 import { DeleteAccountDto } from './dto/delete-account.dto.js';
+import { SubscriptionService } from '../subscription/subscription.service.js';
 
 @Injectable()
 export class AuthService {
@@ -27,6 +28,7 @@ export class AuthService {
     private jwtService: JwtService,
     private configService: ConfigService,
     private emailService: EmailService,
+    private subscriptionService: SubscriptionService,
   ) {}
 
   async signup(dto: SignupDto) {
@@ -85,16 +87,32 @@ export class AuthService {
     // Create and store a refresh token (rotating refresh tokens)
     const refreshToken = await this.createAndSaveRefreshToken(user.id);
 
+    const userPayload: Record<string, unknown> = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      plan: user.plan,
+      createdAt: user.createdAt,
+    };
+
+    try {
+      const sub = await this.subscriptionService.getUserSubscription(user.id);
+      userPayload.planInitial =
+        sub.billingInterval === 'year' ? 'yearly' : 'monthly';
+      userPayload.expiresAt = sub.expiresAt
+        ? ((sub.expiresAt as Date).toISOString?.() ?? sub.expiresAt)
+        : null;
+      userPayload.subscriptionStatus = sub.status ?? null;
+    } catch {
+      userPayload.planInitial = null;
+      userPayload.expiresAt = null;
+      userPayload.subscriptionStatus = null;
+    }
+
     const authData = {
       accessToken,
       refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        plan: user.plan,
-        createdAt: user.createdAt,
-      },
+      user: userPayload,
     };
 
     return ApiResponseUtil.created(authData, 'Authentication successful');
@@ -242,7 +260,23 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    return user;
+    const result: Record<string, unknown> = { ...user };
+
+    try {
+      const sub = await this.subscriptionService.getUserSubscription(userId);
+      result.planInitial =
+        sub.billingInterval === 'year' ? 'yearly' : 'monthly';
+      result.expiresAt = sub.expiresAt
+        ? ((sub.expiresAt as Date).toISOString?.() ?? sub.expiresAt)
+        : null;
+      result.subscriptionStatus = sub.status ?? null;
+    } catch {
+      result.planInitial = null;
+      result.expiresAt = null;
+      result.subscriptionStatus = null;
+    }
+
+    return result;
   }
 
   async changePassword(userId: string, dto: ChangePasswordDto) {
