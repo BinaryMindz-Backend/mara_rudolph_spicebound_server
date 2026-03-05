@@ -121,21 +121,16 @@ export class BookSlipService {
         if (asin) searchQuery = asin;
       }
     } else if (inputType === InputType.GOODREADS_URL) {
-      // For Goodreads, extract search query
-      const match = input.match(
-        /goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/,
-      );
-      if (match && match[1]) {
-        searchQuery = decodeURIComponent(match[1].replace(/[-_]/g, ' '));
-        this.logger.log(
-          `🔹 Extracted search query from Goodreads: ${searchQuery}`,
-        );
       goodreadsId = extractGoodreadsId(input) ?? undefined;
       this.logger.log(`🔹 Extracted Goodreads book ID: ${goodreadsId}`);
-      const slugMatch = input.match(/goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/);
+      const slugMatch = input.match(
+        /goodreads\.com\/book\/show\/\d+(?:[.-]([^?/#]+))?/,
+      );
       if (slugMatch && slugMatch[1]) {
         searchQuery = decodeURIComponent(slugMatch[1].replace(/[-_]/g, ' '));
-        this.logger.log(`🔹 Extracted search query from Goodreads URL slug: ${searchQuery}`);
+        this.logger.log(
+          `🔹 Extracted search query from Goodreads URL slug: ${searchQuery}`,
+        );
       }
       // If no slug (e.g. /book/show/9144), searchQuery stays as full URL; we'll fetch by ID below
     } else if (inputType === InputType.GOOGLE_BOOKS_URL) {
