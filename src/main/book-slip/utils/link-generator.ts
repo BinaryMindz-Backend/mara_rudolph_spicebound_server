@@ -42,7 +42,9 @@ export function generateAmazonLink(
   if (isbn10) {
     return `https://www.amazon.com/dp/${isbn10}`;
   }
-  const searchTerms = isbn13 ? `${isbn13.replace(/[-\s]/g, '')} ${title}` : `${title} ${author}`;
+  const searchTerms = isbn13
+    ? `${isbn13.replace(/[-\s]/g, '')} ${title}`
+    : `${title} ${author}`;
   return `https://www.amazon.com/s?k=${encodeURIComponent(searchTerms)}`;
 }
 
@@ -90,8 +92,10 @@ export function generateLinks(
   goodreadsBookId?: string,
 ): BookLinks {
   return {
-    amazon: generateAmazonLink(title, author, asin, isbn13) || existingAmazonUrl,
-    bookshop: existingBookshopUrl || generateBookshopLink(title, author, isbn13),
+    amazon:
+      generateAmazonLink(title, author, asin, isbn13) || existingAmazonUrl,
+    bookshop:
+      existingBookshopUrl || generateBookshopLink(title, author, isbn13),
     goodreads: generateGoodreadsLink(title, author, isbn13, goodreadsBookId),
   };
 }

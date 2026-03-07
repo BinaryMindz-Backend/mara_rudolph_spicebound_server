@@ -31,6 +31,8 @@ export type SubscriptionMinAggregateOutputType = {
   stripeSubscriptionId: string | null;
   plan: $Enums.SubscriptionPlan | null;
   status: string | null;
+  billingInterval: string | null;
+  expiresAt: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
 };
@@ -42,6 +44,8 @@ export type SubscriptionMaxAggregateOutputType = {
   stripeSubscriptionId: string | null;
   plan: $Enums.SubscriptionPlan | null;
   status: string | null;
+  billingInterval: string | null;
+  expiresAt: Date | null;
   createdAt: Date | null;
   updatedAt: Date | null;
 };
@@ -53,6 +57,8 @@ export type SubscriptionCountAggregateOutputType = {
   stripeSubscriptionId: number;
   plan: number;
   status: number;
+  billingInterval: number;
+  expiresAt: number;
   createdAt: number;
   updatedAt: number;
   _all: number;
@@ -65,6 +71,8 @@ export type SubscriptionMinAggregateInputType = {
   stripeSubscriptionId?: true;
   plan?: true;
   status?: true;
+  billingInterval?: true;
+  expiresAt?: true;
   createdAt?: true;
   updatedAt?: true;
 };
@@ -76,6 +84,8 @@ export type SubscriptionMaxAggregateInputType = {
   stripeSubscriptionId?: true;
   plan?: true;
   status?: true;
+  billingInterval?: true;
+  expiresAt?: true;
   createdAt?: true;
   updatedAt?: true;
 };
@@ -87,6 +97,8 @@ export type SubscriptionCountAggregateInputType = {
   stripeSubscriptionId?: true;
   plan?: true;
   status?: true;
+  billingInterval?: true;
+  expiresAt?: true;
   createdAt?: true;
   updatedAt?: true;
   _all?: true;
@@ -179,6 +191,8 @@ export type SubscriptionGroupByOutputType = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval: string | null;
+  expiresAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
   _count: SubscriptionCountAggregateOutputType | null;
@@ -211,6 +225,12 @@ export type SubscriptionWhereInput = {
     | Prisma.EnumSubscriptionPlanFilter<'Subscription'>
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFilter<'Subscription'> | string;
+  billingInterval?: Prisma.StringNullableFilter<'Subscription'> | string | null;
+  expiresAt?:
+    | Prisma.DateTimeNullableFilter<'Subscription'>
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
   updatedAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
   user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
@@ -223,6 +243,8 @@ export type SubscriptionOrderByWithRelationInput = {
   stripeSubscriptionId?: Prisma.SortOrder;
   plan?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  billingInterval?: Prisma.SortOrderInput | Prisma.SortOrder;
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
   user?: Prisma.UserOrderByWithRelationInput;
@@ -241,6 +263,15 @@ export type SubscriptionWhereUniqueInput = Prisma.AtLeast<
       | Prisma.EnumSubscriptionPlanFilter<'Subscription'>
       | $Enums.SubscriptionPlan;
     status?: Prisma.StringFilter<'Subscription'> | string;
+    billingInterval?:
+      | Prisma.StringNullableFilter<'Subscription'>
+      | string
+      | null;
+    expiresAt?:
+      | Prisma.DateTimeNullableFilter<'Subscription'>
+      | Date
+      | string
+      | null;
     createdAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
     updatedAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
     user?: Prisma.XOR<Prisma.UserScalarRelationFilter, Prisma.UserWhereInput>;
@@ -255,6 +286,8 @@ export type SubscriptionOrderByWithAggregationInput = {
   stripeSubscriptionId?: Prisma.SortOrder;
   plan?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  billingInterval?: Prisma.SortOrderInput | Prisma.SortOrder;
+  expiresAt?: Prisma.SortOrderInput | Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
   _count?: Prisma.SubscriptionCountOrderByAggregateInput;
@@ -280,6 +313,15 @@ export type SubscriptionScalarWhereWithAggregatesInput = {
     | Prisma.EnumSubscriptionPlanWithAggregatesFilter<'Subscription'>
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringWithAggregatesFilter<'Subscription'> | string;
+  billingInterval?:
+    | Prisma.StringNullableWithAggregatesFilter<'Subscription'>
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.DateTimeNullableWithAggregatesFilter<'Subscription'>
+    | Date
+    | string
+    | null;
   createdAt?:
     | Prisma.DateTimeWithAggregatesFilter<'Subscription'>
     | Date
@@ -296,6 +338,8 @@ export type SubscriptionCreateInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
   user: Prisma.UserCreateNestedOneWithoutSubscriptionsInput;
@@ -308,6 +352,8 @@ export type SubscriptionUncheckedCreateInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -320,6 +366,15 @@ export type SubscriptionUpdateInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   user?: Prisma.UserUpdateOneRequiredWithoutSubscriptionsNestedInput;
@@ -334,6 +389,15 @@ export type SubscriptionUncheckedUpdateInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -345,6 +409,8 @@ export type SubscriptionCreateManyInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -357,6 +423,15 @@ export type SubscriptionUpdateManyMutationInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -370,6 +445,15 @@ export type SubscriptionUncheckedUpdateManyInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -391,6 +475,8 @@ export type SubscriptionCountOrderByAggregateInput = {
   stripeSubscriptionId?: Prisma.SortOrder;
   plan?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  billingInterval?: Prisma.SortOrder;
+  expiresAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -402,6 +488,8 @@ export type SubscriptionMaxOrderByAggregateInput = {
   stripeSubscriptionId?: Prisma.SortOrder;
   plan?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  billingInterval?: Prisma.SortOrder;
+  expiresAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -413,6 +501,8 @@ export type SubscriptionMinOrderByAggregateInput = {
   stripeSubscriptionId?: Prisma.SortOrder;
   plan?: Prisma.SortOrder;
   status?: Prisma.SortOrder;
+  billingInterval?: Prisma.SortOrder;
+  expiresAt?: Prisma.SortOrder;
   createdAt?: Prisma.SortOrder;
   updatedAt?: Prisma.SortOrder;
 };
@@ -533,6 +623,8 @@ export type SubscriptionCreateWithoutUserInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -543,6 +635,8 @@ export type SubscriptionUncheckedCreateWithoutUserInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -606,6 +700,12 @@ export type SubscriptionScalarWhereInput = {
     | Prisma.EnumSubscriptionPlanFilter<'Subscription'>
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFilter<'Subscription'> | string;
+  billingInterval?: Prisma.StringNullableFilter<'Subscription'> | string | null;
+  expiresAt?:
+    | Prisma.DateTimeNullableFilter<'Subscription'>
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
   updatedAt?: Prisma.DateTimeFilter<'Subscription'> | Date | string;
 };
@@ -616,6 +716,8 @@ export type SubscriptionCreateManyUserInput = {
   stripeSubscriptionId: string;
   plan: $Enums.SubscriptionPlan;
   status: string;
+  billingInterval?: string | null;
+  expiresAt?: Date | string | null;
   createdAt?: Date | string;
   updatedAt?: Date | string;
 };
@@ -628,6 +730,15 @@ export type SubscriptionUpdateWithoutUserInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -640,6 +751,15 @@ export type SubscriptionUncheckedUpdateWithoutUserInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -652,6 +772,15 @@ export type SubscriptionUncheckedUpdateManyWithoutUserInput = {
     | Prisma.EnumSubscriptionPlanFieldUpdateOperationsInput
     | $Enums.SubscriptionPlan;
   status?: Prisma.StringFieldUpdateOperationsInput | string;
+  billingInterval?:
+    | Prisma.NullableStringFieldUpdateOperationsInput
+    | string
+    | null;
+  expiresAt?:
+    | Prisma.NullableDateTimeFieldUpdateOperationsInput
+    | Date
+    | string
+    | null;
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
   updatedAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string;
 };
@@ -667,6 +796,8 @@ export type SubscriptionSelect<
     stripeSubscriptionId?: boolean;
     plan?: boolean;
     status?: boolean;
+    billingInterval?: boolean;
+    expiresAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -685,6 +816,8 @@ export type SubscriptionSelectCreateManyAndReturn<
     stripeSubscriptionId?: boolean;
     plan?: boolean;
     status?: boolean;
+    billingInterval?: boolean;
+    expiresAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -703,6 +836,8 @@ export type SubscriptionSelectUpdateManyAndReturn<
     stripeSubscriptionId?: boolean;
     plan?: boolean;
     status?: boolean;
+    billingInterval?: boolean;
+    expiresAt?: boolean;
     createdAt?: boolean;
     updatedAt?: boolean;
     user?: boolean | Prisma.UserDefaultArgs<ExtArgs>;
@@ -717,6 +852,8 @@ export type SubscriptionSelectScalar = {
   stripeSubscriptionId?: boolean;
   plan?: boolean;
   status?: boolean;
+  billingInterval?: boolean;
+  expiresAt?: boolean;
   createdAt?: boolean;
   updatedAt?: boolean;
 };
@@ -731,6 +868,8 @@ export type SubscriptionOmit<
   | 'stripeSubscriptionId'
   | 'plan'
   | 'status'
+  | 'billingInterval'
+  | 'expiresAt'
   | 'createdAt'
   | 'updatedAt',
   ExtArgs['result']['subscription']
@@ -770,6 +909,8 @@ export type $SubscriptionPayload<
       stripeSubscriptionId: string;
       plan: $Enums.SubscriptionPlan;
       status: string;
+      billingInterval: string | null;
+      expiresAt: Date | null;
       createdAt: Date;
       updatedAt: Date;
     },
@@ -1390,6 +1531,8 @@ export interface SubscriptionFieldRefs {
   readonly stripeSubscriptionId: Prisma.FieldRef<'Subscription', 'String'>;
   readonly plan: Prisma.FieldRef<'Subscription', 'SubscriptionPlan'>;
   readonly status: Prisma.FieldRef<'Subscription', 'String'>;
+  readonly billingInterval: Prisma.FieldRef<'Subscription', 'String'>;
+  readonly expiresAt: Prisma.FieldRef<'Subscription', 'DateTime'>;
   readonly createdAt: Prisma.FieldRef<'Subscription', 'DateTime'>;
   readonly updatedAt: Prisma.FieldRef<'Subscription', 'DateTime'>;
 }

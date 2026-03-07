@@ -2,79 +2,85 @@ import { Injectable, Logger } from '@nestjs/common';
 import * as cheerio from 'cheerio';
 
 export interface GoodreadsBookData {
-    title?: string;
-    author?: string;
-    description?: string;
-    isbn13?: string;
+  title?: string;
+  author?: string;
+  description?: string;
+  isbn13?: string;
 }
 
 @Injectable()
 export class GoodreadsProvider {
   private readonly logger = new Logger(GoodreadsProvider.name);
 
-    /**
-     * Fetches book metadata from a Goodreads book/show page by book ID.
-     * Used when user pastes a Goodreads URL so we can resolve title/author for search.
-     */
-    async fetchByBookId(bookId: string): Promise<GoodreadsBookData | null> {
-        try {
-            const url = `https://www.goodreads.com/book/show/${bookId}`;
-            this.logger.log(`🔍 Fetching Goodreads book page: ${url}`);
+  /**
+   * Fetches book metadata from a Goodreads book/show page by book ID.
+   * Used when user pastes a Goodreads URL so we can resolve title/author for search.
+   */
+  async fetchByBookId(bookId: string): Promise<GoodreadsBookData | null> {
+    try {
+      const url = `https://www.goodreads.com/book/show/${bookId}`;
+      this.logger.log(`🔍 Fetching Goodreads book page: ${url}`);
 
-            const response = await fetch(url, {
-                headers: {
-                    'User-Agent':
-                        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-                    'Accept-Language': 'en-US,en;q=0.9',
-                },
-            });
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+          'Accept-Language': 'en-US,en;q=0.9',
+        },
+      });
 
-            if (!response.ok) {
-                this.logger.warn(`⚠️ Goodreads book page failed with status: ${response.status}`);
-                return null;
-            }
+      if (!response.ok) {
+        this.logger.warn(
+          `⚠️ Goodreads book page failed with status: ${response.status}`,
+        );
+        return null;
+      }
 
-            const html = await response.text();
-            const $ = cheerio.load(html);
+      const html = await response.text();
+      const $ = cheerio.load(html);
 
-            // Goodreads: #bookTitle (often with trailing newline), author in .authorName or [itemprop="author"]
-            const titleEl = $('#bookTitle');
-            const title = titleEl.length ? titleEl.first().text().trim() : undefined;
+      // Goodreads: #bookTitle (often with trailing newline), author in .authorName or [itemprop="author"]
+      const titleEl = $('#bookTitle');
+      const title = titleEl.length ? titleEl.first().text().trim() : undefined;
 
-            const authorEl = $('a.authorName, [itemprop="author"]').first();
-            const author = authorEl.length ? authorEl.text().trim() : undefined;
+      const authorEl = $('a.authorName, [itemprop="author"]').first();
+      const author = authorEl.length ? authorEl.text().trim() : undefined;
 
-            if (!title && !author) {
-                this.logger.warn(`⚠️ Could not parse title/author from Goodreads book ${bookId}`);
-                return null;
-            }
+      if (!title && !author) {
+        this.logger.warn(
+          `⚠️ Could not parse title/author from Goodreads book ${bookId}`,
+        );
+        return null;
+      }
 
-            // Optional: description from #description span(s)
-            let description: string | undefined;
-            const descSpan = $('#description span').first();
-            if (descSpan.length) {
-                description = descSpan.text().trim().slice(0, 2000) || undefined;
-            }
+      // Optional: description from #description span(s)
+      let description: string | undefined;
+      const descSpan = $('#description span').first();
+      if (descSpan.length) {
+        description = descSpan.text().trim().slice(0, 2000) || undefined;
+      }
 
-            this.logger.log(`✅ Goodreads book resolved: ${title ?? '?'} by ${author ?? '?'}`);
-            return { title, author, description };
-        } catch (error) {
-            this.logger.error(`❌ Failed to fetch Goodreads book ${bookId}`, error);
-            return null;
-        }
+      this.logger.log(
+        `✅ Goodreads book resolved: ${title ?? '?'} by ${author ?? '?'}`,
+      );
+      return { title, author, description };
+    } catch (error) {
+      this.logger.error(`❌ Failed to fetch Goodreads book ${bookId}`, error);
+      return null;
     }
+  }
 
-    /**
-     * Scrapes Goodreads search results to find the average rating and rating count
-     * for a given book title and author.
-     */
-    async getRatings(
-        title: string,
-        author: string,
-    ): Promise<{ averageRating?: number; ratingsCount?: number } | null> {
-        try {
-            const query = `${title} ${author}`;
-            const url = `https://www.goodreads.com/search?q=${encodeURIComponent(query)}`;
+  /**
+   * Scrapes Goodreads search results to find the average rating and rating count
+   * for a given book title and author.
+   */
+  async getRatings(
+    title: string,
+    author: string,
+  ): Promise<{ averageRating?: number; ratingsCount?: number } | null> {
+    try {
+      const query = `${title} ${author}`;
+      const url = `https://www.goodreads.com/search?q=${encodeURIComponent(query)}`;
 
       this.logger.log(`🔍 Fetching Goodreads ratings for: ${query}`);
 
