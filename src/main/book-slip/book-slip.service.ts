@@ -728,13 +728,68 @@ export class BookSlipService {
     }
   }
 
+  /**
+   * Build slip responses for multiple books with two batched queries (aliases + ratings)
+   * instead of 2N queries. Use for library/list endpoints.
+   */
+  public async buildSlipsBatch(
+    books: any[],
+  ): Promise<BookSlipResponse[]> {
+    if (books.length === 0) return [];
+    const bookIds = books.map((b) => b.id);
+
+    const [aliasesRows, ratingGroups] = await Promise.all([
+      this.prisma.bookAlias.findMany({
+        where: { bookId: { in: bookIds } },
+      }),
+      this.prisma.rating.groupBy({
+        by: ['bookId'],
+        where: { bookId: { in: bookIds } },
+        _avg: { value: true },
+        _count: true,
+      }),
+    ]);
+
+    const aliasesByBookId = new Map<string, typeof aliasesRows>();
+    for (const row of aliasesRows) {
+      const list = aliasesByBookId.get(row.bookId) ?? [];
+      list.push(row);
+      aliasesByBookId.set(row.bookId, list);
+    }
+    const ratingsByBookId = new Map(
+      ratingGroups.map((r) => [
+        r.bookId,
+        { _avg: { value: r._avg.value }, _count: r._count },
+      ]),
+    );
+
+    return books.map((book) => {
+      const aliases = aliasesByBookId.get(book.id) ?? [];
+      let finalAsin: string | undefined;
+      let finalIsbn13: string | undefined;
+      let finalGoodreadsId: string | undefined;
+      for (const alias of aliases) {
+        if (alias.type === BookAliasType.ASIN) finalAsin = alias.value;
+        if (alias.type === BookAliasType.ISBN_13) finalIsbn13 = alias.value;
+        if (alias.type === BookAliasType.GOODREADS_ID) finalGoodreadsId = alias.value;
+      }
+      const platformRatings = ratingsByBookId.get(book.id) ?? {
+        _avg: { value: null as number | null },
+        _count: 0,
+      };
+      return this.buildSlipResponse(book, false, finalAsin, finalIsbn13, finalGoodreadsId, platformRatings);
+    });
+  }
+
+  /**
+   * Build a single slip (one book). For multiple books use buildSlipsBatch to avoid N+1 queries.
+   */
   public async buildSlip(
     book: any,
     created: boolean,
     asin?: string,
     isbn13?: string,
   ): Promise<BookSlipResponse> {
-    // Fetch ISBN, ASIN, and Goodreads ID from aliases if not provided (for direct links)
     let finalAsin = asin;
     let finalIsbn13 = isbn13;
     let finalGoodreadsId: string | undefined;
@@ -742,20 +797,32 @@ export class BookSlipService {
     const aliases = await this.prisma.bookAlias.findMany({
       where: { bookId: book.id },
     });
-
     for (const alias of aliases) {
-      if (alias.type === BookAliasType.ASIN && !finalAsin) {
-        finalAsin = alias.value;
-      }
-      if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) {
-        finalIsbn13 = alias.value;
-      }
-      if (alias.type === BookAliasType.GOODREADS_ID) {
-        finalGoodreadsId = alias.value;
-      }
+      if (alias.type === BookAliasType.ASIN && !finalAsin) finalAsin = alias.value;
+      if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) finalIsbn13 = alias.value;
+      if (alias.type === BookAliasType.GOODREADS_ID) finalGoodreadsId = alias.value;
     }
 
-    // Generate links: direct to book when we have ASIN (Amazon), Goodreads ID or ISBN (Goodreads)
+    const platformRatings = await this.prisma.rating.aggregate({
+      where: { bookId: book.id },
+      _avg: { value: true },
+      _count: true,
+    });
+
+    return this.buildSlipResponse(book, created, finalAsin, finalIsbn13, finalGoodreadsId, platformRatings);
+  }
+
+  /**
+   * Synchronous slip response builder (used by buildSlip and buildSlipsBatch).
+   */
+  private buildSlipResponse(
+    book: any,
+    created: boolean,
+    finalAsin: string | undefined,
+    finalIsbn13: string | undefined,
+    finalGoodreadsId: string | undefined,
+    platformRatings: { _avg: { value: number | null }; _count: number },
+  ): BookSlipResponse {
     const links = generateLinks(
       book.title,
       book.primaryAuthor || 'Unknown Author',
@@ -765,21 +832,12 @@ export class BookSlipService {
       book.bookshopUrl,
       finalGoodreadsId,
     );
-
-    // Calculate platform user ratings (Spicebound ratings)
-    const platformRatings = await this.prisma.rating.aggregate({
-      where: { bookId: book.id },
-      _avg: { value: true },
-      _count: true,
-    });
-
     const combinedRatings = calculateCombinedRating(
       book.externalAvgRating,
       book.externalRatingCount,
       platformRatings._avg.value,
       platformRatings._count,
     );
-
     const ratingsInfo = {
       ...combinedRatings,
       count: (book.externalRatingCount || 0) + platformRatings._count,

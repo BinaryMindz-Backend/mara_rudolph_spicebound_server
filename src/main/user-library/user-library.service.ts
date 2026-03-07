@@ -245,20 +245,17 @@ export class UserLibraryService {
       });
     }
 
-    // Map all books into standard BookSlipResponse format
-    return await Promise.all(
-      books.map(async (userBook) => {
-        const slip = await this.bookSlipService.buildSlip(userBook.book, false);
-        return {
-          ...slip,
-          userLibrary: {
-            status: userBook.status as ReadingStatus,
-            orderIndex: userBook.orderIndex,
-            createdAt: userBook.createdAt,
-          },
-        } as UserLibraryResponse;
-      }),
-    );
+    // Map all books into standard BookSlipResponse format (batched: 2 queries instead of 2 per book)
+    const bookList = books.map((ub) => ub.book);
+    const slips = await this.bookSlipService.buildSlipsBatch(bookList);
+    return books.map((userBook, i) => ({
+      ...slips[i],
+      userLibrary: {
+        status: userBook.status as ReadingStatus,
+        orderIndex: userBook.orderIndex,
+        createdAt: userBook.createdAt,
+      },
+    })) as UserLibraryResponse[];
   }
 
   /**
