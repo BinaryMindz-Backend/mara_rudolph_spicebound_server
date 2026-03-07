@@ -66,7 +66,7 @@ export class BookSlipService {
     private readonly openLibrary: OpenLibraryProvider,
     private readonly goodreads: GoodreadsProvider,
     private readonly aiEnrichment: AiEnrichmentService,
-  ) {}
+  ) { }
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
@@ -250,29 +250,7 @@ export class BookSlipService {
     const normalizedTitle = normalizeText(merged.title);
     const normalizedAuthor = normalizeText(merged.author);
 
-    /**
-     * 4b️⃣ Supplement terrible API ratings with scraped Goodreads ratings if needed
-     */
-    if ((merged.externalRatingCount || 0) < 50) {
-      this.logger.log(
-        `🔹 External rating count is low (${merged.externalRatingCount}). Scraping Goodreads for realistic ratings...`,
-      );
-      const goodreadsRatings = await this.goodreads.getRatings(
-        merged.title,
-        merged.author,
-      );
-      if (
-        goodreadsRatings &&
-        goodreadsRatings.averageRating &&
-        goodreadsRatings.ratingsCount
-      ) {
-        merged.externalAvgRating = goodreadsRatings.averageRating;
-        merged.externalRatingCount = goodreadsRatings.ratingsCount;
-        this.logger.log(
-          `✅ Replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`,
-        );
-      }
-    }
+
 
     /**
      * 5️⃣ Check existing book by normalized title + author (fallback check)
@@ -323,7 +301,32 @@ export class BookSlipService {
         enrichPayload.amazonAsin = asin;
         enrichPayload.titleFromUrl = searchQuery;
       }
-      enriched = await this.aiEnrichment.enrichBook(enrichPayload);
+      /**
+       * 6b️⃣ Fetch Goodreads ratings in parallel if needed
+       */
+      const ratingsPromise = ((merged.externalRatingCount || 0) < 50)
+        ? this.goodreads.getRatings(merged.title, merged.author).catch(e => {
+          this.logger.error('Goodreads scraping failed in parallel execution', e);
+          return null;
+        })
+        : Promise.resolve(null);
+
+      // Await both AI and Ratings
+      const [aiResult, ratingsResult] = await Promise.all([
+        this.aiEnrichment.enrichBook(enrichPayload),
+        ratingsPromise
+      ]);
+
+      enriched = aiResult;
+
+      if (ratingsResult?.averageRating && ratingsResult?.ratingsCount) {
+        merged.externalAvgRating = ratingsResult.averageRating;
+        merged.externalRatingCount = ratingsResult.ratingsCount;
+        this.logger.log(
+          `✅ Parallel scrape replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`,
+        );
+      }
+
     } catch (error: any) {
       if (error.message === 'NON_BOOK_CONTENT') {
         this.logger.warn(
