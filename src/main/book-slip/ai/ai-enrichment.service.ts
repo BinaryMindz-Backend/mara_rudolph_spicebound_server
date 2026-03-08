@@ -40,7 +40,7 @@ export interface EnrichedBookData {
 export class AiEnrichmentService {
   private readonly logger = new Logger(AiEnrichmentService.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(private configService: ConfigService) { }
 
   async enrichBook(bookData: any): Promise<EnrichedBookData> {
     try {
@@ -229,12 +229,12 @@ SERIES CLASSIFICATION RULES:
 - **TOTAL BOOKS**: Reflect the full planned series count (e.g. Fourth Wing/Empyrean = 5; Speak of the Demon/Dealing with Demons = 6).
 - **SERIES OVER STANDALONE**: Known series books must NOT be marked standalone.
 `;
-}
+  }
 
   private buildUserPrompt(bookData: any): string {
     const hasAmazonContext = bookData.amazonAsin && bookData.titleFromUrl;
     const amazonBlock = hasAmazonContext
-        ? `
+      ? `
 **AMAZON LINK CONTEXT (PRIORITY):** The user looked up this book by pasting an Amazon product URL.
 - Amazon ASIN: ${bookData.amazonAsin}
 - Title/slug from the URL: "${bookData.titleFromUrl}"
@@ -242,7 +242,7 @@ SERIES CLASSIFICATION RULES:
 The Title/Author/Description below may be from a DIFFERENT book (e.g. a collection, box set, or wrong search result). You MUST identify and return metadata for the **exact book at this Amazon ASIN**—the one the user's link points to. Include "title" and "author" in your JSON with the correct book's title and author.
 
 `
-        : '';
+      : '';
 
     return `Analyze this book using both the provided metadata AND your pre-trained knowledge of the book. Return ONLY valid JSON.
 ${amazonBlock}
@@ -971,7 +971,7 @@ Return ONLY this JSON structure:
 - Empty arrays [] are valid for tropes, creatures, and subgenres when not applicable
 - The confidence object helps flag when human review may be needed
 `;
-}
+  }
 
   private sanitizeEnrichedData(data: any): EnrichedBookData {
     if (!data || typeof data !== 'object') {
@@ -1098,7 +1098,7 @@ Return ONLY this JSON structure:
       }
     }
 
-        if (data.confidence && typeof data.confidence === 'object') {
+    if (data.confidence && typeof data.confidence === 'object') {
       sanitized.confidence = {
         spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.spiceRating) ? data.confidence.spiceRating : 'LOW',
         overall: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.overall) ? data.confidence.overall : 'LOW',
