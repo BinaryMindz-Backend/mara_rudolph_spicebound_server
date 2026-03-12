@@ -4,13 +4,14 @@ import {
   isValidTrope,
   APPROVED_TROPES,
 } from '../../../common/constants/tropes.js';
-import { isValidSpiceRating } from '../../../common/constants/spice-rating.js';
 
 export interface EnrichedBookData {
   title?: string;
   author?: string;
   ageLevel?: string;
+  spiceCategory?: string;
   spiceRating?: number;
+  spiceIncreasesInSeries?: boolean;
   tropes?: string[];
   creatures?: string[];
   subgenres?: string[];
@@ -52,7 +53,9 @@ export class AiEnrichmentService {
         );
         return {
           ageLevel: 'UNKNOWN',
+          spiceCategory: 'No Spice',
           spiceRating: 0,
+          spiceIncreasesInSeries: false,
           tropes: [],
           creatures: [],
           subgenres: [],
@@ -78,7 +81,7 @@ export class AiEnrichmentService {
             content: userPrompt,
           },
         ],
-        temperature: 0.3, // Low temperature for consistent, factual responses
+        temperature: 0.2, // Low temperature for consistent, factual responses
         max_tokens: 800,
       };
 
@@ -107,7 +110,9 @@ export class AiEnrichmentService {
         );
         return {
           ageLevel: 'UNKNOWN',
+          spiceCategory: 'No Spice',
           spiceRating: 0,
+          spiceIncreasesInSeries: false,
           tropes: [],
           creatures: [],
           subgenres: [],
@@ -121,7 +126,9 @@ export class AiEnrichmentService {
         this.logger.warn('Empty response from OpenAI');
         return {
           ageLevel: 'UNKNOWN',
+          spiceCategory: 'No Spice',
           spiceRating: 0,
+          spiceIncreasesInSeries: false,
           tropes: [],
           creatures: [],
           subgenres: [],
@@ -157,7 +164,9 @@ export class AiEnrichmentService {
         );
         return {
           ageLevel: 'UNKNOWN',
+          spiceCategory: 'No Spice',
           spiceRating: 0,
+          spiceIncreasesInSeries: false,
           tropes: [],
           creatures: [],
           subgenres: [],
@@ -173,7 +182,9 @@ export class AiEnrichmentService {
       );
       return {
         ageLevel: 'UNKNOWN',
+        spiceCategory: 'No Spice',
         spiceRating: 0,
+        spiceIncreasesInSeries: false,
         tropes: [],
         creatures: [],
         subgenres: [],
@@ -244,8 +255,12 @@ The Title/Author/Description below may be from a DIFFERENT book (e.g. a collecti
 `
       : '';
 
+    const seriesBlock = bookData.seriesContext
+      ? `\n**SERIES CONTEXT (Google/OpenLibrary):**\n- Series Name: ${bookData.seriesContext.name || 'Unknown'}\n- Volume/Position: ${bookData.seriesContext.position || 'Unknown'}\n- Total Books: ${bookData.seriesContext.totalBooks || 'Unknown'}\nValidate this before using, and fill in any missing details like status or total counts.\n`
+      : '';
+
     return `Analyze this book using both the provided metadata AND your pre-trained knowledge of the book. Return ONLY valid JSON.
-${amazonBlock}
+${amazonBlock}${seriesBlock}
 BOOK: Title="${bookData.title || 'unknown'}" | Author="${bookData.author || 'unknown'}" | Description="${bookData.description || 'none'}"
 
 ### 1. AGE LEVEL
@@ -261,23 +276,76 @@ Classify the intended reader age level based on content maturity, themes, and ma
 
 **Key Distinction:** YA may have intense romance but NO explicit sexual scenes. New Adult and above may include explicit content. If a book has explicit sexual content, it CANNOT be YA.
 
-### 2. SPICE RATING (0-6)
-Rate the romantic/sexual heat level:
+### 2. SPICE RATING
 
-| Rating | Label | Description | Examples |
-|--------|-------|-------------|----------|
-| 0 | None | No romantic content whatsoever | Pure fantasy/thriller with no romance subplot |
-| 1 | Cute | Kissing, hand-holding, innocent romance, butterflies | Most YA romance, cozy romance |
-| 2 | Sweet | Closed door—attraction and tension clear, intimacy implied but not shown | Clean romance, sweet romance |
-| 3 | Warm | 1-3 open door sex scenes, not overly descriptive | Light to medium steam, some romance novels |
-| 4 | Spicy | Descriptive open door scenes, often more than 2 scenes, detailed but not the main focus | Most NA+ romantasy (Fourth Wing level) |
-| 5 | Hot Spicy | Frequent, detailed scenes–characters can't keep hands off each other | High-heat romance, spicy romantasy |
-| 6 | Explicit/Kink | Erotica-level—explicit kink, scenes are a primary feature, adult content central | Erotica, erotic romance |
+Spicebound uses a dual spice system: a **primary categorical label** (displayed as the main chip) and a **secondary numeric estimate** (displayed inside the Spice Guide modal). Both must be returned.
 
-**Important Notes:**
-- Spice 4+ requires NA, ADULT, or EROTICA age level
-- If no romance exists in the book, spice = 0
-- Base this on the book's actual reputation, not assumptions
+#### 2a. SPICE CATEGORY (Primary — displayed as chip)
+
+Assign ONE category that best describes THIS BOOK's spice level:
+
+| Category | Numeric Range | Description | When to Use |
+|----------|---------------|-------------|-------------|
+| No Spice | 0–1 | No sexual content. May include light romance or kissing. | Books with zero romance, or romance limited to hand-holding/kissing. Most middle grade, many YA, non-romance genres. |
+| Closed Door | 2 | AKA clean or fade-to-black. Romantic tension and attraction are clear, but intimacy happens off-page. | Clean romance, sweet romance, most YA romance, books where the "door closes" before anything explicit. |
+| Mild Spice | 3 | 1–3 open-door scenes, nothing wild. Descriptive but not the book's focus. | Light-to-medium steam. Romance is present and scenes are open-door, but they're relatively brief or infrequent. |
+| Confirmed Spice | 3–4 | Confident spice is present, but exact level is uncertain. | **Low-confidence fallback.** Use when the book clearly has open-door content but you cannot confidently distinguish between Mild and High. This is an honest hedge — never force a Mild or High rating when uncertain. |
+| High Spice | 4 | 3+ scenes, more explicit. Frequent, detailed, and a significant part of the reading experience. | High-heat romance and romantasy. Scenes are descriptive, frequent, and integral to the story. Characters have strong physical chemistry throughout. |
+| Erotica | 5 | Spice is central with minimal plot. Sexual content is the primary feature. | Erotica and erotic romance where the plot primarily serves the explicit scenes. |
+
+**CRITICAL RULES:**
+- **Rate THIS BOOK only.** Do not average across the series. If book 1 has closed-door romance but later books are explicitly spicy, book 1 is still "Closed Door."
+- **When uncertain between Mild Spice and High Spice, use "Confirmed Spice."** Do not guess. An honest hedge is always better than a wrong rating.
+- **Be conservative.** When in doubt, rate lower rather than higher. A reader who discovers more spice than expected is pleasantly surprised; a reader who finds less than expected feels misled.
+- **High Spice and Erotica require NA, ADULT, or EROTICA age level.** If you assign High Spice or Erotica, the age level cannot be YA or CHILDRENS.
+- **No romance = "No Spice."** If the book has no romantic subplot whatsoever, the category is always "No Spice."
+- **Base this on the book's actual content and reader community consensus,** not assumptions from the title, cover, or the author's other works.
+
+**CATEGORY SELECTION RULES:**
+1. Return EXACTLY ONE category string from the approved list above.
+2. Use the exact strings: "No Spice", "Closed Door", "Mild Spice", "Confirmed Spice", "High Spice", "Erotica"
+3. If confidence in spice assessment is LOW, prefer "Confirmed Spice" (if spice exists) or note it in confidence.spiceRating.
+
+#### 2b. SPICE NUMERIC ESTIMATE (Secondary — displayed in Spice Guide modal)
+
+Also return a numeric spice estimate on a 0–5 scale. This is shown inside the Spice Guide modal as an "Estimated rating" alongside the categorical legend. It is secondary to the category and labeled as an AI estimate.
+
+| Rating | Description |
+|--------|-------------|
+| 0 | None — no romantic or sexual content |
+| 1 | Kissing & light romance |
+| 2 | Fade-to-black scenes |
+| 3 | Mild spice, 1–3 open-door scenes |
+| 4 | Descriptive open-door scenes, frequent |
+| 5 | Erotica-forward, minimal plot |
+
+The numeric estimate should be consistent with the category. If the category is "Confirmed Spice," the numeric estimate should be 3 or 4 (your best guess within that range).
+
+#### 2c. SPICE INCREASES IN SERIES (Secondary tag — displayed as separate chip)
+
+Return a boolean indicating whether spice **significantly increases** across the series compared to this book.
+
+Set \`spiceIncreasesInSeries: true\` ONLY when ALL of the following are true:
+1. The book is part of a multi-book series (not a standalone).
+2. The spice level in later books is meaningfully higher than in this book — enough that a reader could feel misled by this book's rating alone.
+3. You have reasonable confidence in this assessment based on the series' reputation.
+
+**Threshold guidance:** A jump from Closed Door → Mild Spice or higher qualifies. A jump from Mild Spice → High Spice qualifies. A subtle increase within the same category (e.g., light 3 to strong 3) does NOT qualify.
+
+**When NOT to apply:**
+- The book is a standalone.
+- The book is already the spiciest in the series (or close to it).
+- The book is already High Spice or higher.
+- You are not confident about the spice trajectory of the series.
+- The spice increase is minor or subjective.
+
+Set \`spiceIncreasesInSeries: false\` in all other cases. When in doubt, leave it false — a missing tag is fine, a wrong one erodes reader trust.
+
+**Examples:**
+- ACOTAR book 1 (Mild Spice) → later books are High Spice → \`true\`
+- Fourth Wing book 1 (Confirmed Spice) → book 2 is also Confirmed Spice → \`false\` (no significant increase)
+- Ice Planet Barbarians book 1 (High Spice) → subsequent books are also High Spice → \`false\`
+- A standalone romance → \`false\` (not a series)
 
 ### 3. TROPES (Select 3-4 from approved list)
 Choose the tropes that BEST define this book's core dynamics, emotional themes, and narrative elements.
@@ -746,8 +814,8 @@ Provide series details if applicable:
 - \`name\` should only be \`null\` if the book has no series or universe connection whatsoever
 - \`isMultiArc\` should be \`false\` for standalones
 - Status depends on publication:
-  - Already published standalone -> \`status: "COMPLETE"\`
-  - Pre-order / unreleased standalone -> \`status: "INCOMPLETE"\`
+  - Already published standalone → \`status: "COMPLETE"\`
+  - Pre-order / unreleased standalone → \`status: "INCOMPLETE"\`
 
 ---
 
@@ -896,7 +964,7 @@ Multi-arc series - arc name unknown:
 ### 7. DESCRIPTION
 Create a reader-friendly description with TWO parts:
 Part 1 - Core Description (FIRST):
-Write 3-5 sentences that hook a reader and help them decide if this book is for them. This is the most important part of the book slip.
+Write a 150–300 word description that hooks a reader and helps them decide if this book is for them. This is the most important part of the book slip.
 How to write it:
 Lead with the hook — open with the most compelling element: the protagonist's situation, the inciting conflict, or the central tension. Drop the reader into the story immediately.
 Preserve the source's voice and energy. If the publisher description uses dramatic, punchy language — mirror that tone. If it's witty and playful — keep that feel. Do NOT flatten engaging source copy into bland, generic summary language.
@@ -911,7 +979,7 @@ Do NOT fabricate plot details, character traits, or events not present in the so
 Source fidelity rule: Treat the publisher/source description as your primary reference. Reorganize it for clarity and flow, but preserve its hook, tone, key language, and specific details. You are editing for structure, not rewriting from scratch. If the source description is already strong, stay close to it. Only deviate significantly if the source is cluttered, spoiler-heavy, or poorly structured.
 
 Part 2 - Additional Info (AFTER, separated by two line breaks):
-Place supplemental context at the END, after two line breaks (\n\n). Keep Part 2 under 50 words total. Include only what is relevant — not every book will have all of these. If none apply meaningfully, omit Part 2 entirely.
+Place supplemental context at the END, after two line breaks (\n\n). Keep Part 2 under 60 words total. Include only what is relevant — not every book will have all of these. If none apply meaningfully, omit Part 2 entirely.
 Priority order (include in this order, skip any that don't apply):
 Series reading order notes — e.g., "First in the Crowns of Nyaxia series." or "Can be read as a standalone." Do NOT spell out other book titles in the series.
 Comparison titles — "For fans of..." (use only when well-known, accurate comparisons exist)
@@ -920,11 +988,11 @@ Bestseller status or major awards — e.g., "#1 New York Times Bestseller" or "H
 Author accolades — e.g., "From the author of The Martian"
 
 Rules:
-Total description (Part 1 + Part 2 combined) must be under 450 words
+Total description (Part 1 + Part 2 combined) must be under 400 words
 Part 1 should be the bulk of the description; Part 2 is supplemental and brief
 Do NOT open the description with bestseller info, awards, author quotes, or any Part 2 content
 Focus on STORY first, credentials second — always
-If the source description contains content warnings relevant to dark themes (dubious consent, graphic violence, trafficking, etc.), include a brief ⚠️ content note at the end of Part 1
+If the source description contains content or trigger warnings relevant to dark themes (dubious consent, graphic violence, rape, trafficking, torture, etc.), include a brief ⚠️ content note at the end of Part 1 or beginning of Part 2
 Do NOT copy the source description verbatim — restructure and condense where needed while preserving its strengths
 If you cannot find a reliable source description, write a concise, accurate description based on what you know about the book and flag confidence.overall as "MEDIUM" or "LOW"
 
@@ -939,7 +1007,9 @@ Return ONLY this JSON structure:
   "title": "Exact book title (REQUIRED when Amazon ASIN/titleFromUrl were provided above)",
   "author": "Primary author (REQUIRED when Amazon ASIN/titleFromUrl were provided above)",
   "ageLevel": "CHILDRENS" | "YA" | "NA" | "ADULT" | "EROTICA",
-  "spiceRating": 0-6,
+  "spiceCategory": "No Spice" | "Closed Door" | "Mild Spice" | "Confirmed Spice" | "High Spice" | "Erotica",
+  "spiceRating": 0-5,
+  "spiceIncreasesInSeries": true | false,
   "tropes": ["Trope 1", "Trope 2", "Trope 3", "Trope 4"],
   "creatures": ["Creature 1", "Creature 2"],
   "subgenres": ["Subgenre 1", "Subgenre 2"],
@@ -1002,10 +1072,21 @@ Return ONLY this JSON structure:
       sanitized.ageLevel = 'UNKNOWN';
     }
 
-    // Validate spiceRating - must be integer 0-6
+    // Validate spiceCategory
+    const validSpiceCategories = ["No Spice", "Closed Door", "Mild Spice", "Confirmed Spice", "High Spice", "Erotica"];
+    if (validSpiceCategories.includes(data.spiceCategory)) {
+      sanitized.spiceCategory = data.spiceCategory;
+    } else {
+      sanitized.spiceCategory = "No Spice"; // Default fallback
+    }
+
+    // Validate spiceIncreasesInSeries
+    sanitized.spiceIncreasesInSeries = !!data.spiceIncreasesInSeries;
+
+    // Validate spiceRating - must be integer 0-5
     if (
       typeof data.spiceRating === 'number' &&
-      isValidSpiceRating(data.spiceRating)
+      data.spiceRating >= 0 && data.spiceRating <= 5
     ) {
       sanitized.spiceRating = Math.floor(data.spiceRating);
     } else if (typeof data.spiceRating === 'string') {
@@ -1013,7 +1094,7 @@ Return ONLY this JSON structure:
       const numMatch = data.spiceRating.match(/\d+/);
       if (numMatch) {
         const num = parseInt(numMatch[0], 10);
-        sanitized.spiceRating = isValidSpiceRating(num) ? num : 0;
+        sanitized.spiceRating = (num >= 0 && num <= 5) ? num : 0;
       } else {
         sanitized.spiceRating = 0;
       }
@@ -1023,13 +1104,12 @@ Return ONLY this JSON structure:
 
     // Auto-correct age level based on spice rating (high spice requires mature rating)
     if (
-      sanitized.spiceRating &&
-      sanitized.spiceRating >= 4 &&
+      ((sanitized.spiceRating && sanitized.spiceRating >= 4) || ['High Spice', 'Erotica'].includes(sanitized.spiceCategory as string)) &&
       sanitized.ageLevel &&
       !['NA', 'ADULT', 'EROTICA'].includes(sanitized.ageLevel)
     ) {
       this.logger.warn(
-        `Auto-correcting ageLevel from ${sanitized.ageLevel} to NA due to high spice (${sanitized.spiceRating})`,
+        `Auto-correcting ageLevel from ${sanitized.ageLevel} to NA due to high spice (${sanitized.spiceCategory} / ${sanitized.spiceRating})`,
       );
       sanitized.ageLevel = 'NA';
     }
@@ -1073,35 +1153,53 @@ Return ONLY this JSON structure:
     // Preserve series and arc info and validate
     if (data.series && typeof data.series === 'object') {
       const s = data.series;
+      let position = typeof s.position === 'number' ? s.position : 1;
+      let totalBooks = typeof s.totalBooks === 'number' ? s.totalBooks : null;
+      let status = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status) ? s.status : 'UNKNOWN';
+
+      if (totalBooks !== null && totalBooks < position) {
+        totalBooks = position;
+      }
+      if (status === 'COMPLETE' && totalBooks === null) {
+        status = 'UNKNOWN';
+      }
+
       sanitized.series = {
         name: s.name || null,
-        position: typeof s.position === 'number' ? s.position : 1,
-        totalBooks: typeof s.totalBooks === 'number' ? s.totalBooks : null,
-        status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status)
-          ? s.status
-          : 'UNKNOWN',
+        position,
+        totalBooks,
+        status,
         isMultiArc: !!s.isMultiArc,
         arc: null,
       };
 
       if (s.isMultiArc && s.arc && typeof s.arc === 'object') {
         const a = s.arc;
+        let arcPosition = typeof a.position === 'number' ? a.position : null;
+        let arcTotalBooks = typeof a.totalBooks === 'number' ? a.totalBooks : null;
+        let arcStatus = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status) ? a.status : 'UNKNOWN';
+
+        if (arcPosition !== null && arcTotalBooks !== null && arcTotalBooks < arcPosition) {
+           arcTotalBooks = arcPosition;
+        }
+        if (arcStatus === 'COMPLETE' && arcTotalBooks === null) {
+           arcStatus = 'UNKNOWN';
+        }
+
         sanitized.series.arc = {
           arcNumber: typeof a.arcNumber === 'number' ? a.arcNumber : null,
           name: a.name || null,
-          position: typeof a.position === 'number' ? a.position : null,
-          totalBooks: typeof a.totalBooks === 'number' ? a.totalBooks : null,
-          status: ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status)
-            ? a.status
-            : 'UNKNOWN',
+          position: arcPosition,
+          totalBooks: arcTotalBooks,
+          status: arcStatus,
         };
       }
     }
 
     if (data.confidence && typeof data.confidence === 'object') {
       sanitized.confidence = {
-        spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.spiceRating) ? data.confidence.spiceRating : 'LOW',
-        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.overall) ? data.confidence.overall : 'LOW',
+        spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.spiceRating as string) ? data.confidence.spiceRating : 'LOW',
+        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.overall as string) ? data.confidence.overall : 'LOW',
       };
     }
 

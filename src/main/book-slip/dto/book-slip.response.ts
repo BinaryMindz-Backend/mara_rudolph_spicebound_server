@@ -13,7 +13,9 @@ export interface BookSlipResponse {
 
   // ageLevel is now displayed as formatted string (e.g., "New Adult" instead of "NA")
   ageLevel?: string;
+  spiceCategory?: string;
   spiceRating?: number;
+  spiceIncreasesInSeries?: boolean;
 
   tropes: string[];
   creatures: string[];

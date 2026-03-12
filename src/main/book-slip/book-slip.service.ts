@@ -181,6 +181,7 @@ export class BookSlipService {
       this.logger.log(
         `✅ Found existing book by external ID: ${existingBook.id} (no API calls needed)`,
       );
+      existingBook = await this.refreshIncompleteSeriesIfNeeded(existingBook);
       const slip = await this.buildSlip(existingBook, false);
       return slip;
     }
@@ -278,6 +279,7 @@ export class BookSlipService {
       );
       // Update aliases if we discovered new IDs (e.g. from pasted Goodreads/Amazon URL)
       await this.updateAliasesIfNeeded(existingBook.id, merged, goodreadsId);
+      existingBook = await this.refreshIncompleteSeriesIfNeeded(existingBook);
       const slip = await this.buildSlip(existingBook, false);
       return slip;
     }
@@ -295,6 +297,12 @@ export class BookSlipService {
         title: merged.title,
         author: merged.author,
         description: merged.description,
+        seriesContext: {
+          name: merged.seriesName,
+          position: merged.seriesIndex,
+          totalBooks: merged.seriesTotal,
+          status: merged.seriesStatus,
+        },
       };
       // When user pasted an Amazon URL, pass ASIN + slug so AI returns the correct book (search may have returned a different one)
       if (inputType === InputType.AMAZON_URL && asin) {
@@ -394,7 +402,9 @@ export class BookSlipService {
             shortDescription:
               enriched.description || merged.description || undefined,
             ageLevel: (enriched.ageLevel as AgeLevel) || undefined,
+            spiceCategory: enriched.spiceCategory ?? undefined,
             spiceRating: enriched.spiceRating ?? undefined,
+            spiceIncreasesInSeries: enriched.spiceIncreasesInSeries ?? undefined,
             tropes: enriched.tropes ?? undefined,
             creatures: enriched.creatures ?? undefined,
             subgenres: enriched.subgenres ?? undefined,
@@ -454,7 +464,9 @@ export class BookSlipService {
 
         // AI-enriched metadata
         ageLevel: (enriched.ageLevel as AgeLevel) || AgeLevel.UNKNOWN,
+        spiceCategory: enriched.spiceCategory ?? null,
         spiceRating: enriched.spiceRating ?? null,
+        spiceIncreasesInSeries: enriched.spiceIncreasesInSeries ?? false,
         tropes: enriched.tropes ?? [],
         creatures: enriched.creatures ?? [],
         subgenres: enriched.subgenres ?? [],
@@ -945,7 +957,9 @@ export class BookSlipService {
 
       // Format age level for display (Title Case)
       ageLevel: formatAgeLevel(book.ageLevel),
+      spiceCategory: book.spiceCategory ?? undefined,
       spiceRating: book.spiceRating ?? 0,
+      spiceIncreasesInSeries: book.spiceIncreasesInSeries ?? false,
 
       tropes: (book.tropes ?? []).map(toTitleCase),
       creatures: (book.creatures ?? []).map(toTitleCase),
@@ -973,5 +987,58 @@ export class BookSlipService {
         overall: 'HIGH',
       },
     };
+  }
+
+  private async refreshIncompleteSeriesIfNeeded(book: any): Promise<any> {
+    if (book.seriesStatus !== SeriesStatus.INCOMPLETE && book.arcStatus !== SeriesStatus.INCOMPLETE) {
+      return book;
+    }
+
+    const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+    const isOutdated = Date.now() - new Date(book.updatedAt).getTime() > THIRTY_DAYS_MS;
+    
+    if (!isOutdated) return book;
+
+    this.logger.log(`🔹 Book ${book.id} is INCOMPLETE and >30 days old. Doing lightweight series refresh.`);
+
+    const aliases = await this.prisma.bookAlias.findMany({ where: { bookId: book.id } });
+    const googleId = aliases.find(a => a.type === BookAliasType.GOOGLE_VOLUME_ID)?.value;
+    const openLibId = aliases.find(a => a.type === BookAliasType.OPEN_LIBRARY_ID)?.value;
+
+    let googleData: ExternalBookData | undefined;
+    let openLibraryData: ExternalBookData | undefined;
+
+    if (googleId) {
+      googleData = (await this.googleBooks.fetchByVolumeId(googleId).catch(() => undefined)) ?? undefined;
+    } else {
+      googleData = (await this.googleBooks.search(`${book.title} ${book.primaryAuthor}`).catch(() => undefined)) ?? undefined;
+    }
+
+    if (openLibId) {
+      openLibraryData = (await this.openLibrary.fetchById(openLibId).catch(() => undefined)) ?? undefined;
+    } else {
+      openLibraryData = (await this.openLibrary.search(`${book.title} ${book.primaryAuthor}`).catch(() => undefined)) ?? undefined;
+    }
+
+    const merged = mergeExternalData(googleData, openLibraryData, undefined);
+    
+    const updates: any = {};
+    if (book.seriesStatus === SeriesStatus.INCOMPLETE) {
+      if (merged.seriesStatus === 'COMPLETE') updates.seriesStatus = SeriesStatus.COMPLETE;
+      if (merged.seriesTotal && merged.seriesTotal > (book.seriesTotal || 0)) updates.seriesTotal = merged.seriesTotal;
+    }
+
+    if (Object.keys(updates).length > 0) {
+      this.logger.log(`🔹 Updating book ${book.id} series info: ${JSON.stringify(updates)}`);
+      return await this.prisma.book.update({
+        where: { id: book.id },
+        data: updates
+      });
+    }
+
+    return await this.prisma.book.update({
+      where: { id: book.id },
+      data: { updatedAt: new Date() }
+    });
   }
 }

@@ -121,12 +121,24 @@ export class EnrichedBookSlipResponse {
   ageLevel: string;
 
   @ApiProperty({
-    description: 'Spice rating (0-6 scale)',
+    description: 'Spice category',
+    example: 'High Spice',
+  })
+  spiceCategory: string;
+
+  @ApiProperty({
+    description: 'Spice rating (0-5 scale)',
     example: 4,
     minimum: 0,
-    maximum: 6,
+    maximum: 5,
   })
   spiceRating: number;
+
+  @ApiProperty({
+    description: 'Whether spice increases across the series',
+    example: false,
+  })
+  spiceIncreasesInSeries: boolean;
 
   @ApiProperty({
     description: 'Story tropes',

@@ -43,8 +43,10 @@ model Book {
   firstPublishedYear Int?
 
   // AI-enriched classification
-  ageLevel    AgeLevel @default(UNKNOWN)
-  spiceRating Int?
+  ageLevel               AgeLevel @default(UNKNOWN)
+  spiceCategory          String?
+  spiceRating            Int?     // 0-5 scale
+  spiceIncreasesInSeries Boolean? @default(false)
 
   tropes    String[]
   creatures String[]

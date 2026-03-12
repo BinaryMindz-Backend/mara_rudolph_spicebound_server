@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { BookSlipService } from './book-slip.service';
+import { BookSlipService } from './book-slip.service.js';
 
 describe('BookSlipService', () => {
   let service: BookSlipService;
