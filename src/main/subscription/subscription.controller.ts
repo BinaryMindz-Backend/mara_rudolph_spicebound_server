@@ -78,7 +78,7 @@ export class SubscriptionController {
   @ApiOperation({
     summary: 'Cancel current subscription',
     description:
-      'Cancels the user’s latest Stripe subscription at period end and marks it as canceled locally.',
+      'Cancels the user’s latest Stripe subscription immediately and downgrades the user to FREE.',
   })
   async cancelSubscription(@CurrentUser() userId: string) {
     return this.subscriptionService.cancelCurrentSubscription(userId);

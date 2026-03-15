@@ -66,7 +66,7 @@ export class BookSlipService {
     private readonly openLibrary: OpenLibraryProvider,
     private readonly goodreads: GoodreadsProvider,
     private readonly aiEnrichment: AiEnrichmentService,
-  ) { }
+  ) {}
 
   async discoverBook(input: string): Promise<BookSlipResponse> {
     this.logger.log(`🔹 discoverBook called with input: ${input}`);
@@ -251,8 +251,6 @@ export class BookSlipService {
     const normalizedTitle = normalizeText(merged.title);
     const normalizedAuthor = normalizeText(merged.author);
 
-
-
     /**
      * 5️⃣ Check existing book by normalized title + author (fallback check)
      */
@@ -312,17 +310,23 @@ export class BookSlipService {
       /**
        * 6b️⃣ Fetch Goodreads ratings in parallel if needed
        */
-      const ratingsPromise = ((merged.externalRatingCount || 0) < 50)
-        ? this.goodreads.getRatings(merged.title, merged.author).catch(e => {
-          this.logger.error('Goodreads scraping failed in parallel execution', e);
-          return null;
-        })
-        : Promise.resolve(null);
+      const ratingsPromise =
+        (merged.externalRatingCount || 0) < 50
+          ? this.goodreads
+              .getRatings(merged.title, merged.author)
+              .catch((e) => {
+                this.logger.error(
+                  'Goodreads scraping failed in parallel execution',
+                  e,
+                );
+                return null;
+              })
+          : Promise.resolve(null);
 
       // Await both AI and Ratings
       const [aiResult, ratingsResult] = await Promise.all([
         this.aiEnrichment.enrichBook(enrichPayload),
-        ratingsPromise
+        ratingsPromise,
       ]);
 
       enriched = aiResult;
@@ -334,7 +338,6 @@ export class BookSlipService {
           `✅ Parallel scrape replaced external ratings with Goodreads: ${merged.externalAvgRating} (${merged.externalRatingCount})`,
         );
       }
-
     } catch (error: any) {
       if (error.message === 'NON_BOOK_CONTENT') {
         this.logger.warn(
@@ -404,7 +407,8 @@ export class BookSlipService {
             ageLevel: (enriched.ageLevel as AgeLevel) || undefined,
             spiceCategory: enriched.spiceCategory ?? undefined,
             spiceRating: enriched.spiceRating ?? undefined,
-            spiceIncreasesInSeries: enriched.spiceIncreasesInSeries ?? undefined,
+            spiceIncreasesInSeries:
+              enriched.spiceIncreasesInSeries ?? undefined,
             tropes: enriched.tropes ?? undefined,
             creatures: enriched.creatures ?? undefined,
             subgenres: enriched.subgenres ?? undefined,
@@ -781,9 +785,7 @@ export class BookSlipService {
    * Build slip responses for multiple books with two batched queries (aliases + ratings)
    * instead of 2N queries. Use for library/list endpoints.
    */
-  public async buildSlipsBatch(
-    books: any[],
-  ): Promise<BookSlipResponse[]> {
+  public async buildSlipsBatch(books: any[]): Promise<BookSlipResponse[]> {
     if (books.length === 0) return [];
     const bookIds = books.map((b) => b.id);
 
@@ -820,13 +822,21 @@ export class BookSlipService {
       for (const alias of aliases) {
         if (alias.type === BookAliasType.ASIN) finalAsin = alias.value;
         if (alias.type === BookAliasType.ISBN_13) finalIsbn13 = alias.value;
-        if (alias.type === BookAliasType.GOODREADS_ID) finalGoodreadsId = alias.value;
+        if (alias.type === BookAliasType.GOODREADS_ID)
+          finalGoodreadsId = alias.value;
       }
       const platformRatings = ratingsByBookId.get(book.id) ?? {
         _avg: { value: null as number | null },
         _count: 0,
       };
-      return this.buildSlipResponse(book, false, finalAsin, finalIsbn13, finalGoodreadsId, platformRatings);
+      return this.buildSlipResponse(
+        book,
+        false,
+        finalAsin,
+        finalIsbn13,
+        finalGoodreadsId,
+        platformRatings,
+      );
     });
   }
 
@@ -847,9 +857,12 @@ export class BookSlipService {
       where: { bookId: book.id },
     });
     for (const alias of aliases) {
-      if (alias.type === BookAliasType.ASIN && !finalAsin) finalAsin = alias.value;
-      if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13) finalIsbn13 = alias.value;
-      if (alias.type === BookAliasType.GOODREADS_ID) finalGoodreadsId = alias.value;
+      if (alias.type === BookAliasType.ASIN && !finalAsin)
+        finalAsin = alias.value;
+      if (alias.type === BookAliasType.ISBN_13 && !finalIsbn13)
+        finalIsbn13 = alias.value;
+      if (alias.type === BookAliasType.GOODREADS_ID)
+        finalGoodreadsId = alias.value;
     }
 
     const platformRatings = await this.prisma.rating.aggregate({
@@ -858,7 +871,14 @@ export class BookSlipService {
       _count: true,
     });
 
-    return this.buildSlipResponse(book, created, finalAsin, finalIsbn13, finalGoodreadsId, platformRatings);
+    return this.buildSlipResponse(
+      book,
+      created,
+      finalAsin,
+      finalIsbn13,
+      finalGoodreadsId,
+      platformRatings,
+    );
   }
 
   /**
@@ -990,55 +1010,82 @@ export class BookSlipService {
   }
 
   private async refreshIncompleteSeriesIfNeeded(book: any): Promise<any> {
-    if (book.seriesStatus !== SeriesStatus.INCOMPLETE && book.arcStatus !== SeriesStatus.INCOMPLETE) {
+    if (
+      book.seriesStatus !== SeriesStatus.INCOMPLETE &&
+      book.arcStatus !== SeriesStatus.INCOMPLETE
+    ) {
       return book;
     }
 
     const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-    const isOutdated = Date.now() - new Date(book.updatedAt).getTime() > THIRTY_DAYS_MS;
-    
+    const isOutdated =
+      Date.now() - new Date(book.updatedAt).getTime() > THIRTY_DAYS_MS;
+
     if (!isOutdated) return book;
 
-    this.logger.log(`🔹 Book ${book.id} is INCOMPLETE and >30 days old. Doing lightweight series refresh.`);
+    this.logger.log(
+      `🔹 Book ${book.id} is INCOMPLETE and >30 days old. Doing lightweight series refresh.`,
+    );
 
-    const aliases = await this.prisma.bookAlias.findMany({ where: { bookId: book.id } });
-    const googleId = aliases.find(a => a.type === BookAliasType.GOOGLE_VOLUME_ID)?.value;
-    const openLibId = aliases.find(a => a.type === BookAliasType.OPEN_LIBRARY_ID)?.value;
+    const aliases = await this.prisma.bookAlias.findMany({
+      where: { bookId: book.id },
+    });
+    const googleId = aliases.find(
+      (a) => a.type === BookAliasType.GOOGLE_VOLUME_ID,
+    )?.value;
+    const openLibId = aliases.find(
+      (a) => a.type === BookAliasType.OPEN_LIBRARY_ID,
+    )?.value;
 
     let googleData: ExternalBookData | undefined;
     let openLibraryData: ExternalBookData | undefined;
 
     if (googleId) {
-      googleData = (await this.googleBooks.fetchByVolumeId(googleId).catch(() => undefined)) ?? undefined;
+      googleData =
+        (await this.googleBooks
+          .fetchByVolumeId(googleId)
+          .catch(() => undefined)) ?? undefined;
     } else {
-      googleData = (await this.googleBooks.search(`${book.title} ${book.primaryAuthor}`).catch(() => undefined)) ?? undefined;
+      googleData =
+        (await this.googleBooks
+          .search(`${book.title} ${book.primaryAuthor}`)
+          .catch(() => undefined)) ?? undefined;
     }
 
     if (openLibId) {
-      openLibraryData = (await this.openLibrary.fetchById(openLibId).catch(() => undefined)) ?? undefined;
+      openLibraryData =
+        (await this.openLibrary.fetchById(openLibId).catch(() => undefined)) ??
+        undefined;
     } else {
-      openLibraryData = (await this.openLibrary.search(`${book.title} ${book.primaryAuthor}`).catch(() => undefined)) ?? undefined;
+      openLibraryData =
+        (await this.openLibrary
+          .search(`${book.title} ${book.primaryAuthor}`)
+          .catch(() => undefined)) ?? undefined;
     }
 
     const merged = mergeExternalData(googleData, openLibraryData, undefined);
-    
+
     const updates: any = {};
     if (book.seriesStatus === SeriesStatus.INCOMPLETE) {
-      if (merged.seriesStatus === 'COMPLETE') updates.seriesStatus = SeriesStatus.COMPLETE;
-      if (merged.seriesTotal && merged.seriesTotal > (book.seriesTotal || 0)) updates.seriesTotal = merged.seriesTotal;
+      if (merged.seriesStatus === 'COMPLETE')
+        updates.seriesStatus = SeriesStatus.COMPLETE;
+      if (merged.seriesTotal && merged.seriesTotal > (book.seriesTotal || 0))
+        updates.seriesTotal = merged.seriesTotal;
     }
 
     if (Object.keys(updates).length > 0) {
-      this.logger.log(`🔹 Updating book ${book.id} series info: ${JSON.stringify(updates)}`);
+      this.logger.log(
+        `🔹 Updating book ${book.id} series info: ${JSON.stringify(updates)}`,
+      );
       return await this.prisma.book.update({
         where: { id: book.id },
-        data: updates
+        data: updates,
       });
     }
 
     return await this.prisma.book.update({
       where: { id: book.id },
-      data: { updatedAt: new Date() }
+      data: { updatedAt: new Date() },
     });
   }
 }

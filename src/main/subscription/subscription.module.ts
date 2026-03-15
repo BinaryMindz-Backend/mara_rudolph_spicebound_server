@@ -3,9 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { SubscriptionService } from './subscription.service.js';
 import { SubscriptionController } from './subscription.controller.js';
 import { StripeWebhookController } from './stripe-webhook.controller.js';
+import { UserLibraryModule } from '../user-library/user-library.module.js';
 
 @Module({
-  imports: [ConfigModule],
+  imports: [ConfigModule, UserLibraryModule],
   providers: [SubscriptionService],
   controllers: [SubscriptionController, StripeWebhookController],
   exports: [SubscriptionService],

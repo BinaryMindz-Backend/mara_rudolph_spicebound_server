@@ -41,7 +41,7 @@ export interface EnrichedBookData {
 export class AiEnrichmentService {
   private readonly logger = new Logger(AiEnrichmentService.name);
 
-  constructor(private configService: ConfigService) { }
+  constructor(private configService: ConfigService) {}
 
   async enrichBook(bookData: any): Promise<EnrichedBookData> {
     try {
@@ -1073,11 +1073,18 @@ Return ONLY this JSON structure:
     }
 
     // Validate spiceCategory
-    const validSpiceCategories = ["No Spice", "Closed Door", "Mild Spice", "Confirmed Spice", "High Spice", "Erotica"];
+    const validSpiceCategories = [
+      'No Spice',
+      'Closed Door',
+      'Mild Spice',
+      'Confirmed Spice',
+      'High Spice',
+      'Erotica',
+    ];
     if (validSpiceCategories.includes(data.spiceCategory)) {
       sanitized.spiceCategory = data.spiceCategory;
     } else {
-      sanitized.spiceCategory = "No Spice"; // Default fallback
+      sanitized.spiceCategory = 'No Spice'; // Default fallback
     }
 
     // Validate spiceIncreasesInSeries
@@ -1086,7 +1093,8 @@ Return ONLY this JSON structure:
     // Validate spiceRating - must be integer 0-5
     if (
       typeof data.spiceRating === 'number' &&
-      data.spiceRating >= 0 && data.spiceRating <= 5
+      data.spiceRating >= 0 &&
+      data.spiceRating <= 5
     ) {
       sanitized.spiceRating = Math.floor(data.spiceRating);
     } else if (typeof data.spiceRating === 'string') {
@@ -1094,7 +1102,7 @@ Return ONLY this JSON structure:
       const numMatch = data.spiceRating.match(/\d+/);
       if (numMatch) {
         const num = parseInt(numMatch[0], 10);
-        sanitized.spiceRating = (num >= 0 && num <= 5) ? num : 0;
+        sanitized.spiceRating = num >= 0 && num <= 5 ? num : 0;
       } else {
         sanitized.spiceRating = 0;
       }
@@ -1104,7 +1112,10 @@ Return ONLY this JSON structure:
 
     // Auto-correct age level based on spice rating (high spice requires mature rating)
     if (
-      ((sanitized.spiceRating && sanitized.spiceRating >= 4) || ['High Spice', 'Erotica'].includes(sanitized.spiceCategory as string)) &&
+      ((sanitized.spiceRating && sanitized.spiceRating >= 4) ||
+        ['High Spice', 'Erotica'].includes(
+          sanitized.spiceCategory as string,
+        )) &&
       sanitized.ageLevel &&
       !['NA', 'ADULT', 'EROTICA'].includes(sanitized.ageLevel)
     ) {
@@ -1155,7 +1166,9 @@ Return ONLY this JSON structure:
       const s = data.series;
       let position = typeof s.position === 'number' ? s.position : 1;
       let totalBooks = typeof s.totalBooks === 'number' ? s.totalBooks : null;
-      let status = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status) ? s.status : 'UNKNOWN';
+      let status = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(s.status)
+        ? s.status
+        : 'UNKNOWN';
 
       if (totalBooks !== null && totalBooks < position) {
         totalBooks = position;
@@ -1176,14 +1189,21 @@ Return ONLY this JSON structure:
       if (s.isMultiArc && s.arc && typeof s.arc === 'object') {
         const a = s.arc;
         let arcPosition = typeof a.position === 'number' ? a.position : null;
-        let arcTotalBooks = typeof a.totalBooks === 'number' ? a.totalBooks : null;
-        let arcStatus = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status) ? a.status : 'UNKNOWN';
+        let arcTotalBooks =
+          typeof a.totalBooks === 'number' ? a.totalBooks : null;
+        let arcStatus = ['COMPLETE', 'INCOMPLETE', 'UNKNOWN'].includes(a.status)
+          ? a.status
+          : 'UNKNOWN';
 
-        if (arcPosition !== null && arcTotalBooks !== null && arcTotalBooks < arcPosition) {
-           arcTotalBooks = arcPosition;
+        if (
+          arcPosition !== null &&
+          arcTotalBooks !== null &&
+          arcTotalBooks < arcPosition
+        ) {
+          arcTotalBooks = arcPosition;
         }
         if (arcStatus === 'COMPLETE' && arcTotalBooks === null) {
-           arcStatus = 'UNKNOWN';
+          arcStatus = 'UNKNOWN';
         }
 
         sanitized.series.arc = {
@@ -1198,8 +1218,16 @@ Return ONLY this JSON structure:
 
     if (data.confidence && typeof data.confidence === 'object') {
       sanitized.confidence = {
-        spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.spiceRating as string) ? data.confidence.spiceRating : 'LOW',
-        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.overall as string) ? data.confidence.overall : 'LOW',
+        spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(
+          data.confidence.spiceRating as string,
+        )
+          ? data.confidence.spiceRating
+          : 'LOW',
+        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(
+          data.confidence.overall as string,
+        )
+          ? data.confidence.overall
+          : 'LOW',
       };
     }
 

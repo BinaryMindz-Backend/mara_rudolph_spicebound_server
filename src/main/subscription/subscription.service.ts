@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import Stripe from 'stripe';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { SubscriptionPlan } from '../../../prisma/generated/prisma-client/enums.js';
+import { UserLibraryService } from '../user-library/user-library.service.js';
 
 @Injectable()
 export class SubscriptionService {
@@ -17,6 +18,7 @@ export class SubscriptionService {
   constructor(
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
+    private readonly userLibraryService: UserLibraryService,
   ) {
     const secretKey =
       this.configService.get<string>('STRIPE_SECRET_KEY') ||
@@ -795,13 +797,9 @@ export class SubscriptionService {
       `🛑 Cancel requested for subscription ${latest.stripeSubscriptionId} (user ${userId})`,
     );
 
-    // Ask Stripe to cancel at period end, so user keeps access until expiry.
-    let stripeSub: any | null = null;
+    // Cancel the subscription immediately in Stripe.
     try {
-      stripeSub = (await this.stripe.subscriptions.update(
-        latest.stripeSubscriptionId,
-        { cancel_at_period_end: true },
-      )) as any;
+      await this.stripe.subscriptions.cancel(latest.stripeSubscriptionId);
     } catch (err: any) {
       this.logger.error(
         `❌ Failed to cancel Stripe subscription ${latest.stripeSubscriptionId}: ${err.message}`,
@@ -811,37 +809,34 @@ export class SubscriptionService {
       );
     }
 
-    let billingInterval: 'month' | 'year' =
-      latest.billingInterval === 'year' ? 'year' : 'month';
-
-    const firstItem = stripeSub?.items?.data?.[0];
-    const intervalFromPrice = (firstItem?.price as Stripe.Price | undefined)
-      ?.recurring?.interval;
-    if (intervalFromPrice === 'year' || intervalFromPrice === 'month') {
-      billingInterval = intervalFromPrice;
-    }
-
-    const unixEnd = stripeSub?.current_period_end as number | null | undefined;
-    const expiresAt: Date =
-      unixEnd && unixEnd > 0
-        ? new Date(unixEnd * 1000)
-        : this.computeFallbackExpiry(billingInterval);
+    const now = new Date();
 
     const updated = await this.prisma.subscription.update({
       where: { id: latest.id },
       data: {
         status: 'canceled',
-        billingInterval,
-        expiresAt,
+        expiresAt: now,
       },
     });
 
-    this.logger.log(
-      `🛑 Subscription ${latest.stripeSubscriptionId} marked as canceled; access until ${expiresAt.toISOString()}`,
-    );
+    // Downgrade user to FREE immediately so access is revoked right away.
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { plan: SubscriptionPlan.FREE },
+    });
 
-    // Note: we keep user.plan as PREMIUM until Stripe actually ends the period
-    // and sends customer.subscription.deleted, which will downgrade to FREE.
+    // Trim TBR/Reading list to free limit (keep first 3, remove the rest).
+    const { removed } =
+      await this.userLibraryService.trimTbrToFreeLimit(userId);
+    if (removed > 0) {
+      this.logger.log(
+        `🛑 User ${userId} TBR trimmed to 3; ${removed} book(s) removed`,
+      );
+    }
+
+    this.logger.log(
+      `🛑 Subscription ${latest.stripeSubscriptionId} canceled immediately; user ${userId} downgraded to FREE`,
+    );
 
     return updated;
   }

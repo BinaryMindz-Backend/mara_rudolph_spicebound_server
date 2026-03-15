@@ -395,6 +395,57 @@ export class UserLibraryService {
   }
 
   /**
+   * Trim TBR/Reading list to free-tier limit (3 books). Keeps the first 3 by order
+   * (Reading first, then by orderIndex); removes the rest. Call when user downgrades.
+   */
+  async trimTbrToFreeLimit(userId: string): Promise<{ removed: number }> {
+    const tbrAndReading = await this.prisma.userBook.findMany({
+      where: {
+        userId,
+        status: { in: [ReadingStatus.TBR, ReadingStatus.READING] },
+      },
+      orderBy: { orderIndex: 'asc' },
+    });
+
+    // Match app order: READING first, then by orderIndex
+    tbrAndReading.sort((a, b) => {
+      if (
+        a.status === ReadingStatus.READING &&
+        b.status !== ReadingStatus.READING
+      )
+        return -1;
+      if (
+        a.status !== ReadingStatus.READING &&
+        b.status === ReadingStatus.READING
+      )
+        return 1;
+      return a.orderIndex - b.orderIndex;
+    });
+
+    if (tbrAndReading.length <= 3) {
+      return { removed: 0 };
+    }
+
+    const toRemove = tbrAndReading.slice(3);
+    const idsToRemove = toRemove.map((ub) => ub.id);
+
+    await this.prisma.userBook.deleteMany({
+      where: { id: { in: idsToRemove } },
+    });
+
+    // Reindex kept items to 0, 1, 2
+    const toKeep = tbrAndReading.slice(0, 3);
+    for (let i = 0; i < toKeep.length; i++) {
+      await this.prisma.userBook.update({
+        where: { id: toKeep[i].id },
+        data: { orderIndex: i },
+      });
+    }
+
+    return { removed: toRemove.length };
+  }
+
+  /**
    * Internal: Reorder after book removal
    */
   private async reorderAfterRemoval(
