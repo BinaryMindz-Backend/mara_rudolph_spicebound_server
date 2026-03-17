@@ -394,39 +394,41 @@ export class UserLibraryService {
     });
   }
 
+  /** Priority order when trimming to free limit: 1.TBR, 2.Reading, 3.Read, 4.DNF */
+  private static readonly TRIM_PRIORITY: Record<ReadingStatus, number> = {
+    [ReadingStatus.TBR]: 1,
+    [ReadingStatus.READING]: 2,
+    [ReadingStatus.READ]: 3,
+    [ReadingStatus.DNF]: 4,
+  };
+
   /**
-   * Trim TBR/Reading list to free-tier limit (3 books). Keeps the first 3 by order
-   * (Reading first, then by orderIndex); removes the rest. Call when user downgrades.
+   * Trim user library to free-tier limit (3 books). Keeps the first 3 by
+   * priority: 1. TBR, 2. Reading, 3. Read, 4. DNF (then orderIndex within same status).
+   * Deletes all other books for this user. Call when user downgrades.
    */
   async trimTbrToFreeLimit(userId: string): Promise<{ removed: number }> {
-    const tbrAndReading = await this.prisma.userBook.findMany({
-      where: {
-        userId,
-        status: { in: [ReadingStatus.TBR, ReadingStatus.READING] },
-      },
+    const allBooks = await this.prisma.userBook.findMany({
+      where: { userId },
       orderBy: { orderIndex: 'asc' },
     });
 
-    // Match app order: READING first, then by orderIndex
-    tbrAndReading.sort((a, b) => {
-      if (
-        a.status === ReadingStatus.READING &&
-        b.status !== ReadingStatus.READING
-      )
-        return -1;
-      if (
-        a.status !== ReadingStatus.READING &&
-        b.status === ReadingStatus.READING
-      )
-        return 1;
+    // Sort by priority (TBR → Reading → Read → DNF), then by orderIndex within same status
+    const priority = UserLibraryService.TRIM_PRIORITY;
+    allBooks.sort((a, b) => {
+      const pa = priority[a.status];
+      const pb = priority[b.status];
+      if (pa !== pb) return pa - pb;
       return a.orderIndex - b.orderIndex;
     });
 
-    if (tbrAndReading.length <= 3) {
+    if (allBooks.length <= 3) {
       return { removed: 0 };
     }
 
-    const toRemove = tbrAndReading.slice(3);
+    const toKeep = allBooks.slice(0, 3);
+    const idsToKeep = new Set(toKeep.map((ub) => ub.id));
+    const toRemove = allBooks.filter((ub) => !idsToKeep.has(ub.id));
     const idsToRemove = toRemove.map((ub) => ub.id);
 
     await this.prisma.userBook.deleteMany({
@@ -434,7 +436,6 @@ export class UserLibraryService {
     });
 
     // Reindex kept items to 0, 1, 2
-    const toKeep = tbrAndReading.slice(0, 3);
     for (let i = 0; i < toKeep.length; i++) {
       await this.prisma.userBook.update({
         where: { id: toKeep[i].id },

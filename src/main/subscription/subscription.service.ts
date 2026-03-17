@@ -565,6 +565,16 @@ export class SubscriptionService {
       where: { id: sub.id },
     });
 
+    // Trim TBR/Reading to free limit (3 books) when subscription ends via webhook too.
+    const { removed } = await this.userLibraryService.trimTbrToFreeLimit(
+      sub.userId,
+    );
+    if (removed > 0) {
+      this.logger.log(
+        `🛑 User ${sub.userId} TBR trimmed to 3; ${removed} book(s) removed`,
+      );
+    }
+
     this.logger.log(`⬇️ User ${sub.userId} downgraded to FREE`);
   }
 
