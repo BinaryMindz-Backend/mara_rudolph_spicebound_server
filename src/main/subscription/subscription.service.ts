@@ -292,8 +292,14 @@ export class SubscriptionService {
       | undefined;
     const expiresAt: Date | null = unixEnd ? new Date(unixEnd * 1000) : null;
 
+    // If the subscription is set to cancel at period end, treat it as locally 'canceled'
+    // so the UI can show the expiry date correctly while keeping user on PREMIUM.
+    const localStatus = (subscription as any).cancel_at_period_end
+      ? 'canceled'
+      : subscription.status;
+
     this.logger.log(
-      `[SUBSCRIPTION UPSERT] Subscription ID: ${subscriptionId}, Customer: ${customerId}, Status: ${subscription.status}`,
+      `[SUBSCRIPTION UPSERT] Subscription ID: ${subscriptionId}, Customer: ${customerId}, Status: ${subscription.status}, cancel_at_period_end: ${(subscription as any).cancel_at_period_end}`,
     );
 
     let user = await this.prisma.user.findFirst({
@@ -347,12 +353,12 @@ export class SubscriptionService {
 
     if (existing) {
       this.logger.log(
-        `[UPDATE] Existing subscription found: ${existing.id}. Updating status to ${subscription.status}`,
+        `[UPDATE] Existing subscription found: ${existing.id}. Updating status to ${localStatus}`,
       );
       await this.prisma.subscription.update({
         where: { id: existing.id },
         data: {
-          status: subscription.status,
+          status: localStatus,
           plan,
           billingInterval,
           expiresAt:
@@ -367,7 +373,7 @@ export class SubscriptionService {
         data: {
           stripeSubscriptionId: subscriptionId,
           stripeCustomerId: customerId,
-          status: subscription.status,
+          status: localStatus,
           plan,
           billingInterval,
           expiresAt: expiresAt ?? this.computeFallbackExpiry(billingInterval),
@@ -376,14 +382,16 @@ export class SubscriptionService {
       });
     }
 
-    // Upgrade user plan to PREMIUM
-    this.logger.log(`[UPDATE USER PLAN] Upgrading user ${user.id} to ${plan}`);
+    // Keep/upgrade user plan to PREMIUM (entitlements remain until the subscription actually ends)
+    this.logger.log(`[UPDATE USER PLAN] Ensuring user ${user.id} is ${plan}`);
     await this.prisma.user.update({
       where: { id: user.id },
       data: { plan },
     });
 
-    this.logger.log(`🎉 User ${user.id} (${user.email}) upgraded to ${plan}`);
+    this.logger.log(
+      `🎉 User ${user.id} (${user.email}) plan confirmed as ${plan}`,
+    );
   }
 
   /**
@@ -785,8 +793,9 @@ export class SubscriptionService {
   /* -------------------------------------------------------------------------- */
 
   /**
-   * Cancel the user's current subscription in Stripe and mark it as canceled locally.
-   * We always operate on the latest subscription record.
+   * Schedule the user's subscription to cancel at the end of the current billing period.
+   * The user retains PREMIUM access until the period ends; downgrade and TBR trimming
+   * happen via the customer.subscription.deleted webhook when the period actually expires.
    */
   async cancelCurrentSubscription(userId: string) {
     // Grab latest subscription for this user
@@ -804,52 +813,114 @@ export class SubscriptionService {
     }
 
     this.logger.log(
-      `🛑 Cancel requested for subscription ${latest.stripeSubscriptionId} (user ${userId})`,
+      `🛑 Cancel-at-period-end requested for subscription ${latest.stripeSubscriptionId} (user ${userId})`,
     );
 
-    // Cancel the subscription immediately in Stripe.
+    // Schedule cancellation at end of billing period — user keeps access until then.
+    let stripeSub: Stripe.Subscription;
     try {
-      await this.stripe.subscriptions.cancel(latest.stripeSubscriptionId);
+      stripeSub = await this.stripe.subscriptions.update(
+        latest.stripeSubscriptionId,
+        { cancel_at_period_end: true },
+      );
     } catch (err: any) {
       this.logger.error(
-        `❌ Failed to cancel Stripe subscription ${latest.stripeSubscriptionId}: ${err.message}`,
+        `❌ Failed to schedule cancellation for Stripe subscription ${latest.stripeSubscriptionId}: ${err.message}`,
       );
       throw new BadRequestException(
         'Failed to cancel subscription with Stripe',
       );
     }
 
-    const now = new Date();
+    // Use the actual period-end date from Stripe as the expiry.
+    const unixEnd = (stripeSub as any).current_period_end as
+      | number
+      | null
+      | undefined;
+    const expiresAt: Date = unixEnd
+      ? new Date(unixEnd * 1000)
+      : (latest.expiresAt ??
+        this.computeFallbackExpiry(
+          latest.billingInterval === 'year' ? 'year' : 'month',
+        ));
 
     const updated = await this.prisma.subscription.update({
       where: { id: latest.id },
       data: {
         status: 'canceled',
-        expiresAt: now,
+        expiresAt,
       },
     });
 
-    // Downgrade user to FREE immediately so access is revoked right away.
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { plan: SubscriptionPlan.FREE },
-    });
-
-    // Trim TBR/Reading list to free limit (keep first 3, remove the rest).
-    const { removed } =
-      await this.userLibraryService.trimTbrToFreeLimit(userId);
-    if (removed > 0) {
-      this.logger.log(
-        `🛑 User ${userId} TBR trimmed to 3; ${removed} book(s) removed`,
-      );
-    }
+    // Keep user as PREMIUM — entitlements continue until expiresAt.
+    // Downgrade and TBR trimming happen in handleSubscriptionCanceled when the period ends.
 
     this.logger.log(
-      `🛑 Subscription ${latest.stripeSubscriptionId} canceled immediately; user ${userId} downgraded to FREE`,
+      `🛑 Subscription ${latest.stripeSubscriptionId} scheduled to cancel on ${expiresAt.toISOString()}; user ${userId} retains PREMIUM until then`,
     );
 
     return updated;
   }
+  /**
+   * Re-enable auto-renewal for a subscription that was set to cancel at period end.
+   * Calls Stripe to unset cancel_at_period_end and restores local status to 'active'.
+   */
+  async reactivateSubscription(userId: string) {
+    const latest = await this.prisma.subscription.findFirst({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!latest) {
+      throw new BadRequestException('No subscription found to reactivate');
+    }
+
+    if (!latest.stripeSubscriptionId) {
+      throw new BadRequestException('Subscription is missing Stripe ID');
+    }
+
+    this.logger.log(
+      `🔄 Reactivate auto-renewal requested for subscription ${latest.stripeSubscriptionId} (user ${userId})`,
+    );
+
+    let stripeSub: Stripe.Subscription;
+    try {
+      stripeSub = await this.stripe.subscriptions.update(
+        latest.stripeSubscriptionId,
+        { cancel_at_period_end: false },
+      );
+    } catch (err: any) {
+      this.logger.error(
+        `❌ Failed to reactivate Stripe subscription ${latest.stripeSubscriptionId}: ${err.message}`,
+      );
+      throw new BadRequestException(
+        'Failed to reactivate subscription with Stripe',
+      );
+    }
+
+    const unixEnd = (stripeSub as any).current_period_end as
+      | number
+      | null
+      | undefined;
+    const expiresAt: Date | null = unixEnd
+      ? new Date(unixEnd * 1000)
+      : latest.expiresAt;
+
+    const updated = await this.prisma.subscription.update({
+      where: { id: latest.id },
+      data: {
+        status: 'active',
+        expiresAt,
+      },
+    });
+
+    this.logger.log(
+      `✅ Subscription ${latest.stripeSubscriptionId} reactivated; auto-renewal restored for user ${userId}`,
+    );
+
+    return updated;
+  }
+
   async getUserSubscription(userId: string) {
     await this.syncSubscriptionFromStripeByCustomer(userId);
 

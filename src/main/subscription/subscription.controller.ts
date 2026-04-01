@@ -78,9 +78,21 @@ export class SubscriptionController {
   @ApiOperation({
     summary: 'Cancel current subscription',
     description:
-      'Cancels the user’s latest Stripe subscription immediately and downgrades the user to FREE.',
+      'Schedules the subscription to cancel at end of billing period. User retains PREMIUM until then.',
   })
   async cancelSubscription(@CurrentUser() userId: string) {
     return this.subscriptionService.cancelCurrentSubscription(userId);
+  }
+
+  @ApiBearerAuth('access-token')
+  @Post('reactivate')
+  @UseGuards(JwtAuthGuard)
+  @ApiOperation({
+    summary: 'Re-enable auto-renewal',
+    description:
+      'Unsets cancel_at_period_end on the Stripe subscription and restores local status to active.',
+  })
+  async reactivateSubscription(@CurrentUser() userId: string) {
+    return this.subscriptionService.reactivateSubscription(userId);
   }
 }
