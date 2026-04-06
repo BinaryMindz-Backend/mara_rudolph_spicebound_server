@@ -635,11 +635,18 @@ export class SubscriptionService {
       const existing = await this.prisma.subscription.findFirst({
         where: { stripeSubscriptionId: subscriptionId },
       });
+      // If cancel_at_period_end is set, treat as locally 'canceled' (same as handleSubscriptionUpsert)
+      // so the UI can show "Expires on [date]" and "Re-enable Auto-renewal" without
+      // this sync overwriting the 'canceled' status back to 'active' on every refresh.
+      const localStatus = (stripeSub as any).cancel_at_period_end
+        ? 'canceled'
+        : stripeSub.status;
+
       if (existing) {
         await this.prisma.subscription.update({
           where: { id: existing.id },
           data: {
-            status: stripeSub.status,
+            status: localStatus,
             plan: SubscriptionPlan.PREMIUM,
             billingInterval,
             expiresAt:
@@ -653,7 +660,7 @@ export class SubscriptionService {
           data: {
             stripeSubscriptionId: subscriptionId,
             stripeCustomerId: customerId,
-            status: stripeSub.status,
+            status: localStatus,
             plan: SubscriptionPlan.PREMIUM,
             billingInterval,
             expiresAt: expiresAt ?? this.computeFallbackExpiry(billingInterval),
