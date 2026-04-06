@@ -564,6 +564,16 @@ export class SubscriptionService {
       return;
     }
 
+    // Only downgrade if the stored expiresAt has actually passed.
+    // This guards against Stripe firing the webhook prematurely (e.g. test subscriptions
+    // with a very short billing period) when the user still has paid time remaining.
+    if (sub.expiresAt && sub.expiresAt > new Date()) {
+      this.logger.log(
+        `⏳ Subscription ${subscription.id} webhook fired early — expiresAt ${sub.expiresAt.toISOString()} is still in the future. Skipping downgrade.`,
+      );
+      return;
+    }
+
     await this.prisma.user.update({
       where: { id: sub.userId },
       data: { plan: SubscriptionPlan.FREE },
@@ -839,17 +849,27 @@ export class SubscriptionService {
       );
     }
 
-    // Use the actual period-end date from Stripe as the expiry.
+    // Determine the expiry date: use whichever is further in the future between
+    // Stripe's current_period_end and the existing DB expiresAt.
+    // This prevents Stripe test subscriptions (with artificially short periods)
+    // from overwriting a correct expiresAt with a near-past/near-present value,
+    // which would cause an immediate downgrade instead of waiting for the real period end.
     const unixEnd = (stripeSub as any).current_period_end as
       | number
       | null
       | undefined;
-    const expiresAt: Date = unixEnd
+    const stripeExpiresAt: Date | null = unixEnd
       ? new Date(unixEnd * 1000)
-      : (latest.expiresAt ??
-        this.computeFallbackExpiry(
-          latest.billingInterval === 'year' ? 'year' : 'month',
-        ));
+      : null;
+    const fallback = this.computeFallbackExpiry(
+      latest.billingInterval === 'year' ? 'year' : 'month',
+    );
+    const candidates = [stripeExpiresAt, latest.expiresAt, fallback].filter(
+      (d): d is Date => d instanceof Date,
+    );
+    const expiresAt: Date = candidates.reduce((best, d) =>
+      d > best ? d : best,
+    );
 
     const updated = await this.prisma.subscription.update({
       where: { id: latest.id },
