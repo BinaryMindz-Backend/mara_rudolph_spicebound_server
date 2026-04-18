@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../prisma/generated/prisma-client"
@@ -15,7 +12,7 @@ datasource db {
 
 model User {
   id                 String           @id @default(uuid())
-  name               String
+  firstName          String                              // FIX #7: renamed from `name` to match signup spec (firstName)
   email              String           @unique
   password           String
   plan               SubscriptionPlan @default(FREE)
@@ -42,11 +39,14 @@ model Book {
 
   firstPublishedYear Int?
 
+  // FIX #8: Added coverUrl for future use (Doc 1, Section 4.4)
+  coverUrl String?
+
   // AI-enriched classification
   ageLevel               AgeLevel @default(UNKNOWN)
   spiceCategory          String?
   spiceRating            Int?     // 0-5 scale
-  spiceIncreasesInSeries Boolean? @default(false)
+  spiceIncreasesInSeries Boolean  @default(false)
 
   tropes    String[]
   creatures String[]
@@ -62,11 +62,12 @@ model Book {
   seriesStatus SeriesStatus @default(UNKNOWN)
 
   // Multi-arc info
-  isMultiArc Boolean?      @default(false)
-  arcName    String?
-  arcIndex   Int?
-  arcTotal   Int?
-  arcStatus  SeriesStatus? @default(UNKNOWN)
+  isMultiArc   Boolean      @default(false)
+  arcName      String?
+  arcNumber    Int?          // FIX #4: renamed from arcIndex → arcNumber (stores which arc, e.g. 1, 2, 3)
+  arcPosition  Int?          // FIX #5: new field — book's position *within* its arc (e.g. 1 of 2)
+  arcTotal     Int?
+  arcStatus    SeriesStatus  @default(UNKNOWN)
 
   // Ratings (from external sources like Google Books)
   externalAvgRating   Float?
@@ -75,6 +76,10 @@ model Book {
   // Purchase links
   amazonUrl   String?
   bookshopUrl String?
+
+  // FIX #2: AI confidence levels — persisted so low-confidence records can be flagged for review
+  confidenceSpiceRating String?   // "HIGH" | "MEDIUM" | "LOW"
+  confidenceOverall     String?   // "HIGH" | "MEDIUM" | "LOW"
 
   // Relations
   aliases BookAlias[]
@@ -109,7 +114,7 @@ model UserBook {
   bookId String
 
   status     ReadingStatus @default(TBR)
-  orderIndex Int
+  orderIndex Int           @default(0)    // FIX #6: added default to prevent runtime errors on create
   rating     Float?
 
   createdAt DateTime @default(now())
@@ -133,7 +138,7 @@ model Rating {
 }
 
 model Subscription {
-  id                   String           @id @default(cuid())
+  id                   String           @id @default(uuid())   // FIX: changed cuid() to uuid() for consistency
   userId               String
   stripeCustomerId     String
   stripeSubscriptionId String
@@ -147,8 +152,9 @@ model Subscription {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+// FIX #1: Renamed CHILDREN → CHILDRENS to match AI prompt output and sanitizer normalization
 enum AgeLevel {
-  CHILDREN
+  CHILDRENS
   YA
   NA
   ADULT

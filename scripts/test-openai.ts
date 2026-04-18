@@ -46,13 +46,12 @@ JSON ONLY - validate and return:
 async function main() {
   console.log('Sending request to OpenAI...');
   const requestBody = {
-    model: 'gpt-4o-mini',
+    model: 'gpt-5-mini',
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },
     ],
-    temperature: 0.3,
-    max_tokens: 500,
+    max_completion_tokens: 500,
   };
 
   const response = await fetch('https://api.openai.com/v1/chat/completions', {

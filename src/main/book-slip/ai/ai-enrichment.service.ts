@@ -25,7 +25,7 @@ export interface EnrichedBookData {
     arc?: {
       arcNumber?: number | null;
       name?: string | null;
-      position?: number | null;
+      position?: number | null;   // position within arc (e.g. book 1 of 2)
       totalBooks?: number | null;
       status?: string;
     } | null;
@@ -81,11 +81,10 @@ export class AiEnrichmentService {
             content: userPrompt,
           },
         ],
-        temperature: 0.2, // Low temperature for consistent, factual responses
-        max_tokens: 800,
+        temperature: 1,
+        max_completion_tokens: 800,
       };
 
-      // Log the request for debugging
       this.logger.debug(
         `🔹 OpenAI request model=${model} with ${userPrompt.length} chars`,
       );
@@ -135,11 +134,10 @@ export class AiEnrichmentService {
         };
       }
 
-      this.logger.debug(`🔹 OpenAI raw response: ${content}`);
+      this.logger.log(`🔹 OpenAI raw response: ${content}`);
 
       let enriched;
       try {
-        // Strip out any markdown formatting that the LLM might have added
         let cleanContent = content.trim();
         if (cleanContent.startsWith('```json')) {
           cleanContent = cleanContent
@@ -154,6 +152,20 @@ export class AiEnrichmentService {
         }
 
         enriched = JSON.parse(cleanContent);
+        // Handle double-encoded JSON: model may return a JSON string wrapped in quotes
+        if (typeof enriched === 'string') {
+          let unwrapped = enriched.trim();
+          if (unwrapped.startsWith('"') && unwrapped.endsWith('"')) {
+            unwrapped = unwrapped.slice(1, -1);
+          }
+          // Unescape common escaped quotes
+          unwrapped = unwrapped.replace(/\\"/g, '"');
+          try {
+            enriched = JSON.parse(unwrapped);
+          } catch {
+            // leave as string — will be rejected by sanitizer below
+          }
+        }
         this.logger.log(
           `✅ AI Enrichment parsed successfully: ${JSON.stringify(enriched)}`,
         );
@@ -173,8 +185,81 @@ export class AiEnrichmentService {
         };
       }
 
-      // Validate and sanitize output
-      return this.sanitizeEnrichedData(enriched);
+      let sanitized = this.sanitizeEnrichedData(enriched);
+
+      // Detect clearly-default/empty enrichment and retry with a stronger model
+      const looksLikeDefault =
+        (sanitized.spiceRating === 0 || sanitized.spiceRating === undefined) &&
+        (!sanitized.tropes || sanitized.tropes.length === 0) &&
+        (!sanitized.creatures || sanitized.creatures.length === 0) &&
+        (!sanitized.subgenres || sanitized.subgenres.length === 0) &&
+        (!sanitized.series || !sanitized.series.name);
+
+      if (looksLikeDefault) {
+        const fallbackModel =
+          this.configService.get<string>('OPENAI_FALLBACK_MODEL') ||
+          this.configService.get<string>('openai.fallbackModel') ||
+          'gpt-4o-mini';
+        this.logger.warn(
+          `AI enrichment returned minimal data; retrying with fallback model: ${fallbackModel}`,
+        );
+
+        // re-run request with fallback model
+        const retryRequestBody = { ...requestBody, model: fallbackModel };
+        try {
+          const retryResp = await fetch(
+            'https://api.openai.com/v1/chat/completions',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${apiKey}`,
+              },
+              body: JSON.stringify(retryRequestBody),
+            },
+          );
+
+          if (retryResp.ok) {
+            const retryData = (await retryResp.json()) as any;
+            const retryContent = retryData.choices?.[0]?.message?.content;
+            this.logger.log(`🔹 OpenAI retry raw response: ${retryContent}`);
+            if (retryContent) {
+              let retryClean = retryContent.trim();
+              if (retryClean.startsWith('```json')) {
+                retryClean = retryClean
+                  .replace(/^```json/, '')
+                  .replace(/```$/, '')
+                  .trim();
+              } else if (retryClean.startsWith('```')) {
+                retryClean = retryClean
+                  .replace(/^```/, '')
+                  .replace(/```$/, '')
+                  .trim();
+              }
+              try {
+                let retryEnriched = JSON.parse(retryClean);
+                if (typeof retryEnriched === 'string') {
+                  let unwrapped = retryEnriched.trim();
+                  if (unwrapped.startsWith('\"') && unwrapped.endsWith('\"')) {
+                    unwrapped = unwrapped.slice(1, -1);
+                  }
+                  unwrapped = unwrapped.replace(/\\\"/g, '"');
+                  retryEnriched = JSON.parse(unwrapped);
+                }
+                sanitized = this.sanitizeEnrichedData(retryEnriched);
+              } catch (e) {
+                this.logger.warn('Retry parse failed', e instanceof Error ? e.message : String(e));
+              }
+            }
+          } else {
+            this.logger.warn('Fallback model request failed', String(retryResp.status));
+          }
+        } catch (e) {
+          this.logger.warn('Fallback model request error', e instanceof Error ? e.message : String(e));
+        }
+      }
+
+      return sanitized;
     } catch (error) {
       this.logger.error(
         'AI enrichment failed',
@@ -202,7 +287,7 @@ SANITY CHECK (CRITICAL):
 CRITICAL RULES:
 1. USE YOUR PRE-TRAINED KNOWLEDGE of the book. Don't rely solely on the provided description. If you know the book, accurately reflect its actual spice level, tropes, and series information.
 2. Return ONLY valid JSON, no markdown, no explanations, no extra text.
-3. All numerical ratings must be integers (0-6 for spice)
+3. All numerical ratings must be integers (0-5 for spice)
 4. All arrays must contain strings from the exact approved lists ONLY
 5. Do NOT put creatures in the tropes array.
 6. **AMAZON ASIN**: Use your knowledge to provide the **Amazon ASIN** (e.g., B09B7XVLJG) for the primary paperback or Kindle edition of the book.
@@ -268,13 +353,13 @@ Classify the intended reader age level based on content maturity, themes, and ma
 
 | Level | Description | Indicators |
 |-------|-------------|------------|
-| Childrens | Ages 8-12 | No romance beyond innocent crushes, age-appropriate themes, middle-grade marketing |
+| CHILDRENS | Ages 8-12 | No romance beyond innocent crushes, age-appropriate themes, middle-grade marketing |
 | YA | Ages 13-17 | Teen protagonists, first love themes, fade-to-black or no sexual content, coming-of-age focus |
-| New Adult | Ages 18-25 | College-age/early 20s protagonists, explicit sexual content possible, identity/independence themes |
-| Adult | Ages 25+ | Mature protagonists, complex life situations, explicit content possible, no age-based content restrictions |
-| Erotica | Adults only | Sexual content is the primary focus, plot serves the erotic scenes, marketed as erotica/erotic romance |
+| NA | Ages 18-25 | College-age/early 20s protagonists, explicit sexual content possible, identity/independence themes |
+| ADULT | Ages 25+ | Mature protagonists, complex life situations, explicit content possible, no age-based content restrictions |
+| EROTICA | Adults only | Sexual content is the primary focus, plot serves the erotic scenes, marketed as erotica/erotic romance |
 
-**Key Distinction:** YA may have intense romance but NO explicit sexual scenes. New Adult and above may include explicit content. If a book has explicit sexual content, it CANNOT be YA.
+**Key Distinction:** YA may have intense romance but NO explicit sexual scenes. NA and above may include explicit content. If a book has explicit sexual content, it CANNOT be YA or CHILDRENS.
 
 ### 2. SPICE RATING
 
@@ -802,7 +887,7 @@ Provide series details if applicable:
 - **arc**: Arc-specific details (only include if isMultiArc is true)
   - **arcNumber**: Which arc this book belongs to (1, 2, 3, etc.)
   - **name**: The arc name (if known, otherwise null) — do not infer arc names from protagonist names
-  - **position**: This book's position within its arc
+  - **position**: This book's position within its arc (e.g. 1 of 2, 2 of 2)
   - **totalBooks**: Total books in this specific arc
   - **status**: Publication status of this arc specifically
 
@@ -870,18 +955,6 @@ Published standalone with no series connection:
 }
 \`\`\`
 
-Published standalone within a connected universe:
-\`\`\`json
-"series": {
-  "name": "Bromance Book Club",
-  "position": 3,
-  "totalBooks": 1,
-  "status": "COMPLETE",
-  "isMultiArc": false,
-  "arc": null
-}
-\`\`\`
-
 Standard series - ongoing (e.g., The Empyrean):
 \`\`\`json
 "series": {
@@ -889,18 +962,6 @@ Standard series - ongoing (e.g., The Empyrean):
   "position": 1,
   "totalBooks": 5,
   "status": "INCOMPLETE",
-  "isMultiArc": false,
-  "arc": null
-}
-\`\`\`
-
-Standard series - complete (e.g., The Hunger Games):
-\`\`\`json
-"series": {
-  "name": "The Hunger Games",
-  "position": 1,
-  "totalBooks": 3,
-  "status": "COMPLETE",
   "isMultiArc": false,
   "arc": null
 }
@@ -917,42 +978,6 @@ Multi-arc series - first book (e.g., The Serpent and the Wings of Night):
   "arc": {
     "arcNumber": 1,
     "name": "The Nightborn Duet",
-    "position": 1,
-    "totalBooks": 2,
-    "status": "COMPLETE"
-  }
-}
-\`\`\`
-
-Multi-arc series - second book of first arc:
-\`\`\`json
-"series": {
-  "name": "Crowns of Nyaxia",
-  "position": 2,
-  "totalBooks": 6,
-  "status": "INCOMPLETE",
-  "isMultiArc": true,
-  "arc": {
-    "arcNumber": 1,
-    "name": "The Nightborn Duet",
-    "position": 2,
-    "totalBooks": 2,
-    "status": "COMPLETE"
-  }
-}
-\`\`\`
-
-Multi-arc series - arc name unknown:
-\`\`\`json
-"series": {
-  "name": "Some Multi-Arc Series",
-  "position": 3,
-  "totalBooks": 8,
-  "status": "INCOMPLETE",
-  "isMultiArc": true,
-  "arc": {
-    "arcNumber": 2,
-    "name": null,
     "position": 1,
     "totalBooks": 2,
     "status": "COMPLETE"
@@ -1064,15 +1089,22 @@ Return ONLY this JSON structure:
       sanitized.author = data.author.trim();
     }
 
-    // Validate ageLevel
-    const validAgeLevels = ['CHILDREN', 'YA', 'NA', 'ADULT', 'EROTICA'];
-    if (data.ageLevel && validAgeLevels.includes(data.ageLevel.toUpperCase())) {
-      sanitized.ageLevel = data.ageLevel.toUpperCase();
+    // FIX #1: Validate ageLevel against CHILDRENS (with S) — consistent with schema enum and prompt output.
+    // Legacy "CHILDREN" (no S) is normalized for any records that predate the fix.
+    const validAgeLevels = ['CHILDRENS', 'YA', 'NA', 'ADULT', 'EROTICA'];
+    if (data.ageLevel) {
+      const normalized =
+        data.ageLevel.toUpperCase() === 'CHILDREN'
+          ? 'CHILDRENS'
+          : data.ageLevel.toUpperCase();
+      sanitized.ageLevel = validAgeLevels.includes(normalized)
+        ? normalized
+        : 'UNKNOWN';
     } else {
       sanitized.ageLevel = 'UNKNOWN';
     }
 
-    // Validate spiceCategory
+    // Validate spiceCategory against exact approved strings
     const validSpiceCategories = [
       'No Spice',
       'Closed Door',
@@ -1081,16 +1113,14 @@ Return ONLY this JSON structure:
       'High Spice',
       'Erotica',
     ];
-    if (validSpiceCategories.includes(data.spiceCategory)) {
-      sanitized.spiceCategory = data.spiceCategory;
-    } else {
-      sanitized.spiceCategory = 'No Spice'; // Default fallback
-    }
+    sanitized.spiceCategory = validSpiceCategories.includes(data.spiceCategory)
+      ? data.spiceCategory
+      : 'No Spice';
 
-    // Validate spiceIncreasesInSeries
+    // Validate spiceIncreasesInSeries as strict boolean
     sanitized.spiceIncreasesInSeries = !!data.spiceIncreasesInSeries;
 
-    // Validate spiceRating - must be integer 0-5
+    // Validate spiceRating as integer 0-5
     if (
       typeof data.spiceRating === 'number' &&
       data.spiceRating >= 0 &&
@@ -1098,7 +1128,6 @@ Return ONLY this JSON structure:
     ) {
       sanitized.spiceRating = Math.floor(data.spiceRating);
     } else if (typeof data.spiceRating === 'string') {
-      // Try to extract number from string like "3" or "very hot spice"
       const numMatch = data.spiceRating.match(/\d+/);
       if (numMatch) {
         const num = parseInt(numMatch[0], 10);
@@ -1110,12 +1139,10 @@ Return ONLY this JSON structure:
       sanitized.spiceRating = 0;
     }
 
-    // Auto-correct age level based on spice rating (high spice requires mature rating)
+    // Auto-correct age level: High Spice / Erotica cannot be YA or CHILDRENS
     if (
       ((sanitized.spiceRating && sanitized.spiceRating >= 4) ||
-        ['High Spice', 'Erotica'].includes(
-          sanitized.spiceCategory as string,
-        )) &&
+        ['High Spice', 'Erotica'].includes(sanitized.spiceCategory as string)) &&
       sanitized.ageLevel &&
       !['NA', 'ADULT', 'EROTICA'].includes(sanitized.ageLevel)
     ) {
@@ -1125,43 +1152,36 @@ Return ONLY this JSON structure:
       sanitized.ageLevel = 'NA';
     }
 
-    // Validate tropes - must be from approved list and max 4
+    // Validate tropes — must exactly match approved list, max 4
     if (Array.isArray(data.tropes) && data.tropes.length > 0) {
       const validTropes = data.tropes
         .filter((t: any) => isValidTrope(t))
         .slice(0, 4);
-      sanitized.tropes = validTropes.length > 0 ? validTropes : [];
-
-      // Log any invalid tropes that were filtered
-      const invalidCount = data.tropes.length - validTropes.length;
-      if (invalidCount > 0) {
+      if (validTropes.length < data.tropes.length) {
         this.logger.warn(
-          `Filtered out ${invalidCount} invalid tropes from AI response`,
+          `Filtered out ${data.tropes.length - validTropes.length} invalid tropes from AI response`,
         );
       }
+      sanitized.tropes = validTropes;
     } else {
       sanitized.tropes = [];
     }
 
-    // Validate creatures - max 3
-    if (Array.isArray(data.creatures) && data.creatures.length > 0) {
-      sanitized.creatures = data.creatures
-        .filter((c: any) => typeof c === 'string' && c.trim().length > 0)
-        .slice(0, 3);
-    } else {
-      sanitized.creatures = [];
-    }
+    // Validate creatures — max 3
+    sanitized.creatures = Array.isArray(data.creatures)
+      ? data.creatures
+          .filter((c: any) => typeof c === 'string' && c.trim().length > 0)
+          .slice(0, 3)
+      : [];
 
-    // Validate subgenres - max 3
-    if (Array.isArray(data.subgenres) && data.subgenres.length > 0) {
-      sanitized.subgenres = data.subgenres
-        .filter((s: any) => typeof s === 'string' && s.trim().length > 0)
-        .slice(0, 3);
-    } else {
-      sanitized.subgenres = [];
-    }
+    // Validate subgenres — max 3
+    sanitized.subgenres = Array.isArray(data.subgenres)
+      ? data.subgenres
+          .filter((s: any) => typeof s === 'string' && s.trim().length > 0)
+          .slice(0, 3)
+      : [];
 
-    // Preserve series and arc info and validate
+    // Validate and sanitize series / arc info
     if (data.series && typeof data.series === 'object') {
       const s = data.series;
       let position = typeof s.position === 'number' ? s.position : 1;
@@ -1170,9 +1190,11 @@ Return ONLY this JSON structure:
         ? s.status
         : 'UNKNOWN';
 
+      // Guard: totalBooks must not be less than position
       if (totalBooks !== null && totalBooks < position) {
         totalBooks = position;
       }
+      // Guard: COMPLETE requires a known totalBooks
       if (status === 'COMPLETE' && totalBooks === null) {
         status = 'UNKNOWN';
       }
@@ -1186,6 +1208,7 @@ Return ONLY this JSON structure:
         arc: null,
       };
 
+      // FIX #4 / #5: Persist both arcNumber (which arc) and arc.position (position within arc)
       if (s.isMultiArc && s.arc && typeof s.arc === 'object') {
         const a = s.arc;
         let arcPosition = typeof a.position === 'number' ? a.position : null;
@@ -1209,25 +1232,30 @@ Return ONLY this JSON structure:
         sanitized.series.arc = {
           arcNumber: typeof a.arcNumber === 'number' ? a.arcNumber : null,
           name: a.name || null,
-          position: arcPosition,
+          position: arcPosition,       // position within this arc (e.g. 1 of 2)
           totalBooks: arcTotalBooks,
           status: arcStatus,
         };
       }
     }
 
+    // FIX #2: Pass confidence through so it can be persisted on the book record
     if (data.confidence && typeof data.confidence === 'object') {
       sanitized.confidence = {
         spiceRating: ['HIGH', 'MEDIUM', 'LOW'].includes(
-          data.confidence.spiceRating as string,
+          data.confidence.spiceRating,
         )
           ? data.confidence.spiceRating
           : 'LOW',
-        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(
-          data.confidence.overall as string,
-        )
+        overall: ['HIGH', 'MEDIUM', 'LOW'].includes(data.confidence.overall)
           ? data.confidence.overall
           : 'LOW',
+      };
+    } else {
+      // Default to LOW so missing confidence is always flagged rather than silently promoted to HIGH
+      sanitized.confidence = {
+        spiceRating: 'LOW',
+        overall: 'LOW',
       };
     }
 

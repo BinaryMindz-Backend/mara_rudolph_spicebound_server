@@ -219,7 +219,7 @@ STEP 5: Check DB by title/author
   - NOT FOUND
 
 STEP 6: AI Enrichment
-  - OpenAI gpt-4o-mini (temperature: 0.3)
+  - OpenAI gpt-5-mini (temperature: 0.3)
   - Input: Title, Author, Description
   - Output: ageLevel, spiceRating, tropes, creatures, subgenres
   - Time: ~3-5 seconds

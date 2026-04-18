@@ -44,14 +44,15 @@ export class AuthService {
 
     const createdUser = await this.prisma.user.create({
       data: {
-        name: dto.name,
+        firstName: dto.name,
         email: dto.email,
         password: hashedPassword,
       },
     });
 
-    // Explicitly remove password
-    const { password, ...user } = createdUser;
+    // Explicitly remove password and map `firstName` -> `name` for responses
+    const { password, ...userRaw } = createdUser;
+    const user = { ...userRaw, name: (createdUser as any).firstName };
 
     return await this.generateAuthResponse(user);
   }
@@ -70,7 +71,8 @@ export class AuthService {
     if (!passwordMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    const { password, ...safeUser } = user;
+    const { password, ...userRaw } = user;
+    const safeUser = { ...userRaw, name: (user as any).firstName };
 
     return await this.generateAuthResponse(safeUser);
   }
@@ -89,7 +91,7 @@ export class AuthService {
 
     const userPayload: Record<string, unknown> = {
       id: user.id,
-      name: user.name,
+      name: (user as any).name ?? (user as any).firstName ?? null,
       email: user.email,
       plan: user.plan,
       createdAt: user.createdAt,
@@ -172,7 +174,7 @@ export class AuthService {
       refreshToken: newRefreshToken,
       user: {
         id: user.id,
-        name: user.name,
+        name: (user as any).firstName ?? null,
         email: user.email,
         plan: user.plan,
         createdAt: user.createdAt,
@@ -224,21 +226,29 @@ export class AuthService {
     const updated = await this.prisma.user.update({
       where: { id: userId },
       data: {
-        ...(dto.name && { name: dto.name }),
+        ...(dto.name && { firstName: dto.name }),
         ...(dto.email && { email: dto.email }),
         ...(hashedPassword && { password: hashedPassword }),
       },
       select: {
         id: true,
         email: true,
-        name: true,
+        firstName: true,
         plan: true,
         createdAt: true,
       },
     });
 
+    const mapped = {
+      id: updated.id,
+      email: updated.email,
+      name: (updated as any).firstName ?? null,
+      plan: updated.plan,
+      createdAt: updated.createdAt,
+    };
+
     return ApiResponseUtil.success(
-      updated,
+      mapped,
       'Profile updated successfully',
       200,
     );
@@ -250,7 +260,7 @@ export class AuthService {
       select: {
         id: true,
         email: true,
-        name: true,
+        firstName: true,
         plan: true,
         createdAt: true,
       },
@@ -260,7 +270,13 @@ export class AuthService {
       throw new NotFoundException('User not found');
     }
 
-    const result: Record<string, unknown> = { ...user };
+    const result: Record<string, unknown> = {
+      id: (user as any).id,
+      email: (user as any).email,
+      name: (user as any).firstName ?? null,
+      plan: (user as any).plan,
+      createdAt: (user as any).createdAt,
+    };
 
     try {
       const sub = await this.subscriptionService.getUserSubscription(userId);
@@ -393,17 +409,24 @@ export class AuthService {
   async updateName(userId: string, dto: UpdateNameDto) {
     const updatedUser = await this.prisma.user.update({
       where: { id: userId },
-      data: { name: dto.name },
+      data: { firstName: dto.name },
       select: {
         id: true,
-        name: true,
+        firstName: true,
         email: true,
         plan: true,
       },
     });
 
+    const mapped = {
+      id: updatedUser.id,
+      name: (updatedUser as any).firstName ?? null,
+      email: updatedUser.email,
+      plan: updatedUser.plan,
+    };
+
     return ApiResponseUtil.success(
-      updatedUser,
+      mapped,
       'Name updated successfully',
       200,
     );

@@ -25,58 +25,29 @@ export class BookMetadataEnrichmentService {
   private getSystemPrompt(): string {
     return `You are Spicebound's book metadata enrichment engine, specializing in analyzing books with particular expertise in fantasy romance ("romantasy") and romance genres. Your purpose is to extract and infer detailed metadata that helps readers quickly understand a book's content, tone, and romantic elements.
 
-CRITICAL RULES - FOLLOW EXACTLY:
-1. Return ONLY valid JSON. No markdown, no explanatory text, no preamble, no trailing comments.
-2. Be accurate over generous—if uncertain, lean conservative (lower spice rating, fewer tropes, MEDIUM or LOW confidence).
-3. Analyze ALL book genres, not just romance. Non-romance books still get appropriate age levels and metadata.
-4. Base analysis on actual content and reputation, not assumptions.
-5. Never fabricate. Use null or "UNKNOWN" if uncertain about series/status.
-6. Avoid redundancy—each item must add distinct information.
+You have deep knowledge of:
+- Romance and romantasy reader communities and their terminology
+- BookTok/Bookstagram culture and how readers discuss and categorize books
+- Spice levels, tropes, and content warnings common in the genre
+- Fantasy creatures, worlds, and subgenre classifications
+- Age-level classifications and what distinguishes Children's from YA from NA from Adult from Erotica
+- Publishing industry norms (series structures, publication statuses, standalone vs interconnected universes)
 
-AGE LEVEL (select exactly ONE):
-- CHILDRENS (8-12): No romance beyond innocent crushes
-- YA (13-17): Teen protagonists, fade-to-black or NO sexual content
-- NA (18-25): College-age, explicit content possible
-- ADULT (25+): Mature protagonists, explicit content possible
-- EROTICA (adults): Sexual content is PRIMARY focus
-RULE: YA cannot have explicit sexual scenes. Explicit = minimum NA.
+YOUR APPROACH:
+- Think like a knowledgeable reader recommending books to a friend—what would THEY want to know?
+- Prioritize information that helps readers decide if a book is right for them
+- Be specific rather than generic (e.g., "Fae Romance" over "Paranormal Romance" when accurate)
+- Recognize that the same book may be marketed differently across platforms—use the most accurate classification based on actual content
+- Use the provided description as a key signal for tropes, creatures, and subgenres. Authors and publishers often name-drop creature types (e.g., "shifter," "fae," "demon") and tropes (e.g., "enemies to lovers," "forced proximity") directly in their descriptions. If the description references a specific creature or trope, treat that as strong evidence — do not contradict the description unless you have high confidence it's misleading.
 
-SPICE RATING (0-6 integer):
-0=None | 1=Cute | 2=Sweet | 3=Warm | 4=Spicy | 5=Hot Spicy | 6=Explicit/Kink
-RULE: Spice 4+ requires NA/ADULT/EROTICA. No romance = spice 0.
-
-TROPES (max 4, use EXACTLY these strings):
-"Enemies to Lovers" | "Friends to Lovers" | "Forbidden Love" | "Slow Burn" | "Instalove"
-"Forced Proximity" | "Fake Relationship" | "Marriage of Convenience" | "Arranged Marriage" | "Captive/Captor" | "Trials"
-"Grumpy x Sunshine" | "Morally Grey" | "Touch Her and Die" | "Mutual Pining" | "Angst with a Happy Ending" | "Alphahole"
-"Fated Mates" | "Chosen One" | "Magic-Bonded Pair" | "Soulmates" | "Power Imbalance" | "Hidden Identity" | "Secret Royalty" | "Villain Gets the Girl" | "Dark Savior" | "Reincarnation"
-"Found Family" | "Ragtag Group on a Quest"
-"LGBTQ+" | "Love Triangle" | "Reverse Harem"
-"Age Gap" | "Teacher x Student"
-
-CREATURES (max 3, empty array if none):
-Dragons, Fae, Elves, Dwarves, Orcs, Trolls, Giants, Goblins, Werewolves, Shifters, Skinwalkers, Vampires, Ghosts, Zombies, Reapers, Wraiths, Angels, Demons, Gods/Goddesses, Demigods, Fallen Angels, Witches, Wizards, Elementals, Nymphs, Dryads, Mermaids/Mermen, Sirens, Selkies, Sea Monsters, Phoenixes, Griffins, Centaurs, Minotaurs, Krakens, Valkyries, Djinn/Genies, Kitsune, Gargoyles, Aliens, Cyborgs, Monsters
-Special: "Unknown" (unique), "Various" (multiple, none central)
-
-SUBGENRES (max 3, use EXACTLY these):
-Romance: Romantasy, Paranormal Romance, Vampire Romance, Werewolf & Shifter Romance, Fae Romance, Dragon Romance, Alien Romance, Dark Romance, Mafia Romance, Gothic Romance, Historical Romance, Regency Romance, Contemporary Romance, Romantic Comedy, Romantic Suspense, Sports Romance, Small Town Romance, Holiday Romance, Billionaire Romance, Military Romance, Reverse Harem Romance, Enemies to Lovers Romance, Action & Adventure Romance, Sci-Fi Romance, Time Travel Romance, Steampunk Romance
-Fantasy: Epic Fantasy, High Fantasy, Dark Fantasy, Urban Fantasy, Cozy Fantasy, Sword & Sorcery, Grimdark, Mythic Fantasy, Fairy Tale Retelling, Portal Fantasy, Gaslamp Fantasy, Military Fantasy, Court Intrigue, Magical Realism
-Horror: Dark Fantasy Horror, Gothic Fiction, Paranormal Horror, Supernatural Thriller, Monster Horror
-Erotica: Fantasy Erotica, Paranormal Erotica, Vampire Erotica, Monster Erotica, Dark Erotica, BDSM Erotica, Sci-Fi Erotica
-Sci-Fi: Space Opera, Dystopian, Post-Apocalyptic, Cyberpunk, Military Sci-Fi, First Contact
-Other: Thriller, Mystery, Suspense, Action & Adventure, Literary Fiction, Historical Fiction, Contemporary Fiction, Women's Fiction, Coming of Age, Young Adult Fiction, Middle Grade, Memoir, Self-Help, Biography, True Crime, Non-Fiction
-
-SERIES object:
-- name: Series name or null
-- position: Book number or null
-- totalBooks: Total books or null (use null if unknown)
-- status: "COMPLETE" (all published) | "INCOMPLETE" (unreleased exist) | "UNKNOWN" (cannot determine)
-
-DESCRIPTION: 3-5 sentences on plot/characters/premise. Awards/bestseller info AFTER two line breaks.
-
-CONFIDENCE: spiceRating and overall as HIGH/MEDIUM/LOW.
-
-Return ONLY valid JSON.`;
+CRITICAL RULES:
+1. Return ONLY valid JSON. No markdown code blocks, no explanatory text, no preamble, no trailing comments.
+2. Be accurate over generous—if uncertain, lean conservative (use "Confirmed Spice" category when spice level is ambiguous, fewer tropes, "MEDIUM" or "LOW" confidence).
+3. Your analysis must work for ALL book genres, not just romance. Non-romance books should still receive appropriate age levels, subgenres, descriptions, and any applicable tropes.
+4. Base your analysis on the book's actual content and reputation, not assumptions from title, cover, or author's other works.
+5. Never fabricate information. If you don't know a series total or publication status, use null or "UNKNOWN" rather than guessing.
+6. Avoid redundancy in all list fields (tropes, creatures, subgenres)—each item should add distinct, useful information.
+`;
   }
 
   /**
@@ -94,8 +65,11 @@ Return ONLY valid JSON.`;
     try {
       this.logger.log(`Analyzing: ${request.title} by ${request.author}`);
 
+      const model = this.configService.get<string>('OPENAI_MODEL') || this.configService.get<string>('openai.model') || 'gpt-4-turbo';
+      this.logger.log(`Using OpenAI model: ${model}`);
+
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4-turbo',
+        model,
         messages: [
           {
             role: 'system',
@@ -106,8 +80,8 @@ Return ONLY valid JSON.`;
             content: userPrompt,
           },
         ],
-        temperature: 0.7,
-        max_tokens: 2000,
+        temperature: 1,
+        max_completion_tokens: 2000,
       });
 
       const content = response.choices[0]?.message?.content;
@@ -142,7 +116,7 @@ Return ONLY valid JSON.`;
 - Published Year: ${request.publishedYear ?? 'Unknown'}
 - Description: ${request.description ?? 'Not provided'}
 - Categories/Subjects: ${request.categories?.join(', ') ?? 'Not provided'}
-- Page Count: ${request.pageCount ?? 'Unknown'}
+- Page Count: ${request.pageCount ?? 'Unknown'}          
 - Series Info (if known): ${request.seriesInfo ?? 'Unknown'}
 
 ---
